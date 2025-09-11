@@ -220,27 +220,49 @@ function App() {
 
   // Helper to push to undo stack
   const pushUndo = (newNodes) => {
-    setUndoStack(stack => [...stack, nodes]);
-    setRedoStack([]);
-    setNodes(newNodes);
+    console.log('Push to undo stack:', {
+      currentNodes: nodes.length,
+      newNodes: newNodes.length,
+      undoStackSize: undoStack.length,
+      redoStackSize: redoStack.length
+    });
+    // Use functional updates to ensure state consistency
+    setUndoStack(stack => [...stack, [...nodes]]);
+    setRedoStack(() => []);
+    setNodes(() => Array.isArray(newNodes) ? [...newNodes] : []);
   };
 
   // Undo/Redo handlers
   const handleUndo = () => {
-    setUndoStack(stack => {
-      if (stack.length === 0) return stack;
-      setRedoStack(rstack => [nodes, ...rstack]);
-      setNodes(stack[stack.length - 1]);
-      return stack.slice(0, -1);
+    if (undoStack.length === 0) {
+      console.log('Cannot undo - stack empty');
+      return;
+    }
+    console.log('Undo:', {
+      undoStackSize: undoStack.length,
+      redoStackSize: redoStack.length,
+      currentNodes: nodes.length
     });
+    const prevNodes = undoStack[undoStack.length - 1];
+    setNodes([...prevNodes]);
+    setRedoStack(rstack => [[...nodes], ...rstack]);
+    setUndoStack(stack => stack.slice(0, -1));
   };
+
   const handleRedo = () => {
-    setRedoStack(stack => {
-      if (stack.length === 0) return stack;
-      setUndoStack(ustack => [...ustack, nodes]);
-      setNodes(stack[0]);
-      return stack.slice(1);
+    if (redoStack.length === 0) {
+      console.log('Cannot redo - stack empty');
+      return;
+    }
+    console.log('Redo:', {
+      undoStackSize: undoStack.length,
+      redoStackSize: redoStack.length,
+      currentNodes: nodes.length
     });
+    const nextNodes = redoStack[0];
+    setNodes([...nextNodes]);
+    setUndoStack(stack => [...stack, [...nodes]]);
+    setRedoStack(stack => stack.slice(1));
   };
 
   // Export mind map as JSON
@@ -303,13 +325,18 @@ function App() {
 
   // Node click handler
   const handleNodeClick = (nodeId) => {
+    console.log('Node clicked:', { nodeId, currentSelected: selectedNodeId });
     setSelectedNodeId(nodeId);
   };
 
   // Keyboard shortcuts for editing and deleting
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (!selectedNodeId) return;
+      if (!selectedNodeId) {
+        console.log('No node selected for keyboard action');
+        return;
+      }
+      console.log('Key pressed:', { key: e.key, selectedNodeId });
       // Add child node on Tab
       if (e.key === 'Tab') {
         e.preventDefault();
@@ -360,35 +387,53 @@ function App() {
         onExport={handleExport}
         onImport={handleImport}
         onNew={() => {
+          console.log('New mind map');
           const initialNodes = [{ id: 1, label: '中心主题', x: 400, y: 300, parentId: null }];
-          setNodes(initialNodes);
-          setUndoStack([]);
-          setRedoStack([]);
+          setNodes([...initialNodes]);
+          setUndoStack(() => []);
+          setRedoStack(() => []);
           setSelectedNodeId(null);
-          if (canvasRef.current && canvasRef.current.center) {
-            canvasRef.current.center();
-          }
+          // Give a small delay for the canvas to initialize
+          setTimeout(() => {
+            console.log('Centering canvas', { canvasRef: !!canvasRef.current, center: !!canvasRef.current?.center });
+            if (canvasRef.current?.center) canvasRef.current.center();
+          }, 0);
         }}
         onExportPNG={() => alert('Export as PNG not implemented yet.')}
         onUndo={handleUndo}
         onRedo={handleRedo}
         onDelete={() => {
-          if (!selectedNodeId) return;
-          pushUndo((nodes => {
-            const collectIds = (id, acc) => {
-              acc.push(id);
-              nodes.filter(n => n.parentId === id).forEach(n => collectIds(n.id, acc));
-              return acc;
-            };
-            const idsToDelete = collectIds(selectedNodeId, []);
-            return nodes.filter(n => !idsToDelete.includes(n.id));
-          })(nodes));
+          console.log('Delete:', { selectedNodeId });
+          if (!selectedNodeId) {
+            console.log('No node selected for deletion');
+            return;
+          }
+          const collectIds = (id, acc) => {
+            acc.push(id);
+            nodes.filter(n => n.parentId === id).forEach(n => collectIds(n.id, acc));
+            return acc;
+          };
+          const idsToDelete = collectIds(selectedNodeId, []);
+          console.log('Deleting nodes:', { idsToDelete, totalNodes: nodes.length });
+          pushUndo(nodes.filter(n => !idsToDelete.includes(n.id)));
           setSelectedNodeId(null);
         }}
-        onCenter={() => canvasRef.current && canvasRef.current.center && canvasRef.current.center()}
-        onZoomIn={() => canvasRef.current && canvasRef.current.zoom && canvasRef.current.zoom(1.1)}
-        onZoomOut={() => canvasRef.current && canvasRef.current.zoom && canvasRef.current.zoom(0.9)}
-        onResetZoom={() => canvasRef.current && canvasRef.current.resetZoom && canvasRef.current.resetZoom()}
+        onCenter={() => {
+          console.log('Center canvas:', { canvasRef: !!canvasRef.current, center: !!canvasRef.current?.center });
+          if (canvasRef.current?.center) canvasRef.current.center();
+        }}
+        onZoomIn={() => {
+          console.log('Zoom in:', { canvasRef: !!canvasRef.current, zoom: !!canvasRef.current?.zoom });
+          if (canvasRef.current?.zoom) canvasRef.current.zoom(1.1);
+        }}
+        onZoomOut={() => {
+          console.log('Zoom out:', { canvasRef: !!canvasRef.current, zoom: !!canvasRef.current?.zoom });
+          if (canvasRef.current?.zoom) canvasRef.current.zoom(0.9);
+        }}
+        onResetZoom={() => {
+          console.log('Reset zoom:', { canvasRef: !!canvasRef.current, resetZoom: !!canvasRef.current?.resetZoom });
+          if (canvasRef.current?.resetZoom) canvasRef.current.resetZoom();
+        }}
         onToggleDark={() => alert('Dark mode not implemented yet.')}
       />
       <div style={{ height: 48 }} />
