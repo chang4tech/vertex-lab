@@ -1,5 +1,46 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MindMapCanvas from './MindMapCanvas.jsx';
+// --- Menu Bar Component ---
+function MenuBar({ onExport, onImport }) {
+  const fileInputRef = useRef();
+  return (
+    <nav style={{
+      width: '100%', background: '#fff', borderBottom: '1px solid #eee',
+      display: 'flex', alignItems: 'center', padding: '0 24px', height: 48, zIndex: 200, position: 'sticky', top: 0
+    }}>
+      <div style={{ fontWeight: 700, fontSize: 18, marginRight: 32 }}>🧠 MindMap</div>
+      <div style={{ display: 'flex', gap: 24 }}>
+        <div style={{ cursor: 'pointer', position: 'relative' }}>
+          <span>File</span>
+          <div style={{ display: 'inline', marginLeft: 12 }}>
+            <button onClick={onExport} style={{ marginRight: 8 }}>Export JSON</button>
+            <button onClick={() => fileInputRef.current.click()}>Import JSON</button>
+            <input ref={fileInputRef} type="file" accept="application/json" style={{ display: 'none' }}
+              onChange={e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = evt => {
+                  try {
+                    const data = JSON.parse(evt.target.result);
+                    onImport(data);
+                  } catch {
+                    alert('Invalid JSON file');
+                  }
+                };
+                reader.readAsText(file);
+                e.target.value = '';
+              }}
+            />
+          </div>
+        </div>
+        <div style={{ cursor: 'pointer' }}><span>Edit</span></div>
+        <div style={{ cursor: 'pointer' }}><span>View</span></div>
+        <div style={{ cursor: 'pointer' }}><span>Settings</span></div>
+      </div>
+    </nav>
+  );
+}
 
 /**
  * React Version of the Vue Mind-Mapping Tool UI
@@ -122,6 +163,30 @@ const MainHeader = () => {
  * The main application component.
  */
 function App() {
+  // Export mind map as JSON
+  const handleExport = () => {
+    const blob = new Blob([JSON.stringify(nodes, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'mindmap.json';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 0);
+  };
+
+  // Import mind map from JSON
+  const handleImport = (data) => {
+    if (Array.isArray(data) && data.every(n => n.id && typeof n.x === 'number' && typeof n.y === 'number')) {
+      setNodes(data);
+      setSelectedNodeId(null);
+    } else {
+      alert('Invalid mind map data');
+    }
+  };
   // State to manage the visibility of the help panel
   const [isHelpVisible, setIsHelpVisible] = useState(true);
 
@@ -166,7 +231,7 @@ function App() {
     setSelectedNodeId(nodeId);
   };
 
-  // Keyboard shortcuts for editing
+  // Keyboard shortcuts for editing and deleting
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (!selectedNodeId) return;
@@ -195,6 +260,21 @@ function App() {
           setNodes(nodes => nodes.map(n => n.id === selectedNodeId ? { ...n, label: newLabel } : n));
         }
       }
+      // Delete node and its children on Delete/Backspace
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        setNodes(nodes => {
+          // Recursively collect all descendant ids
+          const collectIds = (id, acc) => {
+            acc.push(id);
+            nodes.filter(n => n.parentId === id).forEach(n => collectIds(n.id, acc));
+            return acc;
+          };
+          const idsToDelete = collectIds(selectedNodeId, []);
+          return nodes.filter(n => !idsToDelete.includes(n.id));
+        });
+        setSelectedNodeId(null);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -202,6 +282,7 @@ function App() {
 
   return (
     <React.Fragment>
+      <MenuBar onExport={handleExport} onImport={handleImport} />
       <MainHeader />
 
       {/* Help trigger button */}
@@ -215,7 +296,14 @@ function App() {
       <HelpPanel isVisible={isHelpVisible} />
 
       {/* Mind map canvas */}
-  <MindMapCanvas nodes={nodes} onNodeClick={handleNodeClick} selectedNodeId={selectedNodeId} />
+      <MindMapCanvas
+        nodes={nodes}
+        onNodeClick={handleNodeClick}
+        selectedNodeId={selectedNodeId}
+        onNodePositionChange={(id, x, y) => {
+          setNodes(nodes => nodes.map(n => n.id === id ? { ...n, x, y } : n));
+        }}
+      />
     </React.Fragment>
   );
 }

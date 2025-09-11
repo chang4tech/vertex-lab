@@ -36,8 +36,11 @@ function drawEdge(ctx, from, to) {
   ctx.stroke();
 }
 
-const MindMapCanvas = ({ nodes, onNodeClick, selectedNodeId }) => {
+const MindMapCanvas = ({ nodes, onNodeClick, selectedNodeId, onNodePositionChange }) => {
   const canvasRef = useRef(null);
+
+  // Drag state
+  const dragState = useRef({ dragging: false, nodeId: null, offsetX: 0, offsetY: 0 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -69,6 +72,51 @@ const MindMapCanvas = ({ nodes, onNodeClick, selectedNodeId }) => {
       }
     });
   }, [nodes, selectedNodeId]);
+
+  // Mouse events for drag
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const handleMouseDown = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      for (const node of nodes) {
+        const dx = node.x - x;
+        const dy = node.y - y;
+        if (dx * dx + dy * dy < NODE_RADIUS * NODE_RADIUS) {
+          dragState.current = {
+            dragging: true,
+            nodeId: node.id,
+            offsetX: node.x - x,
+            offsetY: node.y - y
+          };
+          break;
+        }
+      }
+    };
+    const handleMouseMove = (e) => {
+      if (!dragState.current.dragging) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const { nodeId, offsetX, offsetY } = dragState.current;
+      if (onNodePositionChange && nodeId) {
+        onNodePositionChange(nodeId, x + offsetX, y + offsetY);
+      }
+    };
+    const handleMouseUp = () => {
+      dragState.current = { dragging: false, nodeId: null, offsetX: 0, offsetY: 0 };
+    };
+    canvas.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      canvas.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [nodes, onNodePositionChange]);
 
   // Handle click
   const handleClick = e => {
