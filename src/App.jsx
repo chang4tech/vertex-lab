@@ -450,14 +450,25 @@ function App() {
   // Canvas ref for view actions
   const canvasRef = useRef();
 
-  // Mind map state: simple demo tree
-  const [nodes, setNodes] = useState([
-    { id: 1, label: '中心主题', x: 400, y: 300, parentId: null },
-    { id: 2, label: '分支1', x: 250, y: 200, parentId: 1 },
-    { id: 3, label: '分支2', x: 550, y: 200, parentId: 1 },
-    { id: 4, label: '分支3', x: 250, y: 400, parentId: 1 },
-    { id: 5, label: '分支4', x: 550, y: 400, parentId: 1 },
-  ]);
+  // Mind map state with localStorage persistence
+  const [nodes, setNodes] = useState(() => {
+    const savedNodes = localStorage.getItem('mindmap_nodes');
+    if (savedNodes) {
+      try {
+        return JSON.parse(savedNodes);
+      } catch (e) {
+        console.error('Failed to parse saved nodes:', e);
+      }
+    }
+    // Default initial state if no saved state exists
+    return [
+      { id: 1, label: '中心主题', x: 400, y: 300, parentId: null },
+      { id: 2, label: '分支1', x: 250, y: 200, parentId: 1 },
+      { id: 3, label: '分支2', x: 550, y: 200, parentId: 1 },
+      { id: 4, label: '分支3', x: 250, y: 400, parentId: 1 },
+      { id: 5, label: '分支4', x: 550, y: 400, parentId: 1 },
+    ];
+  });
   const [selectedNodeId, setSelectedNodeId] = useState(null);
 
   // Helper to push to undo stack
@@ -553,6 +564,11 @@ function App() {
 
   // State to manage the visibility of the help panel
   const [isHelpVisible, setIsHelpVisible] = useState(true);
+
+  // Save nodes to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('mindmap_nodes', JSON.stringify(nodes));
+  }, [nodes]);
 
   // Load the saved state from localStorage on initial render
   useEffect(() => {
@@ -660,6 +676,8 @@ function App() {
           setUndoStack(() => []);
           setRedoStack(() => []);
           setSelectedNodeId(null);
+          // Clear the saved state when creating a new mind map
+          localStorage.removeItem('mindmap_nodes');
           // Give a small delay for the canvas to initialize
           setTimeout(() => {
             console.log('Centering canvas', { canvasRef: !!canvasRef.current, center: !!canvasRef.current?.center });
