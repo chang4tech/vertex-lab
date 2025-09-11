@@ -84,7 +84,9 @@ function MenuBar({
                 e.preventDefault();
                 e.stopPropagation();
                 console.log('Export PNG clicked');
-                alert('Export as PNG not implemented yet.');
+                if (canvasRef.current?.exportAsPNG) {
+                  canvasRef.current.exportAsPNG();
+                }
                 setOpenMenu(null);
               }}
             >
@@ -626,7 +628,9 @@ function App() {
             e.preventDefault();
             if (e.shiftKey) {
               console.log('Export PNG');
-              alert('Export as PNG not implemented yet.');
+              if (canvasRef.current?.exportAsPNG) {
+                canvasRef.current.exportAsPNG();
+              }
             } else {
               console.log('Export JSON');
               handleExport();

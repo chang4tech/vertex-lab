@@ -64,6 +64,18 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePo
       view.current.scale = 1;
       const canvas = canvasRef.current;
       canvas.dispatchEvent(new Event('redraw'));
+    },
+    exportAsPNG: () => {
+      const canvas = canvasRef.current;
+      const link = document.createElement('a');
+      const now = new Date();
+      const pad = n => n.toString().padStart(2, '0');
+      const filename = `mindmap-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.png`;
+      link.download = filename;
+      link.href = canvas.toDataURL('image/png');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   }), [nodes]);
   // Drag state
