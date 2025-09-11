@@ -37,10 +37,35 @@ function drawEdge(ctx, from, to) {
 }
 
 
-const MindMapCanvas = ({ nodes, onNodeClick, selectedNodeId, onNodePositionChange }) => {
+import { forwardRef, useImperativeHandle } from 'react';
+
+const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePositionChange }, ref) => {
   const canvasRef = useRef(null);
   // Pan/zoom state
   const view = useRef({ offsetX: 0, offsetY: 0, scale: 1 });
+  // Expose imperative methods for centering and zooming
+  useImperativeHandle(ref, () => ({
+    center: () => {
+      // Center the root node (id:1) if exists, else center canvas
+      const root = nodes.find(n => n.id === 1) || nodes[0];
+      if (!root) return;
+      const canvas = canvasRef.current;
+      view.current.scale = 1;
+      view.current.offsetX = canvas.width / 2 - root.x;
+      view.current.offsetY = canvas.height / 2 - root.y;
+      canvas.dispatchEvent(new Event('redraw'));
+    },
+    zoom: (factor) => {
+      view.current.scale *= factor;
+      const canvas = canvasRef.current;
+      canvas.dispatchEvent(new Event('redraw'));
+    },
+    resetZoom: () => {
+      view.current.scale = 1;
+      const canvas = canvasRef.current;
+      canvas.dispatchEvent(new Event('redraw'));
+    }
+  }), [nodes]);
   // Drag state
   const dragState = useRef({ dragging: false, nodeId: null, offsetX: 0, offsetY: 0 });
   // Pan state
@@ -236,8 +261,9 @@ const MindMapCanvas = ({ nodes, onNodeClick, selectedNodeId, onNodePositionChang
       onClick={handleClick}
       tabIndex={0}
       onContextMenu={e => e.preventDefault()}
+
     />
   );
-};
+});
 
 export default MindMapCanvas;

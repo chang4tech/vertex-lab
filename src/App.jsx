@@ -201,6 +201,48 @@ const MainHeader = () => {
  * The main application component.
  */
 function App() {
+  // Undo/redo stacks
+  const [undoStack, setUndoStack] = useState([]);
+  const [redoStack, setRedoStack] = useState([]);
+
+  // Canvas ref for view actions
+  const canvasRef = useRef();
+
+  // Mind map state: simple demo tree
+  const [nodes, setNodes] = useState([
+    { id: 1, label: '中心主题', x: 400, y: 300, parentId: null },
+    { id: 2, label: '分支1', x: 250, y: 200, parentId: 1 },
+    { id: 3, label: '分支2', x: 550, y: 200, parentId: 1 },
+    { id: 4, label: '分支3', x: 250, y: 400, parentId: 1 },
+    { id: 5, label: '分支4', x: 550, y: 400, parentId: 1 },
+  ]);
+  const [selectedNodeId, setSelectedNodeId] = useState(null);
+
+  // Helper to push to undo stack
+  const pushUndo = (newNodes) => {
+    setUndoStack(stack => [...stack, nodes]);
+    setRedoStack([]);
+    setNodes(newNodes);
+  };
+
+  // Undo/Redo handlers
+  const handleUndo = () => {
+    setUndoStack(stack => {
+      if (stack.length === 0) return stack;
+      setRedoStack(rstack => [nodes, ...rstack]);
+      setNodes(stack[stack.length - 1]);
+      return stack.slice(0, -1);
+    });
+  };
+  const handleRedo = () => {
+    setRedoStack(stack => {
+      if (stack.length === 0) return stack;
+      setUndoStack(ustack => [...ustack, nodes]);
+      setNodes(stack[0]);
+      return stack.slice(1);
+    });
+  };
+
   // Export mind map as JSON
   const handleExport = () => {
     const blob = new Blob([JSON.stringify(nodes, null, 2)], { type: 'application/json' });
@@ -223,24 +265,15 @@ function App() {
   // Import mind map from JSON
   const handleImport = (data) => {
     if (Array.isArray(data) && data.every(n => n.id && typeof n.x === 'number' && typeof n.y === 'number')) {
-      setNodes(data);
+      pushUndo(data);
       setSelectedNodeId(null);
     } else {
       alert('Invalid mind map data');
     }
   };
+
   // State to manage the visibility of the help panel
   const [isHelpVisible, setIsHelpVisible] = useState(true);
-
-  // Mind map state: simple demo tree
-  const [nodes, setNodes] = useState([
-    { id: 1, label: '中心主题', x: 400, y: 300, parentId: null },
-    { id: 2, label: '分支1', x: 250, y: 200, parentId: 1 },
-    { id: 3, label: '分支2', x: 550, y: 200, parentId: 1 },
-    { id: 4, label: '分支3', x: 250, y: 400, parentId: 1 },
-    { id: 5, label: '分支4', x: 550, y: 400, parentId: 1 },
-  ]);
-  const [selectedNodeId, setSelectedNodeId] = useState(null);
 
   // Load the saved state from localStorage on initial render
   useEffect(() => {
@@ -280,7 +313,7 @@ function App() {
       // Add child node on Tab
       if (e.key === 'Tab') {
         e.preventDefault();
-        setNodes(nodes => {
+        pushUndo((nodes => {
           const parent = nodes.find(n => n.id === selectedNodeId);
           if (!parent) return nodes;
           const maxId = Math.max(...nodes.map(n => n.id));
@@ -292,21 +325,20 @@ function App() {
             ...nodes,
             { id: maxId + 1, label: '新节点', x, y, parentId: parent.id }
           ];
-        });
+        })(nodes));
       }
       // Rename node on Enter
       if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
         e.preventDefault();
         const newLabel = window.prompt('输入新名称:', nodes.find(n => n.id === selectedNodeId)?.label || '');
         if (newLabel) {
-          setNodes(nodes => nodes.map(n => n.id === selectedNodeId ? { ...n, label: newLabel } : n));
+          pushUndo(nodes.map(n => n.id === selectedNodeId ? { ...n, label: newLabel } : n));
         }
       }
       // Delete node and its children on Delete/Backspace
       if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault();
-        setNodes(nodes => {
-          // Recursively collect all descendant ids
+        pushUndo((nodes => {
           const collectIds = (id, acc) => {
             acc.push(id);
             nodes.filter(n => n.parentId === id).forEach(n => collectIds(n.id, acc));
@@ -314,7 +346,7 @@ function App() {
           };
           const idsToDelete = collectIds(selectedNodeId, []);
           return nodes.filter(n => !idsToDelete.includes(n.id));
-        });
+        })(nodes));
         setSelectedNodeId(null);
       }
     };
@@ -327,13 +359,22 @@ function App() {
       <MenuBar
         onExport={handleExport}
         onImport={handleImport}
-        onNew={() => setNodes([{ id: 1, label: '中心主题', x: 400, y: 300, parentId: null }])}
+        onNew={() => {
+          const initialNodes = [{ id: 1, label: '中心主题', x: 400, y: 300, parentId: null }];
+          setNodes(initialNodes);
+          setUndoStack([]);
+          setRedoStack([]);
+          setSelectedNodeId(null);
+          if (canvasRef.current && canvasRef.current.center) {
+            canvasRef.current.center();
+          }
+        }}
         onExportPNG={() => alert('Export as PNG not implemented yet.')}
-        onUndo={() => alert('Undo not implemented yet.')}
-        onRedo={() => alert('Redo not implemented yet.')}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
         onDelete={() => {
           if (!selectedNodeId) return;
-          setNodes(nodes => {
+          pushUndo((nodes => {
             const collectIds = (id, acc) => {
               acc.push(id);
               nodes.filter(n => n.parentId === id).forEach(n => collectIds(n.id, acc));
@@ -341,13 +382,13 @@ function App() {
             };
             const idsToDelete = collectIds(selectedNodeId, []);
             return nodes.filter(n => !idsToDelete.includes(n.id));
-          });
+          })(nodes));
           setSelectedNodeId(null);
         }}
-        onCenter={() => alert('Center not implemented yet.')}
-        onZoomIn={() => alert('Zoom in not implemented yet.')}
-        onZoomOut={() => alert('Zoom out not implemented yet.')}
-        onResetZoom={() => alert('Reset zoom not implemented yet.')}
+        onCenter={() => canvasRef.current && canvasRef.current.center && canvasRef.current.center()}
+        onZoomIn={() => canvasRef.current && canvasRef.current.zoom && canvasRef.current.zoom(1.1)}
+        onZoomOut={() => canvasRef.current && canvasRef.current.zoom && canvasRef.current.zoom(0.9)}
+        onResetZoom={() => canvasRef.current && canvasRef.current.resetZoom && canvasRef.current.resetZoom()}
         onToggleDark={() => alert('Dark mode not implemented yet.')}
       />
       <div style={{ height: 48 }} />
@@ -367,11 +408,12 @@ function App() {
 
       {/* Mind map canvas */}
       <MindMapCanvas
+        ref={canvasRef}
         nodes={nodes}
         onNodeClick={handleNodeClick}
         selectedNodeId={selectedNodeId}
         onNodePositionChange={(id, x, y) => {
-          setNodes(nodes => nodes.map(n => n.id === id ? { ...n, x, y } : n));
+          pushUndo(nodes.map(n => n.id === id ? { ...n, x, y } : n));
         }}
       />
     </React.Fragment>
