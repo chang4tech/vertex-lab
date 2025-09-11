@@ -36,7 +36,7 @@ function drawEdge(ctx, from, to) {
   ctx.stroke();
 }
 
-const MindMapCanvas = ({ nodes, onNodeClick }) => {
+const MindMapCanvas = ({ nodes, onNodeClick, selectedNodeId }) => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -50,9 +50,25 @@ const MindMapCanvas = ({ nodes, onNodeClick }) => {
         if (parent) drawEdge(ctx, parent, node);
       }
     });
-    // Draw nodes
-    nodes.forEach(node => drawNode(ctx, node));
-  }, [nodes]);
+    // Draw nodes, highlight selected
+    nodes.forEach(node => {
+      if (selectedNodeId && node.id === selectedNodeId) {
+        ctx.save();
+        ctx.shadowColor = '#ff9800';
+        ctx.shadowBlur = 20;
+        drawNode(ctx, node);
+        ctx.restore();
+        // Draw border highlight
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, NODE_RADIUS + 4, 0, 2 * Math.PI);
+        ctx.strokeStyle = '#ff9800';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+      } else {
+        drawNode(ctx, node);
+      }
+    });
+  }, [nodes, selectedNodeId]);
 
   // Handle click
   const handleClick = e => {

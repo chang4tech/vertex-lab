@@ -160,12 +160,45 @@ function App() {
 
   const triggerClass = `trigger ${isHelpVisible ? 'active' : ''}`;
 
+
   // Node click handler
   const handleNodeClick = (nodeId) => {
     setSelectedNodeId(nodeId);
-    // For demo: highlight node or show dialog, etc.
-    // alert('Clicked node: ' + nodeId);
   };
+
+  // Keyboard shortcuts for editing
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!selectedNodeId) return;
+      // Add child node on Tab
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        setNodes(nodes => {
+          const parent = nodes.find(n => n.id === selectedNodeId);
+          if (!parent) return nodes;
+          const maxId = Math.max(...nodes.map(n => n.id));
+          const angle = Math.random() * 2 * Math.PI;
+          const dist = 120;
+          const x = parent.x + Math.cos(angle) * dist;
+          const y = parent.y + Math.sin(angle) * dist;
+          return [
+            ...nodes,
+            { id: maxId + 1, label: '新节点', x, y, parentId: parent.id }
+          ];
+        });
+      }
+      // Rename node on Enter
+      if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+        e.preventDefault();
+        const newLabel = window.prompt('输入新名称:', nodes.find(n => n.id === selectedNodeId)?.label || '');
+        if (newLabel) {
+          setNodes(nodes => nodes.map(n => n.id === selectedNodeId ? { ...n, label: newLabel } : n));
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedNodeId, nodes]);
 
   return (
     <React.Fragment>
@@ -182,7 +215,7 @@ function App() {
       <HelpPanel isVisible={isHelpVisible} />
 
       {/* Mind map canvas */}
-      <MindMapCanvas nodes={nodes} onNodeClick={handleNodeClick} />
+  <MindMapCanvas nodes={nodes} onNodeClick={handleNodeClick} selectedNodeId={selectedNodeId} />
     </React.Fragment>
   );
 }
