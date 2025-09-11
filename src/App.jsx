@@ -3,6 +3,14 @@ import MindMapCanvas from './MindMapCanvas.jsx';
 // --- Menu Bar Component ---
 function MenuBar({ onExport, onImport }) {
   const fileInputRef = useRef();
+  const [fileMenuOpen, setFileMenuOpen] = React.useState(false);
+  // Close menu on click outside
+  React.useEffect(() => {
+    if (!fileMenuOpen) return;
+    const close = () => setFileMenuOpen(false);
+    window.addEventListener('mousedown', close);
+    return () => window.removeEventListener('mousedown', close);
+  }, [fileMenuOpen]);
   return (
     <nav style={{
       width: '100%', background: '#fff', borderBottom: '1px solid #eee',
@@ -11,28 +19,33 @@ function MenuBar({ onExport, onImport }) {
       <div style={{ fontWeight: 700, fontSize: 18, marginRight: 32 }}>🧠 MindMap</div>
       <div style={{ display: 'flex', gap: 24 }}>
         <div style={{ cursor: 'pointer', position: 'relative' }}>
-          <span>File</span>
-          <div style={{ display: 'inline', marginLeft: 12 }}>
-            <button onClick={onExport} style={{ marginRight: 8 }}>Export JSON</button>
-            <button onClick={() => fileInputRef.current.click()}>Import JSON</button>
-            <input ref={fileInputRef} type="file" accept="application/json" style={{ display: 'none' }}
-              onChange={e => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = evt => {
-                  try {
-                    const data = JSON.parse(evt.target.result);
-                    onImport(data);
-                  } catch {
-                    alert('Invalid JSON file');
-                  }
-                };
-                reader.readAsText(file);
-                e.target.value = '';
-              }}
-            />
-          </div>
+          <span onClick={e => { e.stopPropagation(); setFileMenuOpen(v => !v); }}>File</span>
+          {fileMenuOpen && (
+            <div style={{
+              position: 'absolute', top: 32, left: 0, background: '#fff', border: '1px solid #eee', borderRadius: 4,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.12)', minWidth: 120, zIndex: 1000, padding: '4px 0'
+            }} onClick={e => e.stopPropagation()}>
+              <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={() => { onExport(); setFileMenuOpen(false); }}>Export JSON</div>
+              <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={() => { fileInputRef.current.click(); setFileMenuOpen(false); }}>Import JSON</div>
+              <input ref={fileInputRef} type="file" accept="application/json" style={{ display: 'none' }}
+                onChange={e => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = evt => {
+                    try {
+                      const data = JSON.parse(evt.target.result);
+                      onImport(data);
+                    } catch {
+                      alert('Invalid JSON file');
+                    }
+                  };
+                  reader.readAsText(file);
+                  e.target.value = '';
+                }}
+              />
+            </div>
+          )}
         </div>
         <div style={{ cursor: 'pointer' }}><span>Edit</span></div>
         <div style={{ cursor: 'pointer' }}><span>View</span></div>
