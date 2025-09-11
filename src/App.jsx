@@ -5,19 +5,37 @@ function MenuBar({
   onExport, onImport, onNew, onExportPNG, onUndo, onRedo, onDelete, onCenter, onZoomIn, onZoomOut, onResetZoom, onToggleDark
 }) {
   const fileInputRef = useRef();
-  const [openMenu, setOpenMenu] = React.useState(null); // 'file' | 'edit' | 'view' | 'settings' | null
-  // Close menu on click outside
-  React.useEffect(() => {
+  const [openMenu, setOpenMenu] = useState(null); // 'file' | 'edit' | 'view' | 'settings' | null
+
+  // Close menu when clicking outside
+  useEffect(() => {
     if (!openMenu) return;
-    const close = () => setOpenMenu(null);
-    window.addEventListener('mousedown', close);
-    return () => window.removeEventListener('mousedown', close);
+
+    const handleClickOutside = (event) => {
+      // Don't close if clicking inside a menu
+      if (event.target.closest('.menu-dropdown')) return;
+      // Don't close if clicking on a menu trigger
+      if (event.target.closest('.menu-trigger')) return;
+      setOpenMenu(null);
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, [openMenu]);
+
   const menuDropdown = (type, items) => openMenu === type && (
-    <div style={{
-      position: 'absolute', top: 32, left: 0, background: '#fff', border: '1px solid #eee', borderRadius: 4,
-      boxShadow: '0 2px 8px rgba(0,0,0,0.12)', minWidth: 140, zIndex: 1000, padding: '4px 0'
-    }} onClick={e => e.stopPropagation()}>{items}</div>
+    <div className="menu-dropdown" style={{
+      position: 'absolute',
+      top: 32,
+      left: 0,
+      background: '#fff',
+      border: '1px solid #eee',
+      borderRadius: 4,
+      boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+      minWidth: 140,
+      zIndex: 1000,
+      padding: '4px 0'
+    }}>{items}</div>
   );
   return (
     <nav style={{
@@ -27,12 +45,52 @@ function MenuBar({
       <div style={{ fontWeight: 700, fontSize: 18, marginRight: 32 }}>🧠 MindMap</div>
       <div style={{ display: 'flex', gap: 24 }}>
         <div style={{ cursor: 'pointer', position: 'relative' }}>
-          <span onClick={e => { e.stopPropagation(); setOpenMenu(openMenu === 'file' ? null : 'file'); }}>File</span>
+          <span className="menu-trigger" onClick={(e) => {
+            e.preventDefault();
+            console.log('File menu clicked');
+            setOpenMenu(openMenu === 'file' ? null : 'file');
+          }}>File</span>
           {menuDropdown('file', <>
-            <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={() => { onNew(); setOpenMenu(null); }}>New</div>
-            <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={() => { onExport(); setOpenMenu(null); }}>Export JSON</div>
-            <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={() => { onExportPNG(); setOpenMenu(null); }}>Export PNG</div>
-            <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={() => { fileInputRef.current.click(); setOpenMenu(null); }}>Import JSON</div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('New clicked');
+                onNew();
+                setOpenMenu(null);
+              }}
+            >New</div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Export JSON clicked');
+                onExport();
+                setOpenMenu(null);
+              }}
+            >Export JSON</div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Export PNG clicked');
+                onExportPNG();
+                setOpenMenu(null);
+              }}
+            >Export PNG</div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Import JSON clicked');
+                fileInputRef.current.click();
+                setOpenMenu(null);
+              }}
+            >Import JSON</div>
             <input ref={fileInputRef} type="file" accept="application/json" style={{ display: 'none' }}
               onChange={e => {
                 const file = e.target.files[0];
@@ -53,26 +111,110 @@ function MenuBar({
           </>)}
         </div>
         <div style={{ cursor: 'pointer', position: 'relative' }}>
-          <span onClick={e => { e.stopPropagation(); setOpenMenu(openMenu === 'edit' ? null : 'edit'); }}>Edit</span>
+          <span className="menu-trigger" onClick={(e) => {
+            e.preventDefault();
+            console.log('Edit menu clicked');
+            setOpenMenu(openMenu === 'edit' ? null : 'edit');
+          }}>Edit</span>
           {menuDropdown('edit', <>
-            <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={() => { onUndo(); setOpenMenu(null); }}>Undo</div>
-            <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={() => { onRedo(); setOpenMenu(null); }}>Redo</div>
-            <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={() => { onDelete(); setOpenMenu(null); }}>Delete</div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Undo clicked');
+                onUndo();
+                setOpenMenu(null);
+              }}
+            >Undo</div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Redo clicked');
+                onRedo();
+                setOpenMenu(null);
+              }}
+            >Redo</div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Delete clicked');
+                onDelete();
+                setOpenMenu(null);
+              }}
+            >Delete</div>
           </>)}
         </div>
         <div style={{ cursor: 'pointer', position: 'relative' }}>
-          <span onClick={e => { e.stopPropagation(); setOpenMenu(openMenu === 'view' ? null : 'view'); }}>View</span>
+          <span className="menu-trigger" onClick={(e) => {
+            e.preventDefault();
+            console.log('View menu clicked');
+            setOpenMenu(openMenu === 'view' ? null : 'view');
+          }}>View</span>
           {menuDropdown('view', <>
-            <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={() => { onCenter(); setOpenMenu(null); }}>Center</div>
-            <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={() => { onZoomIn(); setOpenMenu(null); }}>Zoom In</div>
-            <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={() => { onZoomOut(); setOpenMenu(null); }}>Zoom Out</div>
-            <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={() => { onResetZoom(); setOpenMenu(null); }}>Reset Zoom</div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Center clicked');
+                onCenter();
+                setOpenMenu(null);
+              }}
+            >Center</div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Zoom In clicked');
+                onZoomIn();
+                setOpenMenu(null);
+              }}
+            >Zoom In</div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Zoom Out clicked');
+                onZoomOut();
+                setOpenMenu(null);
+              }}
+            >Zoom Out</div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Reset Zoom clicked');
+                onResetZoom();
+                setOpenMenu(null);
+              }}
+            >Reset Zoom</div>
           </>)}
         </div>
         <div style={{ cursor: 'pointer', position: 'relative' }}>
-          <span onClick={e => { e.stopPropagation(); setOpenMenu(openMenu === 'settings' ? null : 'settings'); }}>Settings</span>
+          <span className="menu-trigger" onClick={(e) => {
+            e.preventDefault();
+            console.log('Settings menu clicked');
+            setOpenMenu(openMenu === 'settings' ? null : 'settings');
+          }}>Settings</span>
           {menuDropdown('settings', <>
-            <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={() => { onToggleDark(); setOpenMenu(null); }}>Toggle Dark Mode</div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Toggle Dark Mode clicked');
+                onToggleDark();
+                setOpenMenu(null);
+              }}
+            >Toggle Dark Mode</div>
           </>)}
         </div>
       </div>
