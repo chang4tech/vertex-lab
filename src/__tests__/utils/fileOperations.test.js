@@ -15,7 +15,7 @@ describe('fileOperations', () => {
       { id: 2, label: 'Child', x: 500, y: 400 }
     ];
 
-    it('creates a JSON blob with correct data', () => {
+    it('creates a JSON blob with correct data', async () => {
       const appendChildSpy = vi.spyOn(document.body, 'appendChild');
       const removeChildSpy = vi.spyOn(document.body, 'removeChild');
       
@@ -25,7 +25,12 @@ describe('fileOperations', () => {
       expect(URL.createObjectURL).toHaveBeenCalled();
       const blobCall = URL.createObjectURL.mock.calls[0][0];
       expect(blobCall).toBeInstanceOf(Blob);
-      expect(JSON.parse(blobCall.text())).toEqual(mockNodes);
+      const reader = new FileReader();
+      await new Promise((resolve) => {
+        reader.onload = () => resolve(reader.result);
+        reader.readAsText(blobCall);
+      });
+      expect(JSON.parse(reader.result)).toEqual(mockNodes);
 
       // Check if link was created and clicked
       expect(appendChildSpy).toHaveBeenCalled();

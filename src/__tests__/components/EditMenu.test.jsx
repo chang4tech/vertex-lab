@@ -26,9 +26,8 @@ describe('EditMenu', () => {
   it('is hidden when isOpen is false', () => {
     render(<EditMenu {...mockProps} isOpen={false} />);
     
-    expect(screen.queryByText('Undo')).not.toBeInTheDocument();
-    expect(screen.queryByText('Redo')).not.toBeInTheDocument();
-    expect(screen.queryByText('Delete')).not.toBeInTheDocument();
+    const menu = screen.queryByRole('menu');
+    expect(menu).not.toBeInTheDocument();
   });
 
   it('calls handlers and closes menu when items are clicked', () => {
