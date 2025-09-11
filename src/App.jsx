@@ -6,7 +6,7 @@ function MenuBar({ onExport, onImport }) {
   return (
     <nav style={{
       width: '100%', background: '#fff', borderBottom: '1px solid #eee',
-      display: 'flex', alignItems: 'center', padding: '0 24px', height: 48, zIndex: 200, position: 'sticky', top: 0
+      display: 'flex', alignItems: 'center', padding: '0 24px', height: 48, zIndex: 200, position: 'fixed', top: 0, left: 0, right: 0
     }}>
       <div style={{ fontWeight: 700, fontSize: 18, marginRight: 32 }}>🧠 MindMap</div>
       <div style={{ display: 'flex', gap: 24 }}>
@@ -283,13 +283,16 @@ function App() {
   return (
     <React.Fragment>
       <MenuBar onExport={handleExport} onImport={handleImport} />
+      <div style={{ height: 48 }} />
       <MainHeader />
 
-      {/* Help trigger button */}
-      <div className={triggerClass} onClick={toggleHelp}>
-        <i className="trigger-icon" />
-        <div className="trigger-tooltip">
-          {isHelpVisible ? '收起' : '帮助'}
+      {/* Help trigger button, now floating bottom right */}
+      <div style={{ position: 'fixed', right: 32, bottom: 32, zIndex: 110 }}>
+        <div className={triggerClass} onClick={toggleHelp}>
+          <i className="trigger-icon" />
+          <div className="trigger-tooltip">
+            {isHelpVisible ? '收起' : '帮助'}
+          </div>
         </div>
       </div>
 
