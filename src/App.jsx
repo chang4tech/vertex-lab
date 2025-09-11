@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import MindMapCanvas from './MindMapCanvas.jsx';
 // --- Menu Bar Component ---
 function MenuBar({
-  onExport, onImport, onNew, onExportPNG, onUndo, onRedo, onDelete, onCenter, onZoomIn, onZoomOut, onResetZoom, onToggleDark
+  onExport, onImport, onNew, onExportPNG, onUndo, onRedo, onDelete, onCenter, onZoomIn, onZoomOut, onResetZoom, onToggleDark,
+  nodes, setNodes, setUndoStack, setRedoStack, setSelectedNodeId, canvasRef
 }) {
   const fileInputRef = useRef();
   const [openMenu, setOpenMenu] = useState(null); // 'file' | 'edit' | 'view' | 'settings' | null
@@ -220,6 +221,81 @@ function MenuBar({
                 setOpenMenu(null);
               }}
             >Reset Zoom</div>
+          </>)}
+        </div>
+        <div style={{ cursor: 'pointer', position: 'relative' }}>
+          <span className="menu-trigger" onClick={(e) => {
+            e.preventDefault();
+            console.log('Library menu clicked');
+            setOpenMenu(openMenu === 'library' ? null : 'library');
+          }}>Library</span>
+          {menuDropdown('library', <>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Save to Library clicked');
+                const name = window.prompt('Enter a name for this template:');
+                if (name) {
+                  const library = JSON.parse(localStorage.getItem('mindmap_library') || '{}');
+                  library[name] = nodes;
+                  localStorage.setItem('mindmap_library', JSON.stringify(library));
+                  alert('Template saved to library');
+                }
+                setOpenMenu(null);
+              }}
+            >Save to Library</div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Load from Library clicked');
+                const library = JSON.parse(localStorage.getItem('mindmap_library') || '{}');
+                const templates = Object.keys(library);
+                if (templates.length === 0) {
+                  alert('No templates in library');
+                  return;
+                }
+                const name = window.prompt('Enter template name to load:\n\nAvailable templates:\n' + templates.join('\n'));
+                if (name && library[name]) {
+                  setNodes([...library[name]]);
+                  setUndoStack([]);
+                  setRedoStack([]);
+                  setSelectedNodeId(null);
+                  if (canvasRef.current?.center) {
+                    canvasRef.current.center();
+                  }
+                } else if (name) {
+                  alert('Template not found');
+                }
+                setOpenMenu(null);
+              }}
+            >Load from Library</div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Delete from Library clicked');
+                const library = JSON.parse(localStorage.getItem('mindmap_library') || '{}');
+                const templates = Object.keys(library);
+                if (templates.length === 0) {
+                  alert('No templates in library');
+                  return;
+                }
+                const name = window.prompt('Enter template name to delete:\n\nAvailable templates:\n' + templates.join('\n'));
+                if (name && library[name]) {
+                  delete library[name];
+                  localStorage.setItem('mindmap_library', JSON.stringify(library));
+                  alert('Template deleted from library');
+                } else if (name) {
+                  alert('Template not found');
+                }
+                setOpenMenu(null);
+              }}
+            >Delete from Library</div>
           </>)}
         </div>
         <div style={{ cursor: 'pointer', position: 'relative' }}>
@@ -567,6 +643,12 @@ function App() {
       <MenuBar
         onExport={handleExport}
         onImport={handleImport}
+        nodes={nodes}
+        setNodes={setNodes}
+        setUndoStack={setUndoStack}
+        setRedoStack={setRedoStack}
+        setSelectedNodeId={setSelectedNodeId}
+        canvasRef={canvasRef}
         onNew={() => {
           console.log('New mind map');
           const initialNodes = [{ id: 1, label: '中心主题', x: 400, y: 300, parentId: null }];
