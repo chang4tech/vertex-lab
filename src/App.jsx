@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MindMapCanvas from './MindMapCanvas.jsx';
 // --- Menu Bar Component ---
-function MenuBar({ onExport, onImport }) {
+function MenuBar({
+  onExport, onImport, onNew, onExportPNG, onUndo, onRedo, onDelete, onCenter, onZoomIn, onZoomOut, onResetZoom, onToggleDark
+}) {
   const fileInputRef = useRef();
   const [fileMenuOpen, setFileMenuOpen] = React.useState(false);
   // Close menu on click outside
@@ -23,9 +25,11 @@ function MenuBar({ onExport, onImport }) {
           {fileMenuOpen && (
             <div style={{
               position: 'absolute', top: 32, left: 0, background: '#fff', border: '1px solid #eee', borderRadius: 4,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.12)', minWidth: 120, zIndex: 1000, padding: '4px 0'
+              boxShadow: '0 2px 8px rgba(0,0,0,0.12)', minWidth: 140, zIndex: 1000, padding: '4px 0'
             }} onClick={e => e.stopPropagation()}>
+              <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={() => { onNew(); setFileMenuOpen(false); }}>New</div>
               <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={() => { onExport(); setFileMenuOpen(false); }}>Export JSON</div>
+              <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={() => { onExportPNG(); setFileMenuOpen(false); }}>Export PNG</div>
               <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={() => { fileInputRef.current.click(); setFileMenuOpen(false); }}>Import JSON</div>
               <input ref={fileInputRef} type="file" accept="application/json" style={{ display: 'none' }}
                 onChange={e => {
@@ -47,9 +51,29 @@ function MenuBar({ onExport, onImport }) {
             </div>
           )}
         </div>
-        <div style={{ cursor: 'pointer' }}><span>Edit</span></div>
-        <div style={{ cursor: 'pointer' }}><span>View</span></div>
-        <div style={{ cursor: 'pointer' }}><span>Settings</span></div>
+        <div style={{ cursor: 'pointer', position: 'relative' }}>
+          <span>Edit</span>
+          <div style={{ position: 'absolute', top: 32, left: 0, background: '#fff', border: '1px solid #eee', borderRadius: 4, boxShadow: '0 2px 8px rgba(0,0,0,0.12)', minWidth: 120, zIndex: 1000, padding: '4px 0', display: 'none' }}>
+            <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={onUndo}>Undo</div>
+            <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={onRedo}>Redo</div>
+            <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={onDelete}>Delete</div>
+          </div>
+        </div>
+        <div style={{ cursor: 'pointer', position: 'relative' }}>
+          <span>View</span>
+          <div style={{ position: 'absolute', top: 32, left: 0, background: '#fff', border: '1px solid #eee', borderRadius: 4, boxShadow: '0 2px 8px rgba(0,0,0,0.12)', minWidth: 120, zIndex: 1000, padding: '4px 0', display: 'none' }}>
+            <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={onCenter}>Center</div>
+            <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={onZoomIn}>Zoom In</div>
+            <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={onZoomOut}>Zoom Out</div>
+            <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={onResetZoom}>Reset Zoom</div>
+          </div>
+        </div>
+        <div style={{ cursor: 'pointer', position: 'relative' }}>
+          <span>Settings</span>
+          <div style={{ position: 'absolute', top: 32, left: 0, background: '#fff', border: '1px solid #eee', borderRadius: 4, boxShadow: '0 2px 8px rgba(0,0,0,0.12)', minWidth: 120, zIndex: 1000, padding: '4px 0', display: 'none' }}>
+            <div style={{ padding: '8px 20px', cursor: 'pointer' }} onClick={onToggleDark}>Toggle Dark Mode</div>
+          </div>
+        </div>
       </div>
     </nav>
   );
@@ -299,7 +323,32 @@ function App() {
 
   return (
     <React.Fragment>
-      <MenuBar onExport={handleExport} onImport={handleImport} />
+      <MenuBar
+        onExport={handleExport}
+        onImport={handleImport}
+        onNew={() => setNodes([{ id: 1, label: '中心主题', x: 400, y: 300, parentId: null }])}
+        onExportPNG={() => alert('Export as PNG not implemented yet.')}
+        onUndo={() => alert('Undo not implemented yet.')}
+        onRedo={() => alert('Redo not implemented yet.')}
+        onDelete={() => {
+          if (!selectedNodeId) return;
+          setNodes(nodes => {
+            const collectIds = (id, acc) => {
+              acc.push(id);
+              nodes.filter(n => n.parentId === id).forEach(n => collectIds(n.id, acc));
+              return acc;
+            };
+            const idsToDelete = collectIds(selectedNodeId, []);
+            return nodes.filter(n => !idsToDelete.includes(n.id));
+          });
+          setSelectedNodeId(null);
+        }}
+        onCenter={() => alert('Center not implemented yet.')}
+        onZoomIn={() => alert('Zoom in not implemented yet.')}
+        onZoomOut={() => alert('Zoom out not implemented yet.')}
+        onResetZoom={() => alert('Reset zoom not implemented yet.')}
+        onToggleDark={() => alert('Dark mode not implemented yet.')}
+      />
       <div style={{ height: 48 }} />
       <MainHeader />
 
