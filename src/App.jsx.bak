@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import MindMapCanvas from './MindMapCanvas.jsx';
-// --- Menu Bar Component ---
+
 function MenuBar({
   onExport, onImport, onNew, onUndo, onRedo, onDelete, onCenter, onZoomIn, onZoomOut, onResetZoom, onToggleDark,
   nodes, setNodes, setUndoStack, setRedoStack, setSelectedNodeId, canvasRef
@@ -38,6 +38,7 @@ function MenuBar({
       padding: '4px 0'
     }}>{items}</div>
   );
+
   return (
     <nav style={{
       width: '100%', background: '#fff', borderBottom: '1px solid #eee',
@@ -84,7 +85,7 @@ function MenuBar({
                 e.preventDefault();
                 e.stopPropagation();
                 console.log('Export PNG clicked');
-                alert('Export as PNG not implemented yet.');
+                onExportPNG();
                 setOpenMenu(null);
               }}
             >
@@ -203,7 +204,7 @@ function MenuBar({
           }}>View</span>
           {menuDropdown('view', <>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -211,9 +212,12 @@ function MenuBar({
                 onCenter();
                 setOpenMenu(null);
               }}
-            >Center</div>
+            >
+              <span>Center</span>
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘0</span>
+            </div>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -221,9 +225,12 @@ function MenuBar({
                 onZoomIn();
                 setOpenMenu(null);
               }}
-            >Zoom In</div>
+            >
+              <span>Zoom In</span>
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘+</span>
+            </div>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -231,9 +238,12 @@ function MenuBar({
                 onZoomOut();
                 setOpenMenu(null);
               }}
-            >Zoom Out</div>
+            >
+              <span>Zoom Out</span>
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘-</span>
+            </div>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -241,7 +251,10 @@ function MenuBar({
                 onResetZoom();
                 setOpenMenu(null);
               }}
-            >Reset Zoom</div>
+            >
+              <span>Reset Zoom</span>
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘0</span>
+            </div>
           </>)}
         </div>
         <div style={{ cursor: 'pointer', position: 'relative' }}>
@@ -343,135 +356,35 @@ function MenuBar({
   );
 }
 
-/**
- * React Version of the Vue Mind-Mapping Tool UI
- *
- * This file is a translation of the original Vue.js application into React.
- * All components have been recreated as functional React components using hooks.
- */
-
-// --- Reusable Components ---
-
-/**
- * Component: Dialog
- * A feature-rich, reusable dialog/modal component.
- * @param {object} props - Component props.
- * @param {boolean} props.visible - Whether the dialog is visible.
- * @param {function} props.onClose - Function to call when the dialog should close.
- * @param {string} props.title - The title of the dialog.
- * @param {React.Node} props.children - The content to display inside the dialog body.
- * @param {string} [props.width="300px"] - The width of the dialog.
- * @param {string} [props.maxWidth=""] - The max-width of the dialog.
- * @param {string} [props.top="50%"] - The vertical position of the dialog.
- */
-const Dialog = ({ visible, onClose, title, children, width = "300px", maxWidth = "", top = "50%" }) => {
-  const dialogContentRef = useRef(null);
-
-  // Effect to handle side-effects when visibility changes
-  useEffect(() => {
-    // Function to handle Escape key press
-    const handleKeyup = (event) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    if (visible) {
-      // When dialog opens, listen for Escape key and lock body scroll
-      window.addEventListener('keyup', handleKeyup);
-      document.body.classList.add('lock-scroll');
-    }
-
-    // Cleanup function to run when component unmounts or visibility changes
-    return () => {
-      window.removeEventListener('keyup', handleKeyup);
-      document.body.classList.remove('lock-scroll');
-    };
-  }, [visible, onClose]);
-
-  if (!visible) {
-    return null;
-  }
-
-  // Closes the dialog if the click is on the backdrop itself
-  const handleBackdropClick = (event) => {
-    if (event.target === event.currentTarget) {
-      onClose();
-    }
-  };
-
+function HelpPanel({ isVisible }) {
+  const rulesClass = `rules ${isVisible ? 'show' : ''}`;
   return (
-    <div className="dialog_wrapper" onClick={handleBackdropClick}>
-      <div
-        ref={dialogContentRef}
-        className="dialog_content"
-        style={{ width, top, maxWidth }}
-      >
-        <div className="dialog_header">
-          <span style={{ fontSize: '18px' }}>{title}</span>
-          <div className="close-btn" onClick={onClose}>
-            ✔
-          </div>
-        </div>
-        <div className="dialog_body">
-          {children}
-        </div>
+    <div className="help">
+      <div className={rulesClass}>
+        <div className="rule"><span className="key">Tab</span><span className="desc">插入子节点</span></div>
+        <div className="rule"><span className="key">Enter</span><span className="desc">插入后置节点</span></div>
+        <div className="rule"><span className="key">Shift</span>+<span className="key">Enter</span><span className="desc">插入前置节点</span></div>
+        <div className="rule"><span className="key">Ctrl</span>+<span className="key">Enter</span><span className="desc">插入父节点</span></div>
+        <div className="rule"><span className="key">Ctrl</span>+<span className="key">←↑↓→</span><span className="desc">多节点选择</span></div>
+        <div className="rule"><span className="key">Shift</span>+<span className="key">←↑↓→</span><span className="desc">移动节点</span></div>
+        <div className="rule"><span className="key">Ctrl</span>+<span className="key">e</span><span className="desc">展开/收起节点</span></div>
+        <div className="rule"><span className="key">Space</span>+<span className="key">左键</span><span className="desc">拖动画布</span></div>
+        <div className="rule"><span className="key">Ctrl</span>+<span className="key">o</span><span className="desc">导入文件</span></div>
+        <div className="rule"><span className="key">Ctrl</span>+<span className="key">s</span><span className="desc">导出为文件</span></div>
+        <div className="rule"><span className="key">Ctrl</span>+<span className="key">Shift</span>+<span className="key">s</span><span className="desc">导出为图片</span></div>
       </div>
     </div>
   );
-};
+}
 
+function MainHeader() {
+  return <header />;
+}
 
-
-/**
- * Component: HelpPanel
- * Displays the keyboard shortcuts.
- */
-const HelpPanel = ({ isVisible }) => {
-    const rulesClass = `rules ${isVisible ? 'show' : ''}`;
-    return (
-        <div className="help">
-            <div className={rulesClass}>
-                <div className="rule"><span className="key">Tab</span><span className="desc">插入子节点</span></div>
-                <div className="rule"><span className="key">Enter</span><span className="desc">插入后置节点</span></div>
-                <div className="rule"><span className="key">Shift</span>+<span className="key">Enter</span><span className="desc">插入前置节点</span></div>
-                <div className="rule"><span className="key">Ctrl</span>+<span className="key">Enter</span><span className="desc">插入父节点</span></div>
-                <div className="rule"><span className="key">Ctrl</span>+<span className="key">←↑↓→</span><span className="desc">多节点选择</span></div>
-                <div className="rule"><span className="key">Shift</span>+<span className="key">←↑↓→</span><span className="desc">移动节点</span></div>
-                <div className="rule"><span className="key">Ctrl</span>+<span className="key">e</span><span className="desc">展开/收起节点</span></div>
-                <div className="rule"><span className="key">Space</span>+<span className="key">左键</span><span className="desc">拖动画布</span></div>
-                <div className="rule"><span className="key">Ctrl</span>+<span className="key">o</span><span className="desc">导入文件</span></div>
-                <div className="rule"><span className="key">Ctrl</span>+<span className="key">s</span><span className="desc">导出为文件</span></div>
-                <div className="rule"><span className="key">Ctrl</span>+<span className="key">Shift</span>+<span className="key">s</span><span className="desc">导出为图片</span></div>
-            </div>
-        </div>
-    );
-};
-
-/**
- * Component: MainHeader (Placeholder)
- * A placeholder for the asynchronously loaded header in the original app.
- */
-const MainHeader = () => {
-    // In a real app, this would be a more complex component.
-    return <header> {/* Header content would go here */} </header>;
-};
-
-
-// --- Main Application Component ---
-
-/**
- * The main application component.
- */
 function App() {
-  // Undo/redo stacks
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
-
-  // Canvas ref for view actions
   const canvasRef = useRef();
-
-  // Create file input ref
   const fileInputRef = useRef();
 
   // Mind map state with localStorage persistence
@@ -484,7 +397,6 @@ function App() {
         console.error('Failed to parse saved nodes:', e);
       }
     }
-    // Default initial state if no saved state exists
     return [
       { id: 1, label: '中心主题', x: 400, y: 300, parentId: null },
       { id: 2, label: '分支1', x: 250, y: 200, parentId: 1 },
@@ -495,11 +407,21 @@ function App() {
   });
   const [selectedNodeId, setSelectedNodeId] = useState(null);
 
-  // Help panel visibility state
-  const [isHelpVisible, setIsHelpVisible] = useState(true);
+  // Helper to push to undo stack
+  const pushUndo = useCallback((newNodes) => {
+    console.log('Push to undo stack:', {
+      currentNodes: nodes.length,
+      newNodes: newNodes.length,
+      undoStackSize: undoStack.length,
+      redoStackSize: redoStack.length
+    });
+    setUndoStack(stack => [...stack, [...nodes]]);
+    setRedoStack(() => []);
+    setNodes(() => Array.isArray(newNodes) ? [...newNodes] : []);
+  }, [nodes, undoStack.length, redoStack.length]);
 
-  // Handler functions wrapped in useCallback
-  const handleUndo = useCallback(() => {
+  // Undo/Redo handlers
+  const handleUndo = () => {
     if (undoStack.length === 0) {
       console.log('Cannot undo - stack empty');
       return;
@@ -513,9 +435,9 @@ function App() {
     setNodes([...prevNodes]);
     setRedoStack(rstack => [[...nodes], ...rstack]);
     setUndoStack(stack => stack.slice(0, -1));
-  }, [undoStack, redoStack, nodes]);
+  };
 
-  const handleRedo = useCallback(() => {
+  const handleRedo = () => {
     if (redoStack.length === 0) {
       console.log('Cannot redo - stack empty');
       return;
@@ -529,87 +451,29 @@ function App() {
     setNodes([...nextNodes]);
     setUndoStack(stack => [...stack, [...nodes]]);
     setRedoStack(stack => stack.slice(1));
-  }, [undoStack, redoStack, nodes]);
-
-  const handleExport = useCallback(() => {
-    const blob = new Blob([JSON.stringify(nodes, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const now = new Date();
-    const pad = n => n.toString().padStart(2, '0');
-    const filename = `graph-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 0);
-  }, [nodes]);
-
-  const handleImport = useCallback((data) => {
-    console.log('handleImport called with:', data);
-    if (Array.isArray(data) &&
-        data.every(n => n.id && typeof n.x === 'number' && typeof n.y === 'number' && typeof n.label === 'string')) {
-      console.log('Importing valid mind map data:', data.length, 'nodes');
-      // Clone the data to ensure we don't modify the original
-      const importedNodes = data.map(node => ({ ...node }));
-      setNodes(importedNodes);
-      setUndoStack([]);
-      setRedoStack([]);
-      setSelectedNodeId(null);
-      // Center the view on the imported mind map
-      setTimeout(() => {
-        if (canvasRef.current?.center) {
-          console.log('Centering view on imported mind map');
-          canvasRef.current.center();
-        }
-      }, 0);
-    } else {
-      console.error('Invalid mind map data:', data);
-      alert('Invalid mind map data: Must contain nodes with id, label, x, y properties');
-    }
-  }, [canvasRef]);
-
-  // Helper to push to undo stack
-  const pushUndo = useCallback((newNodes) => {
-    console.log('Push to undo stack:', {
-      currentNodes: nodes.length,
-      newNodes: newNodes.length,
-      undoStackSize: undoStack.length,
-      redoStackSize: redoStack.length
-    });
-    // Use functional updates to ensure state consistency
-    setUndoStack(stack => [...stack, [...nodes]]);
-    setRedoStack(() => []);
-    setNodes(() => Array.isArray(newNodes) ? [...newNodes] : []);
-  }, [nodes, undoStack.length, redoStack.length]);
+  };
 
   // Save nodes to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('mindmap_nodes', JSON.stringify(nodes));
   }, [nodes]);
 
-  // Global keyboard shortcuts
+  // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
       const isCommandKey = e.metaKey || e.ctrlKey;
-      
-      if (e.code === 'Space') {
-        // Prevent spacebar from scrolling
-        e.preventDefault();
-      }
 
-      if (e.code === 'Escape') {
-        // Handle help panel
+      // Handle help panel visibility
+      if (e.code.toLowerCase() === 'escape') {
         setIsHelpVisible(false);
         window.localStorage.setItem('xmindHelpTriggerState', '0');
-      } else if (isCommandKey) {
+      }
+
+      // Handle command key combinations
+      if (isCommandKey) {
         switch (e.key.toLowerCase()) {
-          case 'n': {
+          case 'n':
             e.preventDefault();
-            console.log('New mind map');
             const initialNodes = [{ id: 1, label: '中心主题', x: 400, y: 300, parentId: null }];
             setNodes([...initialNodes]);
             setUndoStack([]);
@@ -620,28 +484,35 @@ function App() {
               if (canvasRef.current?.center) canvasRef.current.center();
             }, 0);
             break;
-          }
 
-          case 's': {
+          case 's':
             e.preventDefault();
             if (e.shiftKey) {
-              console.log('Export PNG');
               alert('Export as PNG not implemented yet.');
             } else {
-              console.log('Export JSON');
-              handleExport();
+              const blob = new Blob([JSON.stringify(nodes, null, 2)], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              const now = new Date();
+              const pad = n => n.toString().padStart(2, '0');
+              const filename = `graph-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
+              a.download = filename;
+              document.body.appendChild(a);
+              a.click();
+              setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+              }, 0);
             }
             break;
-          }
 
-          case 'o': {
+          case 'o':
             e.preventDefault();
-            console.log('Import JSON');
             fileInputRef.current?.click();
             break;
-          }
 
-          case 'z': {
+          case 'z':
             e.preventDefault();
             if (e.shiftKey) {
               handleRedo();
@@ -649,33 +520,131 @@ function App() {
               handleUndo();
             }
             break;
-          }
         }
-      } else if (selectedNodeId) {
-        // Node-specific shortcuts that require a selected node
-        if (e.key === 'Tab') {
-          e.preventDefault();
-          pushUndo((nodes => {
-            const parent = nodes.find(n => n.id === selectedNodeId);
-            if (!parent) return nodes;
-            const maxId = Math.max(...nodes.map(n => n.id));
-            const angle = Math.random() * 2 * Math.PI;
-            const dist = 120;
-            const x = parent.x + Math.cos(angle) * dist;
-            const y = parent.y + Math.sin(angle) * dist;
-            return [
-              ...nodes,
-              { id: maxId + 1, label: '新节点', x, y, parentId: parent.id }
-            ];
-          })(nodes));
-        } else if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
-          e.preventDefault();
-          const newLabel = window.prompt('输入新名称:', nodes.find(n => n.id === selectedNodeId)?.label || '');
-          if (newLabel) {
-            pushUndo(nodes.map(n => n.id === selectedNodeId ? { ...n, label: newLabel } : n));
-          }
-        } else if (e.key === 'Delete' || e.key === 'Backspace') {
-          e.preventDefault();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [nodes, undoStack, redoStack, canvasRef, handleUndo, handleRedo]);
+
+  // Node click handler
+  const handleNodeClick = (nodeId) => {
+    console.log('Node clicked:', { nodeId, currentSelected: selectedNodeId });
+    setSelectedNodeId(nodeId);
+  };
+
+  // Keyboard shortcuts for editing and deleting
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!selectedNodeId) {
+        console.log('No node selected for keyboard action');
+        return;
+      }
+
+      // Add child node on Tab
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        pushUndo((nodes => {
+          const parent = nodes.find(n => n.id === selectedNodeId);
+          if (!parent) return nodes;
+          const maxId = Math.max(...nodes.map(n => n.id));
+          const angle = Math.random() * 2 * Math.PI;
+          const dist = 120;
+          const x = parent.x + Math.cos(angle) * dist;
+          const y = parent.y + Math.sin(angle) * dist;
+          return [
+            ...nodes,
+            { id: maxId + 1, label: '新节点', x, y, parentId: parent.id }
+          ];
+        })(nodes));
+      }
+
+      // Rename node on Enter
+      if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+        e.preventDefault();
+        const newLabel = window.prompt('输入新名称:', nodes.find(n => n.id === selectedNodeId)?.label || '');
+        if (newLabel) {
+          pushUndo(nodes.map(n => n.id === selectedNodeId ? { ...n, label: newLabel } : n));
+        }
+      }
+
+      // Delete node and its children on Delete/Backspace
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        pushUndo((nodes => {
+          const collectIds = (id, acc) => {
+            acc.push(id);
+            nodes.filter(n => n.parentId === id).forEach(n => collectIds(n.id, acc));
+            return acc;
+          };
+          const idsToDelete = collectIds(selectedNodeId, []);
+          return nodes.filter(n => !idsToDelete.includes(n.id));
+        })(nodes));
+        setSelectedNodeId(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedNodeId, nodes, pushUndo]);
+
+  // Help panel visibility state
+  const [isHelpVisible, setIsHelpVisible] = useState(true);
+
+  // Load help panel state from localStorage on initial render
+  useEffect(() => {
+    const savedState = window.localStorage.getItem('xmindHelpTriggerState');
+    setIsHelpVisible(savedState !== '0');
+  }, []);
+
+  const triggerClass = `trigger ${isHelpVisible ? 'active' : ''}`;
+
+  return (
+    <React.Fragment>
+      <MenuBar
+        onExport={() => {
+          const blob = new Blob([JSON.stringify(nodes, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          const now = new Date();
+          const pad = n => n.toString().padStart(2, '0');
+          const filename = `graph-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }, 0);
+        }}
+        onImport={(data) => {
+          console.log('Importing data:', data);
+          setNodes([...data]);
+          setUndoStack([]);
+          setRedoStack([]);
+          setSelectedNodeId(null);
+          setTimeout(() => {
+            if (canvasRef.current?.center) canvasRef.current.center();
+          }, 0);
+        }}
+        onNew={() => {
+          const initialNodes = [{ id: 1, label: '中心主题', x: 400, y: 300, parentId: null }];
+          setNodes([...initialNodes]);
+          setUndoStack([]);
+          setRedoStack([]);
+          setSelectedNodeId(null);
+          localStorage.removeItem('mindmap_nodes');
+          setTimeout(() => {
+            if (canvasRef.current?.center) canvasRef.current.center();
+          }, 0);
+        }}
+        onExportPNG={() => alert('Export as PNG not implemented yet.')}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        onDelete={() => {
+          if (!selectedNodeId) return;
           pushUndo((nodes => {
             const collectIds = (id, acc) => {
               acc.push(id);
@@ -686,104 +655,29 @@ function App() {
             return nodes.filter(n => !idsToDelete.includes(n.id));
           })(nodes));
           setSelectedNodeId(null);
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canvasRef, fileInputRef, handleUndo, handleRedo, handleExport, selectedNodeId, nodes, pushUndo]);
-
-  // Load help panel state from localStorage on initial render
-  useEffect(() => {
-    const savedState = window.localStorage.getItem('xmindHelpTriggerState');
-    setIsHelpVisible(savedState !== '0');
-  }, []);
-
-  // Toggles the help panel and saves the state
-  const toggleHelp = () => {
-    const newVisibility = !isHelpVisible;
-    setIsHelpVisible(newVisibility);
-    window.localStorage.setItem('xmindHelpTriggerState', newVisibility ? '1' : '0');
-  };
-
-  const triggerClass = `trigger ${isHelpVisible ? 'active' : ''}`;
-
-  // Node click handler
-  const handleNodeClick = (nodeId) => {
-    console.log('Node clicked:', { nodeId, currentSelected: selectedNodeId });
-    setSelectedNodeId(nodeId);
-  };
-
-  return (
-    <React.Fragment>
-      <MenuBar
-        onExport={handleExport}
-        onImport={handleImport}
+        }}
+        onCenter={() => canvasRef.current?.center()}
+        onZoomIn={() => canvasRef.current?.zoom(1.1)}
+        onZoomOut={() => canvasRef.current?.zoom(0.9)}
+        onResetZoom={() => canvasRef.current?.resetZoom()}
+        onToggleDark={() => alert('Dark mode not implemented yet.')}
         nodes={nodes}
         setNodes={setNodes}
         setUndoStack={setUndoStack}
         setRedoStack={setRedoStack}
         setSelectedNodeId={setSelectedNodeId}
         canvasRef={canvasRef}
-        onNew={() => {
-          console.log('New mind map');
-          const initialNodes = [{ id: 1, label: '中心主题', x: 400, y: 300, parentId: null }];
-          setNodes([...initialNodes]);
-          setUndoStack(() => []);
-          setRedoStack(() => []);
-          setSelectedNodeId(null);
-          // Clear the saved state when creating a new mind map
-          localStorage.removeItem('mindmap_nodes');
-          // Give a small delay for the canvas to initialize
-          setTimeout(() => {
-            console.log('Centering canvas', { canvasRef: !!canvasRef.current, center: !!canvasRef.current?.center });
-            if (canvasRef.current?.center) canvasRef.current.center();
-          }, 0);
-        }}
-        onExportPNG={() => alert('Export as PNG not implemented yet.')}
-        onUndo={handleUndo}
-        onRedo={handleRedo}
-        onDelete={() => {
-          console.log('Delete:', { selectedNodeId });
-          if (!selectedNodeId) {
-            console.log('No node selected for deletion');
-            return;
-          }
-          const collectIds = (id, acc) => {
-            acc.push(id);
-            nodes.filter(n => n.parentId === id).forEach(n => collectIds(n.id, acc));
-            return acc;
-          };
-          const idsToDelete = collectIds(selectedNodeId, []);
-          console.log('Deleting nodes:', { idsToDelete, totalNodes: nodes.length });
-          pushUndo(nodes.filter(n => !idsToDelete.includes(n.id)));
-          setSelectedNodeId(null);
-        }}
-        onCenter={() => {
-          console.log('Center canvas:', { canvasRef: !!canvasRef.current, center: !!canvasRef.current?.center });
-          if (canvasRef.current?.center) canvasRef.current.center();
-        }}
-        onZoomIn={() => {
-          console.log('Zoom in:', { canvasRef: !!canvasRef.current, zoom: !!canvasRef.current?.zoom });
-          if (canvasRef.current?.zoom) canvasRef.current.zoom(1.1);
-        }}
-        onZoomOut={() => {
-          console.log('Zoom out:', { canvasRef: !!canvasRef.current, zoom: !!canvasRef.current?.zoom });
-          if (canvasRef.current?.zoom) canvasRef.current.zoom(0.9);
-        }}
-        onResetZoom={() => {
-          console.log('Reset zoom:', { canvasRef: !!canvasRef.current, resetZoom: !!canvasRef.current?.resetZoom });
-          if (canvasRef.current?.resetZoom) canvasRef.current.resetZoom();
-        }}
-        onToggleDark={() => alert('Dark mode not implemented yet.')}
       />
       <div style={{ height: 48 }} />
       <MainHeader />
 
-      {/* Help trigger button, now floating bottom right */}
-  <div style={{ position: 'fixed', right: 32, bottom: 32, zIndex: 10010 }}>
-        <div className={triggerClass} onClick={toggleHelp}>
+      {/* Help trigger button */}
+      <div style={{ position: 'fixed', right: 32, bottom: 32, zIndex: 10010 }}>
+        <div className={triggerClass} onClick={() => {
+          const newVisibility = !isHelpVisible;
+          setIsHelpVisible(newVisibility);
+          window.localStorage.setItem('xmindHelpTriggerState', newVisibility ? '1' : '0');
+        }}>
           <i className="trigger-icon" />
           <div className="trigger-tooltip">
             {isHelpVisible ? '收起' : '帮助'}
