@@ -99,21 +99,27 @@ body.lock-scroll {
   content: '×';
 }
 
+
+
 .trigger-tooltip {
   visibility: hidden;
-  width: 80px;
+  min-width: 80px;
+  max-width: 200px;
   background-color: #343a40;
   color: #fff;
   text-align: center;
   border-radius: 6px;
-  padding: 5px 0;
+  padding: 5px 10px;
   position: absolute;
-  z-index: 1;
-  bottom: 125%;
-  left: 50%;
-  margin-left: -40px;
+  z-index: 10020;
+  right: 120%;
+  bottom: 0;
+  left: auto;
+  margin-left: 0;
   opacity: 0;
   transition: opacity 0.3s;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 .trigger:hover .trigger-tooltip {

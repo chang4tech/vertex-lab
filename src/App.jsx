@@ -287,7 +287,7 @@ function App() {
       <MainHeader />
 
       {/* Help trigger button, now floating bottom right */}
-      <div style={{ position: 'fixed', right: 32, bottom: 32, zIndex: 110 }}>
+  <div style={{ position: 'fixed', right: 32, bottom: 32, zIndex: 10010 }}>
         <div className={triggerClass} onClick={toggleHelp}>
           <i className="trigger-icon" />
           <div className="trigger-tooltip">
