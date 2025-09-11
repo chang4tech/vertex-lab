@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import MindMapCanvas from './MindMapCanvas.jsx';
 // --- Menu Bar Component ---
 function MenuBar({
@@ -461,7 +461,7 @@ function App() {
   const [selectedNodeId, setSelectedNodeId] = useState(null);
 
   // Helper to push to undo stack
-  const pushUndo = (newNodes) => {
+  const pushUndo = useCallback((newNodes) => {
     console.log('Push to undo stack:', {
       currentNodes: nodes.length,
       newNodes: newNodes.length,
@@ -472,7 +472,7 @@ function App() {
     setUndoStack(stack => [...stack, [...nodes]]);
     setRedoStack(() => []);
     setNodes(() => Array.isArray(newNodes) ? [...newNodes] : []);
-  };
+  }, [nodes, undoStack.length, redoStack.length]);
 
   // Undo/Redo handlers
   const handleUndo = () => {
@@ -559,6 +559,10 @@ function App() {
     const savedState = window.localStorage.getItem('xmindHelpTriggerState');
     setIsHelpVisible(savedState !== '0');
     const handleKeyDown = (event) => {
+      // Prevent spacebar from scrolling
+      if (event.code === 'Space') {
+        event.preventDefault();
+      }
       if (event.code.toLowerCase() === 'escape') {
         setIsHelpVisible(false);
         window.localStorage.setItem('xmindHelpTriggerState', '0');
@@ -636,7 +640,7 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedNodeId, nodes]);
+  }, [selectedNodeId, nodes, pushUndo]);
 
   return (
     <React.Fragment>
