@@ -1,0 +1,167 @@
+/* General Body Styles */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background-color: #f0f2f5;
+  color: #333;
+}
+
+body.lock-scroll {
+  overflow: hidden;
+}
+
+/* --- Help Panel --- */
+.help {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 100;
+}
+
+.rules {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 15px;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  opacity: 0;
+  transform: translateY(-20px);
+  visibility: hidden;
+}
+
+.rules.show {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+}
+
+.rule {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.rule:last-child {
+  margin-bottom: 0;
+}
+
+.key {
+  background-color: #e9ecef;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin: 0 4px;
+  font-weight: 600;
+  color: #495057;
+}
+
+.desc {
+  margin-left: 10px;
+}
+
+
+/* --- Trigger Button --- */
+.trigger {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background-color: #007bff;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease;
+  z-index: 101;
+}
+
+.trigger:hover {
+  background-color: #0056b3;
+}
+
+.trigger.active {
+  background-color: #dc3545;
+}
+
+.trigger-icon::before {
+  content: '?';
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.trigger.active .trigger-icon::before {
+  content: '×';
+}
+
+.trigger-tooltip {
+  visibility: hidden;
+  width: 80px;
+  background-color: #343a40;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -40px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.trigger:hover .trigger-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+
+/* --- Dialog Component --- */
+.dialog_wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dialog_content {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+  transform: translateY(-50%);
+}
+
+.dialog_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.close-btn {
+  cursor: pointer;
+  font-size: 24px;
+  color: #6c757d;
+  transform: rotate(45deg);
+}
+.close-btn:hover {
+    color: #343a40;
+}
+
+.dialog_body {
+  padding: 20px;
+}
