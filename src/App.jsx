@@ -91,18 +91,42 @@ function MenuBar({
                 setOpenMenu(null);
               }}
             >Import JSON</div>
-            <input ref={fileInputRef} type="file" accept="application/json" style={{ display: 'none' }}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json"
+              style={{ display: 'none' }}
               onChange={e => {
+                console.log('File input change event');
                 const file = e.target.files[0];
-                if (!file) return;
+                if (!file) {
+                  console.log('No file selected');
+                  return;
+                }
+                console.log('Reading file:', file.name);
                 const reader = new FileReader();
                 reader.onload = evt => {
                   try {
-                    const data = JSON.parse(evt.target.result);
+                    const content = evt.target.result;
+                    console.log('File content:', content);
+                    const data = JSON.parse(content);
+                    console.log('Parsed data:', data);
+                    if (!Array.isArray(data)) {
+                      throw new Error('Imported data must be an array');
+                    }
+                    if (!data.every(n => n.id && typeof n.x === 'number' && typeof n.y === 'number' && typeof n.label === 'string')) {
+                      throw new Error('Invalid node format');
+                    }
+                    console.log('Importing valid data:', data.length, 'nodes');
                     onImport(data);
-                  } catch {
-                    alert('Invalid JSON file');
+                  } catch (error) {
+                    console.error('Import error:', error);
+                    alert(`Import failed: ${error.message}`);
                   }
+                };
+                reader.onerror = error => {
+                  console.error('File read error:', error);
+                  alert('Failed to read file');
                 };
                 reader.readAsText(file);
                 e.target.value = '';
@@ -428,11 +452,26 @@ function App() {
 
   // Import mind map from JSON
   const handleImport = (data) => {
-    if (Array.isArray(data) && data.every(n => n.id && typeof n.x === 'number' && typeof n.y === 'number')) {
-      pushUndo(data);
+    console.log('handleImport called with:', data);
+    if (Array.isArray(data) &&
+        data.every(n => n.id && typeof n.x === 'number' && typeof n.y === 'number' && typeof n.label === 'string')) {
+      console.log('Importing valid mind map data:', data.length, 'nodes');
+      // Clone the data to ensure we don't modify the original
+      const importedNodes = data.map(node => ({ ...node }));
+      setNodes(importedNodes);
+      setUndoStack([]);
+      setRedoStack([]);
       setSelectedNodeId(null);
+      // Center the view on the imported mind map
+      setTimeout(() => {
+        if (canvasRef.current?.center) {
+          console.log('Centering view on imported mind map');
+          canvasRef.current.center();
+        }
+      }, 0);
     } else {
-      alert('Invalid mind map data');
+      console.error('Invalid mind map data:', data);
+      alert('Invalid mind map data: Must contain nodes with id, label, x, y properties');
     }
   };
 
