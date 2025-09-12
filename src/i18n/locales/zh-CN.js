@@ -48,6 +48,11 @@ export default {
   'settings.browser': '浏览器：',
   'settings.darkMode': '暗黑模式',
 
+  // Node labels
+  'node.centralTopic': '中心主题',
+  'node.branch': '分支',
+  'node.newNode': '新节点',
+
   // Node operations
   'node.addChild': '添加子节点',
   'node.addSibling': '添加同级节点',

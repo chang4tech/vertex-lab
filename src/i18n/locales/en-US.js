@@ -48,6 +48,11 @@ export default {
   'settings.browser': 'Browser:',
   'settings.darkMode': 'Dark Mode',
 
+  // Node labels
+  'node.centralTopic': 'Central Topic',
+  'node.branch': 'Branch',
+  'node.newNode': 'New Node',
+
   // Node operations
   'node.addChild': 'Add Child',
   'node.addSibling': 'Add Sibling',

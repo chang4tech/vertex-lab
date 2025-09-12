@@ -513,6 +513,8 @@ const MainHeader = () => {
  * The main application component.
  */
 function App() {
+  const intl = useIntl();
+
   // Undo/redo stacks
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
@@ -547,14 +549,30 @@ function App() {
     }
     // Default initial state if no saved state exists
     return [
-      { id: 1, label: '中心主题', x: 400, y: 300, parentId: null },
-      { id: 2, label: '分支1', x: 250, y: 200, parentId: 1 },
-      { id: 3, label: '分支2', x: 550, y: 200, parentId: 1 },
-      { id: 4, label: '分支3', x: 250, y: 400, parentId: 1 },
-      { id: 5, label: '分支4', x: 550, y: 400, parentId: 1 },
+      { id: 1, label: 'Central Topic', x: 400, y: 300, parentId: null },
+      { id: 2, label: 'Branch 1', x: 250, y: 200, parentId: 1 },
+      { id: 3, label: 'Branch 2', x: 550, y: 200, parentId: 1 },
+      { id: 4, label: 'Branch 3', x: 250, y: 400, parentId: 1 },
+      { id: 5, label: 'Branch 4', x: 550, y: 400, parentId: 1 },
     ];
   });
   const [selectedNodeId, setSelectedNodeId] = useState(null);
+
+  useEffect(() => {
+    setNodes(nodes => {
+      if (nodes && nodes.length > 0 && nodes[0].label === 'Central Topic') {
+        return [
+          { ...nodes[0], label: intl.formatMessage({ id: 'node.centralTopic' }) },
+          { ...nodes[1], label: `${intl.formatMessage({ id: 'node.branch' })} 1` },
+          { ...nodes[2], label: `${intl.formatMessage({ id: 'node.branch' })} 2` },
+          { ...nodes[3], label: `${intl.formatMessage({ id: 'node.branch' })} 3` },
+          { ...nodes[4], label: `${intl.formatMessage({ id: 'node.branch' })} 4` },
+          ...nodes.slice(5)
+        ];
+      }
+      return nodes;
+    });
+  }, [intl]);
 
   // Help panel visibility state
   const [isHelpVisible, setIsHelpVisible] = useState(true);
@@ -671,7 +689,7 @@ function App() {
           case 'n': {
             e.preventDefault();
             console.log('New mind map');
-            const initialNodes = [{ id: 1, label: '中心主题', x: 400, y: 300, parentId: null }];
+            const initialNodes = [{ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, parentId: null }];
             setNodes([...initialNodes]);
             setUndoStack([]);
             setRedoStack([]);
@@ -728,12 +746,12 @@ function App() {
             const y = parent.y + Math.sin(angle) * dist;
             return [
               ...nodes,
-              { id: maxId + 1, label: '新节点', x, y, parentId: parent.id }
+              { id: maxId + 1, label: intl.formatMessage({ id: 'node.newNode' }), x, y, parentId: parent.id }
             ];
           })(nodes));
         } else if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
           e.preventDefault();
-          const newLabel = window.prompt('输入新名称:', nodes.find(n => n.id === selectedNodeId)?.label || '');
+          const newLabel = window.prompt(intl.formatMessage({ id: 'node.enterName' }), nodes.find(n => n.id === selectedNodeId)?.label || '');
           if (newLabel) {
             pushUndo(nodes.map(n => n.id === selectedNodeId ? { ...n, label: newLabel } : n));
           }
@@ -755,7 +773,7 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canvasRef, fileInputRef, handleUndo, handleRedo, handleExport, selectedNodeId, nodes, pushUndo]);
+  }, [canvasRef, fileInputRef, handleUndo, handleRedo, handleExport, selectedNodeId, nodes, pushUndo, intl]);
 
   // Load help panel state from localStorage on initial render
   useEffect(() => {
@@ -791,7 +809,7 @@ function App() {
         canvasRef={canvasRef}
         onNew={() => {
           console.log('New mind map');
-          const initialNodes = [{ id: 1, label: '中心主题', x: 400, y: 300, parentId: null }];
+          const initialNodes = [{ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, parentId: null }];
           setNodes([...initialNodes]);
           setUndoStack(() => []);
           setRedoStack(() => []);
