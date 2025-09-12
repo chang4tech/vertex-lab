@@ -1,6 +1,6 @@
 import React from 'react';
 
-export function ViewMenu({ isOpen, onClose, onCenter, onZoomIn, onZoomOut, onResetZoom }) {
+export function ViewMenu({ isOpen, onClose, onCenter, onZoomIn, onZoomOut, onResetZoom, showMinimap, onToggleMinimap }) {
   const handleClick = React.useCallback((handler) => (e) => {
     if (e) {
       e.preventDefault();
@@ -25,6 +25,11 @@ export function ViewMenu({ isOpen, onClose, onCenter, onZoomIn, onZoomOut, onRes
       </div>
       <div className="menu-item" onClick={handleClick(onResetZoom)}>
         <span>Reset Zoom</span>
+      </div>
+      <div className="menu-separator" />
+      <div className="menu-item" onClick={handleClick(onToggleMinimap)}>
+        <span>Show Minimap</span>
+        {showMinimap && <span className="menu-check">✓</span>}
       </div>
     </div>
   );

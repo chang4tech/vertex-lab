@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import MindMapCanvas from './MindMapCanvas.jsx';
+import { Minimap } from './components/panels/Minimap';
 // --- Menu Bar Component ---
 function MenuBar({
   onExport, onImport, onNew, onUndo, onRedo, onDelete, onCenter, onZoomIn, onZoomOut, onResetZoom, onToggleDark,
-  nodes, setNodes, setUndoStack, setRedoStack, setSelectedNodeId, canvasRef
+  nodes, setNodes, setUndoStack, setRedoStack, setSelectedNodeId, canvasRef,
+  showMinimap, setShowMinimap
 }) {
   const fileInputRef = useRef();
   const [openMenu, setOpenMenu] = useState(null); // 'file' | 'edit' | 'view' | 'settings' | null
@@ -244,6 +246,19 @@ function MenuBar({
                 setOpenMenu(null);
               }}
             >Reset Zoom</div>
+            <div className="menu-separator" style={{ margin: '4px 0', borderTop: '1px solid #eee' }} />
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowMinimap(!showMinimap);
+                setOpenMenu(null);
+              }}
+            >
+              <span>Show Minimap</span>
+              {showMinimap && <span style={{ marginLeft: 8 }}>✓</span>}
+            </div>
           </>)}
         </div>
         <div style={{ cursor: 'pointer', position: 'relative' }}>
@@ -475,6 +490,18 @@ function App() {
 
   // Create file input ref
   const fileInputRef = useRef();
+
+  // Minimap and viewport state
+  const [showMinimap, setShowMinimap] = useState(() => {
+    const saved = localStorage.getItem('mindmap_show_minimap');
+    return saved !== null ? saved === 'true' : false;
+  });
+  const [viewBox, setViewBox] = useState({ x: 0, y: 0, width: 800, height: 600 });
+
+  // Save minimap visibility preference
+  useEffect(() => {
+    localStorage.setItem('mindmap_show_minimap', showMinimap);
+  }, [showMinimap]);
 
   // Mind map state with localStorage persistence
   const [nodes, setNodes] = useState(() => {
@@ -781,6 +808,8 @@ function App() {
           if (canvasRef.current?.resetZoom) canvasRef.current.resetZoom();
         }}
         onToggleDark={() => alert('Dark mode not implemented yet.')}
+        showMinimap={showMinimap}
+        setShowMinimap={setShowMinimap}
       />
       <div style={{ height: 48 }} />
       <MainHeader />
@@ -806,6 +835,14 @@ function App() {
         onNodePositionChange={(id, x, y) => {
           pushUndo(nodes.map(n => n.id === id ? { ...n, x, y } : n));
         }}
+        onViewBoxChange={setViewBox}
+      />
+
+      {/* Minimap */}
+      <Minimap
+        nodes={nodes}
+        viewBox={viewBox}
+        visible={showMinimap}
       />
     </React.Fragment>
   );

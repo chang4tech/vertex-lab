@@ -12,7 +12,8 @@ const MindMapCanvas = forwardRef(({
   nodes, 
   onNodeClick, 
   selectedNodeId, 
-  onNodePositionChange 
+  onNodePositionChange,
+  onViewBoxChange
 }, ref) => {
   const {
     canvasRef,
@@ -26,6 +27,7 @@ const MindMapCanvas = forwardRef(({
     onNodeClick,
     selectedNodeId,
     onNodePositionChange,
+    onViewBoxChange,
     NODE_RADIUS
   });
 

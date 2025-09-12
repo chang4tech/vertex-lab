@@ -5,12 +5,27 @@ export default function useCanvasOperations({
   onNodeClick,
   selectedNodeId,
   onNodePositionChange,
+  onViewBoxChange,
   NODE_RADIUS
 }) {
   const canvasRef = useRef(null);
   const view = useRef({ offsetX: 0, offsetY: 0, scale: 1 });
   const dragState = useRef({ dragging: false, nodeId: null, offsetX: 0, offsetY: 0 });
   const panState = useRef({ panning: false, startX: 0, startY: 0, startOffsetX: 0, startOffsetY: 0 });
+
+  // Update viewBox whenever the view changes
+  const updateViewBox = useCallback(() => {
+    if (!canvasRef.current || !onViewBoxChange) return;
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const viewBox = {
+      x: -view.current.offsetX / view.current.scale,
+      y: -view.current.offsetY / view.current.scale,
+      width: rect.width / view.current.scale,
+      height: rect.height / view.current.scale
+    };
+    onViewBoxChange(viewBox);
+  }, [onViewBoxChange]);
 
   const drawNode = useCallback((ctx, node, isSelected) => {
     ctx.beginPath();
@@ -93,19 +108,22 @@ export default function useCanvasOperations({
     view.current.offsetX = canvas.width / 2 - root.x;
     view.current.offsetY = canvas.height / 2 - root.y;
     draw();
-  }, [nodes, draw]);
+    updateViewBox();
+  }, [nodes, draw, updateViewBox]);
 
   // Zoom
   const zoom = useCallback((factor) => {
     view.current.scale *= factor;
     draw();
-  }, [draw]);
+    updateViewBox();
+  }, [draw, updateViewBox]);
 
   // Reset zoom
   const resetZoom = useCallback(() => {
     view.current.scale = 1;
     draw();
-  }, [draw]);
+    updateViewBox();
+  }, [draw, updateViewBox]);
 
   // Click handler
   const handleClick = useCallback((e) => {
@@ -173,6 +191,7 @@ export default function useCanvasOperations({
         view.current.offsetX = panState.current.startOffsetX + dx;
         view.current.offsetY = panState.current.startOffsetY + dy;
         draw();
+        updateViewBox();
         return;
       }
 
@@ -198,7 +217,8 @@ export default function useCanvasOperations({
       view.current.scale *= scaleAmount;
       view.current.offsetX -= (mx * (scaleAmount - 1)) * view.current.scale;
       view.current.offsetY -= (my * (scaleAmount - 1)) * view.current.scale;
-      
+      draw();
+      updateViewBox();
       draw();
     };
 
@@ -224,7 +244,7 @@ export default function useCanvasOperations({
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [nodes, onNodePositionChange, draw, NODE_RADIUS]);
+  }, [nodes, onNodePositionChange, draw, NODE_RADIUS, updateViewBox]);
 
   // Initial draw
   useEffect(() => {
