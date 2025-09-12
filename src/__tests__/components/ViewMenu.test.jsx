@@ -61,15 +61,22 @@ describe('ViewMenu', () => {
   it('prevents default event behavior', () => {
     render(<ViewMenu {...mockProps} />);
     
-    const preventDefault = vi.fn();
-    const stopPropagation = vi.fn();
-    
-    fireEvent.click(screen.getByText('Center'), {
-      preventDefault,
-      stopPropagation
+    const centerButton = screen.getByText('Center');
+    const event = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true
     });
     
-    expect(preventDefault).toHaveBeenCalled();
-    expect(stopPropagation).toHaveBeenCalled();
+    // Add spy functions to the event
+    event.preventDefault = vi.fn();
+    event.stopPropagation = vi.fn();
+    
+    // Dispatch the event directly
+    centerButton.dispatchEvent(event);
+    
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(event.stopPropagation).toHaveBeenCalled();
+    expect(mockProps.onCenter).toHaveBeenCalled();
+    expect(mockProps.onClose).toHaveBeenCalled();
   });
 });

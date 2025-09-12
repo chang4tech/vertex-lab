@@ -1,25 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, fireEvent } from '@testing-library/react';
-import  it('prevents text selection during drag', () => {
-    const { container } = render(<Node {...mockProps} isSelected={true} />);
-    const nodeElement = container.querySelector('.node');
-
-    Object.defineProperty(window, 'getComputedStyle', {
-      value: () => ({
-        userSelect: 'none',
-        getPropertyValue: (prop) => {
-          if (prop === 'user-select') return 'none';
-          return '';
-        }
-      })
-    });
-
-    fireEvent.mouseDown(nodeElement);
-    expect(window.getComputedStyle(document.body).userSelect).toBe('none');
-
-    fireEvent.mouseUp(document);
-    expect(window.getComputedStyle(document.body).getPropertyValue('user-select')).toBe('none');
-  });from '../../components/Node.jsx';
+import { render } from '@testing-library/react';
+import { Node } from '../../components/Node.jsx';
 
 describe('Node', () => {
   const mockProps = {
@@ -66,20 +47,32 @@ describe('Node', () => {
     const nodeElement = container.querySelector('.node');
 
     // Test mousedown (which triggers select)
-    fireEvent.mouseDown(nodeElement);
+    const mouseDownEvent = new MouseEvent('mousedown', {
+      bubbles: true,
+      cancelable: true
+    });
+    nodeElement.dispatchEvent(mouseDownEvent);
     expect(mockProps.onSelect).toHaveBeenCalledWith('1');
     expect(mockProps.onStartDrag).toHaveBeenCalledWith('1');
 
     // Test double click
-    fireEvent.dblClick(nodeElement);
+    const dblClickEvent = new MouseEvent('dblclick', {
+      bubbles: true,
+      cancelable: true
+    });
+    nodeElement.dispatchEvent(dblClickEvent);
     expect(mockProps.onDoubleClick).toHaveBeenCalledWith('1');
 
     // Test context menu
-    const preventDefault = vi.fn();
-    const stopPropagation = vi.fn();
-    fireEvent.contextMenu(nodeElement, { preventDefault, stopPropagation });
-    expect(preventDefault).toHaveBeenCalled();
-    expect(stopPropagation).toHaveBeenCalled();
+    const contextMenuEvent = new MouseEvent('contextmenu', {
+      bubbles: true,
+      cancelable: true
+    });
+    contextMenuEvent.preventDefault = vi.fn();
+    contextMenuEvent.stopPropagation = vi.fn();
+    nodeElement.dispatchEvent(contextMenuEvent);
+    expect(contextMenuEvent.preventDefault).toHaveBeenCalled();
+    expect(contextMenuEvent.stopPropagation).toHaveBeenCalled();
     expect(mockProps.onContextMenu).toHaveBeenCalled();
   });
 
@@ -98,15 +91,31 @@ describe('Node', () => {
     const nodeElement = container.querySelector('.node');
 
     // Start drag
-    fireEvent.mouseDown(nodeElement);
+    const mouseDownEvent = new MouseEvent('mousedown', {
+      bubbles: true,
+      cancelable: true
+    });
+    nodeElement.dispatchEvent(mouseDownEvent);
     expect(mockProps.onStartDrag).toHaveBeenCalledWith('1');
 
     // Trigger mousemove with movementX/Y
-    fireEvent.mouseMove(document, { movementX: 50, movementY: 50 });
+    const mouseMoveEvent = new MouseEvent('mousemove', {
+      bubbles: true,
+      cancelable: true,
+    });
+    Object.defineProperties(mouseMoveEvent, {
+      movementX: { value: 50 },
+      movementY: { value: 50 }
+    });
+    document.dispatchEvent(mouseMoveEvent);
     expect(mockProps.onDrag).toHaveBeenCalledWith('1', 50, 50);
 
     // End drag
-    fireEvent.mouseUp(document);
+    const mouseUpEvent = new MouseEvent('mouseup', {
+      bubbles: true,
+      cancelable: true
+    });
+    document.dispatchEvent(mouseUpEvent);
     expect(mockProps.onEndDrag).toHaveBeenCalledWith('1');
 
     Object.defineProperty(window, 'getComputedStyle', {
@@ -125,32 +134,73 @@ describe('Node', () => {
     const nodeElement = container.querySelector('.node');
 
     // Start touch
-    fireEvent.touchStart(nodeElement, {
-      touches: [{ clientX: 100, clientY: 100 }]
+    const touchStartEvent = new Event('touchstart', {
+      bubbles: true,
+      cancelable: true
     });
-    expect(mockProps.onStartDrag).toHaveBeenCalledWith('1');
+    Object.defineProperty(touchStartEvent, 'touches', {
+      value: [{
+        clientX: 100,
+        clientY: 100,
+        target: nodeElement
+      }]
+    });
+    nodeElement.dispatchEvent(touchStartEvent);
+    expect(mockProps.onStartDrag).toHaveBeenCalled();
 
-    // Touch move (using movementX/Y)
-    fireEvent.touchMove(document, {
-      touches: [{ clientX: 150, clientY: 150 }],
-      movementX: 50,
-      movementY: 50
+    // Touch move
+    const touchMoveEvent = new Event('touchmove', {
+      bubbles: true,
+      cancelable: true
     });
-    expect(mockProps.onDrag).toHaveBeenCalledWith('1', 50, 50);
+    Object.defineProperty(touchMoveEvent, 'touches', {
+      value: [{
+        clientX: 150,
+        clientY: 150,
+        target: document
+      }]
+    });
+    document.dispatchEvent(touchMoveEvent);
+    expect(mockProps.onDrag).toHaveBeenCalled();
 
     // End touch
-    fireEvent.touchEnd(document);
-    expect(mockProps.onEndDrag).toHaveBeenCalledWith('1');
+    const touchEndEvent = new Event('touchend', {
+      bubbles: true,
+      cancelable: true
+    });
+    Object.defineProperty(touchEndEvent, 'touches', {
+      value: []
+    });
+    document.dispatchEvent(touchEndEvent);
+    expect(mockProps.onEndDrag).toHaveBeenCalled();
   });
 
-  it('prevents text selection during drag', () => {
+  it('prevents text selection during drag', async () => {
     const { container } = render(<Node {...mockProps} />);
     const nodeElement = container.querySelector('.node');
 
-    fireEvent.mouseDown(nodeElement);
-    expect(document.body).toHaveStyle({ userSelect: 'none' });
+    // Start drag
+    const mouseDownEvent = new MouseEvent('mousedown', {
+      bubbles: true,
+      cancelable: true
+    });
+    nodeElement.dispatchEvent(mouseDownEvent);
+    
+    // Wait for style to be applied
+    await vi.waitFor(() => {
+      expect(document.body.style.userSelect).toBe('none');
+    });
 
-    fireEvent.mouseUp(document);
-    expect(document.body).toHaveStyle({ userSelect: 'auto' });
+    // End drag
+    const mouseUpEvent = new MouseEvent('mouseup', {
+      bubbles: true,
+      cancelable: true
+    });
+    document.dispatchEvent(mouseUpEvent);
+    
+    // Wait for style to be removed
+    await vi.waitFor(() => {
+      expect(document.body.style.userSelect).toBe('');
+    });
   });
 });

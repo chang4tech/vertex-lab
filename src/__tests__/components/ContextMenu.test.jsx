@@ -11,6 +11,10 @@ describe('ContextMenu', () => {
     children: <div data-testid="menu-content">Menu Content</div>
   };
 
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('renders at the specified position when open', () => {
     const { getByTestId } = render(<ContextMenu {...mockProps} />);
     
@@ -29,36 +33,64 @@ describe('ContextMenu', () => {
     expect(queryByTestId('menu-content')).not.toBeInTheDocument();
   });
 
-  it('calls onClose when clicking outside', () => {
-    const { container } = render(<ContextMenu {...mockProps} />);
+  it('calls onClose when clicking outside', async () => {
+    render(<ContextMenu {...mockProps} />);
     
     // Click outside the menu
-    fireEvent.mouseDown(container);
-    expect(mockProps.onClose).toHaveBeenCalledTimes(1);
+    const event = new MouseEvent('mousedown', {
+      bubbles: true,
+      cancelable: true
+    });
+    document.dispatchEvent(event);
+
+    // Wait for the event to be processed
+    await vi.waitFor(() => {
+      expect(mockProps.onClose).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('does not call onClose when clicking inside', () => {
     const { getByTestId } = render(<ContextMenu {...mockProps} />);
     
     // Click inside the menu
-    fireEvent.mouseDown(getByTestId('menu-content'));
+    const event = new MouseEvent('mousedown', {
+      bubbles: true,
+      cancelable: true
+    });
+    getByTestId('menu-content').dispatchEvent(event);
+
     expect(mockProps.onClose).not.toHaveBeenCalled();
   });
 
-  it('handles touch events', () => {
-    const { container } = render(<ContextMenu {...mockProps} />);
+  it('handles touch events', async () => {
+    render(<ContextMenu {...mockProps} />);
     
     // Touch outside the menu
-    fireEvent.touchStart(container);
-    expect(mockProps.onClose).toHaveBeenCalledTimes(1);
+    const event = new TouchEvent('touchstart', {
+      bubbles: true,
+      cancelable: true
+    });
+    document.dispatchEvent(event);
+    
+    // Wait for the event to be processed
+    await vi.waitFor(() => {
+      expect(mockProps.onClose).toHaveBeenCalledTimes(1);
+    });
   });
 
-  it('adjusts position when near window boundaries', () => {
+  it('adjusts position when near window boundaries', async () => {
     // Mock window dimensions
     const originalInnerHeight = window.innerHeight;
     const originalInnerWidth = window.innerWidth;
     Object.defineProperty(window, 'innerHeight', { value: 200 });
     Object.defineProperty(window, 'innerWidth', { value: 200 });
+
+    // Mock getBoundingClientRect
+    const mockGetBoundingClientRect = vi.fn(() => ({
+      width: 100,
+      height: 100
+    }));
+    Element.prototype.getBoundingClientRect = mockGetBoundingClientRect;
 
     // Test near bottom right corner
     const { rerender, getByTestId } = render(
@@ -66,18 +98,17 @@ describe('ContextMenu', () => {
     );
 
     let menu = getByTestId('context-menu');
-    expect(menu).toHaveStyle({
-      right: '10px',
-      bottom: '10px'
+    // Wait for useEffect to run
+    await vi.waitFor(() => {
+      expect(menu.style.right).toBe('10px');
+      expect(menu.style.bottom).toBe('10px');
     });
 
     // Test near top left
     rerender(<ContextMenu {...mockProps} x={10} y={10} />);
     menu = getByTestId('context-menu');
-    expect(menu).toHaveStyle({
-      left: '10px',
-      top: '10px'
-    });
+    expect(menu.style.left).toBe('10px');
+    expect(menu.style.top).toBe('10px');
 
     // Restore window dimensions
     Object.defineProperty(window, 'innerHeight', { value: originalInnerHeight });

@@ -3,17 +3,27 @@ import React from 'react';
 export function ContextMenu({ x, y, isOpen, onClose, children }) {
   const menuRef = React.useRef(null);
   const handleOutsideClick = React.useCallback((e) => {
-    if (menuRef.current && !menuRef.current.contains(e.target)) {
-      onClose();
+    // Skip if the menu is not open
+    if (!isOpen) return;
+    
+    // Skip if the click was inside the menu
+    if (menuRef.current && menuRef.current.contains(e.target)) {
+      return;
     }
-  }, [onClose]);
+
+    // Call onClose for clicks outside
+    onClose();
+  }, [isOpen, onClose]);
   
   React.useEffect(() => {
+    // Only add listeners when menu is open
     if (!isOpen) return;
 
+    // Add the event listeners
     document.addEventListener('mousedown', handleOutsideClick);
     document.addEventListener('touchstart', handleOutsideClick);
 
+    // Clean up the event listeners
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
       document.removeEventListener('touchstart', handleOutsideClick);
@@ -30,10 +40,15 @@ export function ContextMenu({ x, y, isOpen, onClose, children }) {
     const bottom = y + menuRect.height > viewportHeight;
 
     if (right || bottom) {
-      menuRef.current.style.right = right ? '10px' : 'auto';
-      menuRef.current.style.bottom = bottom ? '10px' : 'auto';
-      menuRef.current.style.left = right ? 'auto' : `${x}px`;
-      menuRef.current.style.top = bottom ? 'auto' : `${y}px`;
+      menuRef.current.style.right = right ? '10px' : '';
+      menuRef.current.style.bottom = bottom ? '10px' : '';
+      menuRef.current.style.left = right ? '' : `${x}px`;
+      menuRef.current.style.top = bottom ? '' : `${y}px`;
+    } else {
+      menuRef.current.style.right = '';
+      menuRef.current.style.bottom = '';
+      menuRef.current.style.left = `${x}px`;
+      menuRef.current.style.top = `${y}px`;
     }
   }, [x, y, isOpen]);
 

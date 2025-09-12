@@ -2,6 +2,20 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import MindMapCanvas from '../../components/canvas/MindMapCanvas';
 
+// Mock canvas API
+const mockContext = {
+  clearRect: vi.fn(),
+  save: vi.fn(),
+  restore: vi.fn(),
+  translate: vi.fn(),
+  scale: vi.fn(),
+  beginPath: vi.fn(),
+  moveTo: vi.fn(),
+  lineTo: vi.fn(),
+  stroke: vi.fn(),
+  fillText: vi.fn()
+};
+
 describe('MindMapCanvas', () => {
   const mockNodes = [
     { id: 1, label: 'Root', x: 400, y: 300, parentId: null },
@@ -18,6 +32,23 @@ describe('MindMapCanvas', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    
+    // Mock canvas context
+    HTMLCanvasElement.prototype.getContext = function() {
+      return mockContext;
+    };
+
+    // Mock canvas dimensions
+    HTMLCanvasElement.prototype.getBoundingClientRect = function() {
+      return {
+        width: 800,
+        height: 600,
+        top: 0,
+        left: 0,
+        right: 800,
+        bottom: 600
+      };
+    };
   });
 
   it('renders canvas element', () => {

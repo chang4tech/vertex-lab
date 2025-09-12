@@ -1,7 +1,6 @@
 import React, { forwardRef } from 'react';
 import useCanvasOperations from '../../hooks/useCanvasOperations';
-import Node from './Node';
-import Edge from './Edge';
+import { Node } from '../Node';
 
 const NODE_RADIUS = 32;
 const NODE_COLOR = '#fff';

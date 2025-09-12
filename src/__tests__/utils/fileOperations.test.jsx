@@ -1,12 +1,26 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { exportToJSON, validateImportData, importFromJSON } from '../../utils/fileOperations';
 
 describe('fileOperations', () => {
   beforeEach(() => {
+    vi.useFakeTimers();
     vi.clearAllMocks();
     // Reset mocks
-    global.URL.createObjectURL = vi.fn(() => 'blob:test');
-    global.URL.revokeObjectURL = vi.fn();
+    window.URL.createObjectURL = vi.fn(() => 'blob:test');
+    window.URL.revokeObjectURL = vi.fn();
+
+    // Mock createElement to return a fake link element
+    const mockLink = {
+      href: '',
+      download: '',
+      click: vi.fn(),
+    };
+    vi.spyOn(document, 'createElement').mockReturnValue(mockLink);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   describe('exportToJSON', () => {
@@ -16,6 +30,7 @@ describe('fileOperations', () => {
     ];
 
     it('creates a JSON blob with correct data', async () => {
+      vi.useFakeTimers();
       const appendChildSpy = vi.spyOn(document.body, 'appendChild');
       const removeChildSpy = vi.spyOn(document.body, 'removeChild');
       
@@ -25,18 +40,20 @@ describe('fileOperations', () => {
       expect(URL.createObjectURL).toHaveBeenCalled();
       const blobCall = URL.createObjectURL.mock.calls[0][0];
       expect(blobCall).toBeInstanceOf(Blob);
-      const reader = new FileReader();
-      await new Promise((resolve) => {
+      
+      const blobData = await new Promise((resolve) => {
+        const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
         reader.readAsText(blobCall);
       });
-      expect(JSON.parse(reader.result)).toEqual(mockNodes);
+      expect(JSON.parse(blobData)).toEqual(mockNodes);
 
       // Check if link was created and clicked
       expect(appendChildSpy).toHaveBeenCalled();
       expect(removeChildSpy).toHaveBeenCalled();
       
-      // Check if URL was revoked
+      // Check if URL was revoked after timeout
+      vi.runAllTimers();
       expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:test');
     });
 
@@ -44,20 +61,11 @@ describe('fileOperations', () => {
       const mockDate = new Date('2025-09-11T12:00:00');
       vi.setSystemTime(mockDate);
 
-      const mockCreateElement = vi.spyOn(document, 'createElement');
-      mockCreateElement.mockReturnValue({
-        click: vi.fn(),
-        download: '',
-      });
-
       exportToJSON(mockNodes);
       
-      expect(mockCreateElement).toHaveBeenCalledWith('a');
-      const link = mockCreateElement.mock.results[0].value;
+      expect(document.createElement).toHaveBeenCalledWith('a');
+      const link = document.createElement.mock.results[0].value;
       expect(link.download).toMatch(/mindmap-20250911-120000\.json/);
-
-      vi.useRealTimers();
-      mockCreateElement.mockRestore();
     });
   });
 
@@ -128,5 +136,6 @@ describe('fileOperations', () => {
       const error = new Error('Read error');
       expect(() => importFromJSON(error))
         .toThrow('Read error');
+    });
   });
 });

@@ -61,15 +61,21 @@ describe('EditMenu', () => {
     render(<EditMenu {...mockProps} />);
     
     const undoButton = screen.getByText('Undo');
-    const preventDefault = vi.fn();
-    const stopPropagation = vi.fn();
-    
-    fireEvent.click(undoButton, {
-      preventDefault,
-      stopPropagation
+    const event = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true
     });
     
-    expect(preventDefault).toHaveBeenCalled();
-    expect(stopPropagation).toHaveBeenCalled();
+    // Add spy functions to the event
+    event.preventDefault = vi.fn();
+    event.stopPropagation = vi.fn();
+    
+    // Dispatch the event directly
+    undoButton.dispatchEvent(event);
+    
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(event.stopPropagation).toHaveBeenCalled();
+    expect(mockProps.onUndo).toHaveBeenCalled();
+    expect(mockProps.onClose).toHaveBeenCalled();
   });
 });

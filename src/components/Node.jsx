@@ -84,7 +84,7 @@ export function Node({
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('touchmove', handleMouseMove);
       document.removeEventListener('touchend', handleMouseUp);
-      document.body.style.userSelect = 'auto';
+      document.body.style.userSelect = '';
     };
   }, [isSelected, handleMouseMove, handleMouseUp]);
 
