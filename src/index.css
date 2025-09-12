@@ -11,6 +11,15 @@ body.lock-scroll {
   overflow: hidden;
 }
 
+/* Search highlighting */
+mark {
+  background-color: #ffeb3b;
+  color: #333;
+  padding: 0 2px;
+  border-radius: 2px;
+  font-weight: bold;
+}
+
 /* --- Minimap --- */
 .minimap {
   position: fixed;

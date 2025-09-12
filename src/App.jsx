@@ -3,12 +3,13 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import MindMapCanvas from './MindMapCanvas.jsx';
 import { Minimap } from './components/panels/Minimap';
 import Settings from './components/Settings';
+import Search from './components/Search';
 import { LocaleSelector } from './i18n/LocaleProvider';
 import { organizeLayout } from './utils/layoutUtils';
 
 // --- Menu Bar Component ---
 function MenuBar({
-  onExport, onImport, onNew, onUndo, onRedo, onDelete, onAutoLayout, onCenter, onZoomIn, onZoomOut, onResetZoom, onToggleDark,
+  onExport, onImport, onNew, onUndo, onRedo, onDelete, onAutoLayout, onSearch, onCenter, onZoomIn, onZoomOut, onResetZoom, onToggleDark,
   nodes, setNodes, setUndoStack, setRedoStack, setSelectedNodeId, canvasRef,
   showMinimap, setShowMinimap
 }) {
@@ -219,6 +220,19 @@ function MenuBar({
             >
               <FormattedMessage id="edit.autoLayout" defaultMessage="Auto Layout" />
               <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘L</span>
+            </div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Search clicked');
+                onSearch();
+                setOpenMenu(null);
+              }}
+            >
+              <FormattedMessage id="edit.search" defaultMessage="Search" />
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘F</span>
             </div>
           </>)}
         </div>
@@ -592,6 +606,10 @@ function App() {
   // Help panel visibility state
   const [isHelpVisible, setIsHelpVisible] = useState(true);
 
+  // Search state
+  const [showSearch, setShowSearch] = useState(false);
+  const [highlightedNodeIds, setHighlightedNodeIds] = useState([]);
+
   // Handler functions wrapped in useCallback
   const handleUndo = useCallback(() => {
     if (undoStack.length === 0) {
@@ -687,6 +705,27 @@ function App() {
     pushUndo(layoutedNodes);
   }, [nodes, pushUndo]);
 
+  // Search handlers
+  const handleShowSearch = useCallback(() => {
+    setShowSearch(true);
+  }, []);
+
+  const handleCloseSearch = useCallback(() => {
+    setShowSearch(false);
+    setHighlightedNodeIds([]);
+  }, []);
+
+  const handleSelectSearchNode = useCallback((nodeId) => {
+    setSelectedNodeId(nodeId);
+    if (canvasRef.current?.focusOnNode) {
+      canvasRef.current.focusOnNode(nodeId);
+    }
+  }, [canvasRef]);
+
+  const handleHighlightNodes = useCallback((nodeIds) => {
+    setHighlightedNodeIds(nodeIds);
+  }, []);
+
   // Save nodes to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('mindmap_nodes', JSON.stringify(nodes));
@@ -760,6 +799,13 @@ function App() {
             handleAutoLayout();
             break;
           }
+
+          case 'f': {
+            e.preventDefault();
+            console.log('Search shortcut');
+            handleShowSearch();
+            break;
+          }
         }
       } else if (selectedNodeId) {
         // Node-specific shortcuts that require a selected node
@@ -802,7 +848,7 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canvasRef, fileInputRef, handleUndo, handleRedo, handleExport, handleAutoLayout, selectedNodeId, nodes, pushUndo, intl]);
+  }, [canvasRef, fileInputRef, handleUndo, handleRedo, handleExport, handleAutoLayout, handleShowSearch, selectedNodeId, nodes, pushUndo, intl]);
 
   // Load help panel state from localStorage on initial render
   useEffect(() => {
@@ -871,6 +917,7 @@ function App() {
           setSelectedNodeId(null);
         }}
         onAutoLayout={handleAutoLayout}
+        onSearch={handleShowSearch}
         onCenter={() => {
           console.log('Center canvas:', { canvasRef: !!canvasRef.current, center: !!canvasRef.current?.center });
           if (canvasRef.current?.center) canvasRef.current.center();
@@ -912,6 +959,7 @@ function App() {
         nodes={nodes}
         onNodeClick={handleNodeClick}
         selectedNodeId={selectedNodeId}
+        highlightedNodeIds={highlightedNodeIds}
         onNodePositionChange={(id, x, y) => {
           pushUndo(nodes.map(n => n.id === id ? { ...n, x, y } : n));
         }}
@@ -928,6 +976,16 @@ function App() {
             canvasRef.current.setViewport(newViewport);
           }
         }}
+      />
+
+      {/* Search */}
+      <Search
+        nodes={nodes}
+        visible={showSearch}
+        selectedNodeId={selectedNodeId}
+        onSelectNode={handleSelectSearchNode}
+        onHighlightNodes={handleHighlightNodes}
+        onClose={handleCloseSearch}
       />
     </React.Fragment>
   );

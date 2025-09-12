@@ -12,14 +12,40 @@ const NODE_BORDER = '#007bff';
 const NODE_TEXT = '#333';
 const EDGE_COLOR = '#aaa';
 
-function drawNode(ctx, node) {
+function drawNode(ctx, node, isSelected = false, isHighlighted = false) {
+  // Draw outer glow for highlighted nodes
+  if (isHighlighted) {
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, NODE_RADIUS + 8, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(255, 235, 59, 0.3)'; // Yellow glow
+    ctx.fill();
+  }
+  
   ctx.beginPath();
   ctx.arc(node.x, node.y, NODE_RADIUS, 0, 2 * Math.PI);
-  ctx.fillStyle = NODE_COLOR;
+  
+  // Node fill color
+  if (isHighlighted) {
+    ctx.fillStyle = '#fff9c4'; // Light yellow for highlighted
+  } else {
+    ctx.fillStyle = NODE_COLOR;
+  }
   ctx.fill();
-  ctx.strokeStyle = NODE_BORDER;
-  ctx.lineWidth = 2;
+  
+  // Node border
+  if (isSelected) {
+    ctx.strokeStyle = '#ff9800';
+    ctx.lineWidth = 4;
+  } else if (isHighlighted) {
+    ctx.strokeStyle = '#ffc107'; // Yellow border for highlighted
+    ctx.lineWidth = 3;
+  } else {
+    ctx.strokeStyle = NODE_BORDER;
+    ctx.lineWidth = 2;
+  }
   ctx.stroke();
+  
+  // Node text
   ctx.fillStyle = NODE_TEXT;
   ctx.font = '16px sans-serif';
   ctx.textAlign = 'center';
@@ -39,7 +65,7 @@ function drawEdge(ctx, from, to) {
 
 import { forwardRef, useImperativeHandle } from 'react';
 
-const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePositionChange }, ref) => {
+const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePositionChange, highlightedNodeIds = [], onViewBoxChange }, ref) => {
   const canvasRef = useRef(null);
   // Pan/zoom state
   const view = useRef({ offsetX: 0, offsetY: 0, scale: 1 });
@@ -76,6 +102,22 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePo
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    },
+    focusOnNode: (nodeId) => {
+      const node = nodes.find(n => n.id === nodeId);
+      if (!node) return;
+      
+      const canvas = canvasRef.current;
+      view.current.offsetX = canvas.width / 2 - node.x * view.current.scale;
+      view.current.offsetY = canvas.height / 2 - node.y * view.current.scale;
+      canvas.dispatchEvent(new Event('redraw'));
+    },
+    setViewport: (viewport) => {
+      view.current.offsetX = viewport.x;
+      view.current.offsetY = viewport.y;
+      view.current.scale = viewport.scale || view.current.scale;
+      const canvas = canvasRef.current;
+      canvas.dispatchEvent(new Event('redraw'));
     }
   }), [nodes]);
   // Drag state
@@ -98,26 +140,23 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePo
         if (parent) drawEdge(ctx, parent, node);
       }
     });
-    // Draw nodes, highlight selected
+    // Draw nodes with selection and highlighting
     nodes.forEach(node => {
-      if (selectedNodeId && node.id === selectedNodeId) {
+      const isSelected = selectedNodeId && node.id === selectedNodeId;
+      const isHighlighted = highlightedNodeIds.includes(node.id);
+      
+      if (isSelected) {
         ctx.save();
         ctx.shadowColor = '#ff9800';
         ctx.shadowBlur = 20;
-        drawNode(ctx, node);
+        drawNode(ctx, node, isSelected, isHighlighted);
         ctx.restore();
-        // Draw border highlight
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, NODE_RADIUS + 4, 0, 2 * Math.PI);
-        ctx.strokeStyle = '#ff9800';
-        ctx.lineWidth = 4;
-        ctx.stroke();
       } else {
-        drawNode(ctx, node);
+        drawNode(ctx, node, isSelected, isHighlighted);
       }
     });
     ctx.restore();
-  }, [nodes, selectedNodeId]);
+  }, [nodes, selectedNodeId, highlightedNodeIds]);
 
   // Mouse events for drag and pan
   useEffect(() => {
@@ -216,19 +255,17 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePo
         }
       });
       nodes.forEach(node => {
-        if (selectedNodeId && node.id === selectedNodeId) {
+        const isSelected = selectedNodeId && node.id === selectedNodeId;
+        const isHighlighted = highlightedNodeIds.includes(node.id);
+        
+        if (isSelected) {
           ctx.save();
           ctx.shadowColor = '#ff9800';
           ctx.shadowBlur = 20;
-          drawNode(ctx, node);
+          drawNode(ctx, node, isSelected, isHighlighted);
           ctx.restore();
-          ctx.beginPath();
-          ctx.arc(node.x, node.y, NODE_RADIUS + 4, 0, 2 * Math.PI);
-          ctx.strokeStyle = '#ff9800';
-          ctx.lineWidth = 4;
-          ctx.stroke();
         } else {
-          drawNode(ctx, node);
+          drawNode(ctx, node, isSelected, isHighlighted);
         }
       });
       ctx.restore();
@@ -247,7 +284,7 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePo
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [nodes, onNodePositionChange, selectedNodeId]);
+  }, [nodes, onNodePositionChange, selectedNodeId, highlightedNodeIds]);
 
   // Handle click (with pan/zoom)
   const handleClick = e => {

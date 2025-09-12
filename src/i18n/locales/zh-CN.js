@@ -17,6 +17,7 @@ export default {
   'edit.redo': '重做',
   'edit.delete': '删除',
   'edit.autoLayout': '自动布局',
+  'edit.search': '搜索',
 
   // View menu
   'view.center': '居中',
@@ -70,6 +71,17 @@ export default {
   'common.loading': '加载中...',
   'common.error': '错误',
   'common.success': '成功',
+
+  // Search
+  'search.placeholder': '搜索节点...',
+  'search.recentSearches': '最近搜索',
+  'search.clearHistory': '清除',
+  'search.noResults': '未找到包含"{query}"的节点',
+  'search.resultsCount': '{count} 个结果',
+  'search.exactMatch': '完全匹配',
+  'search.matchScore': '{score}% 匹配',
+  'search.startTyping': '开始输入以搜索节点',
+  'search.tips': '提示：使用 ↑↓ 导航，Enter 选择，Esc 关闭',
 
   // App name
   'app.name': '🧠 思维导图',

@@ -17,6 +17,7 @@ export default {
   'edit.redo': 'Redo',
   'edit.delete': 'Delete',
   'edit.autoLayout': 'Auto Layout',
+  'edit.search': 'Search',
 
   // View menu
   'view.center': 'Center',
@@ -70,6 +71,17 @@ export default {
   'common.loading': 'Loading...',
   'common.error': 'Error',
   'common.success': 'Success',
+
+  // Search
+  'search.placeholder': 'Search nodes...',
+  'search.recentSearches': 'Recent Searches',
+  'search.clearHistory': 'Clear',
+  'search.noResults': 'No nodes found for "{query}"',
+  'search.resultsCount': '{count} {count, plural, one {result} other {results}}',
+  'search.exactMatch': 'Exact match',
+  'search.matchScore': '{score}% match',
+  'search.startTyping': 'Start typing to search nodes',
+  'search.tips': 'Tips: Use ↑↓ to navigate, Enter to select, Esc to close',
 
   // App name
   'app.name': '🧠 MindMap',

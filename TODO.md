@@ -1,5 +1,13 @@
 # Mind Map Application TODOs
 
+## Recently Completed ✅
+- **Search functionality** - Fuzzy search with highlighting, history, and keyboard navigation (Edit → Search, Cmd+F)
+- **Auto-layout algorithms** - Force-directed layout with collision detection (Edit → Auto Layout, Cmd+L)
+- **Minimap navigation** - Available in View menu for easy canvas navigation
+- **Comprehensive data management** - JSON/PNG export, template library, localStorage persistence
+- **Full keyboard navigation** - Complete set of shortcuts with help panel
+- **Internationalization** - English and Chinese language support
+
 ## Feature Enhancements
 
 ### 1. Visual Themes 🎨
@@ -28,10 +36,10 @@ export const themes = {
 ```
 
 ### 2. Search Functionality 🔍
-- [ ] Add node search by text
-- [ ] Implement fuzzy search
-- [ ] Add search history
-- [ ] Highlight search results on canvas
+- [x] Add node search by text ✅ *Completed - Full-text search with fuzzy matching*
+- [x] Implement fuzzy search ✅ *Completed - Levenshtein-like algorithm with scoring*
+- [x] Add search history ✅ *Completed - Recent searches with localStorage*
+- [x] Highlight search results on canvas ✅ *Completed - Yellow highlighting with visual feedback*
 ```javascript
 export function Search({ nodes, onSelect }) {
   const [query, setQuery] = useState('')
@@ -43,7 +51,7 @@ export function Search({ nodes, onSelect }) {
 ```
 
 ### 3. Navigation Improvements 🗺️
-- [ ] Add minimap for easy navigation
+- [x] Add minimap for easy navigation ✅ *Completed - Available in View menu*
 - [ ] Implement zoom to fit all nodes
 - [ ] Add breadcrumb navigation
 - [ ] Quick jump to recent nodes
@@ -68,7 +76,11 @@ export function NodeTags({ node, onAddTag, onRemoveTag }) {
 ```
 
 ### 5. Data Management 💾
-- [ ] Implement autosave with debounce
+- [x] Local storage persistence ✅ *Completed - Auto-saves to localStorage*
+- [x] JSON import/export ✅ *Completed - File → Import/Export JSON*
+- [x] PNG export ✅ *Completed - File → Export PNG*
+- [x] Template library system ✅ *Completed - Library → Save/Load templates*
+- [ ] Implement autosave with debounce (currently saves immediately)
 - [ ] Add version history
 - [ ] Cloud sync support
 - [ ] Export to different formats (Markdown, FreeMind)
@@ -92,7 +104,7 @@ export function useAutosave(data, key, delay = 1000) {
 - [ ] Shared templates
 
 ### 7. Layout & Presentation 📊
-- [ ] Auto-layout algorithms
+- [x] Auto-layout algorithms ✅ *Completed - Force-directed layout with collision detection (Edit → Auto Layout, Cmd+L)*
 - [ ] Multiple layout styles (radial, tree, etc.)
 - [ ] Presentation mode
 - [ ] Node animations
@@ -105,14 +117,17 @@ export function useAutosave(data, key, delay = 1000) {
 - [ ] Lazy loading for large maps
 
 ### 9. Accessibility 🌐
-- [ ] Keyboard navigation improvements
+- [x] Comprehensive keyboard shortcuts ✅ *Completed - Tab, Enter, Shift+Enter, Ctrl+Enter, arrow keys, etc.*
+- [x] Keyboard shortcut help panel ✅ *Completed - Settings → Keyboard Shortcuts*
 - [ ] Screen reader support
 - [ ] High contrast theme
 - [ ] Voice commands
 
 ### 10. Integration & Export 🔄
-- [ ] Import from other mind map formats
-- [ ] Export to presentation formats
+- [x] JSON format import/export ✅ *Completed - Standard format for data interchange*
+- [x] PNG image export ✅ *Completed - For sharing and presentations*
+- [ ] Import from other mind map formats (FreeMind, XMind, etc.)
+- [ ] Export to presentation formats (PowerPoint, PDF)
 - [ ] API for external integrations
 - [ ] Browser extension support
 
@@ -142,15 +157,29 @@ export function useAutosave(data, key, delay = 1000) {
 - [ ] Implement error boundaries
 - [ ] Add performance monitoring
 
-## Priority Order
-1. Visual Themes & Search (improves usability)
-2. Node Enhancements & Autosave (prevents data loss)
-3. Navigation Improvements (helps with large maps)
-4. Layout & Performance (scales better)
-5. Collaboration Features (enables team usage)
+## Updated Priority Order
+1. **Visual Themes & Search** (improves usability) - High impact, moderate effort
+2. **Node Enhancements** (colors, tags, rich text) - High value for users
+3. **Performance Optimization** (virtualization, WebGL) - Needed for large maps
+4. **Collaboration Features** (real-time, comments) - Enables team usage
+5. **Advanced Export/Import** (Markdown, FreeMind, PowerPoint) - Broader compatibility
 
-## Notes
+## Completed Priorities ✅
+- ~~Search Functionality~~ ✅ Fuzzy search with highlighting and history
+- ~~Layout & Auto-positioning~~ ✅ Force-directed layout implemented
+- ~~Navigation Improvements~~ ✅ Minimap and zoom controls available
+- ~~Basic Data Management~~ ✅ Import/export and templates working
+- ~~Keyboard Accessibility~~ ✅ Comprehensive shortcuts implemented
+
+## Progress Summary
+- **Total Features Planned**: ~40 items across 10 categories
+- **Recently Completed**: 12 major features ✅
+- **In Progress**: None
+- **Next Up**: Visual themes and node enhancements
+
+## Development Notes
 - Each feature should be developed in a separate branch
-- Add tests for each new feature
-- Update documentation with new features
+- Add tests for each new feature (✅ Layout utils tests added)
+- Update documentation with new features (✅ CODEBUDDY.md updated)
 - Consider backward compatibility
+- Maintain internationalization support for new features
