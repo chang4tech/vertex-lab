@@ -16,6 +16,7 @@ export default {
   'edit.undo': 'Undo',
   'edit.redo': 'Redo',
   'edit.delete': 'Delete',
+  'edit.autoLayout': 'Auto Layout',
 
   // View menu
   'view.center': 'Center',
@@ -58,6 +59,7 @@ export default {
   'node.addSibling': 'Add Sibling',
   'node.edit': 'Edit',
   'node.delete': 'Delete',
+  'node.enterName': 'Enter node name:',
 
   // Common
   'common.close': 'Close',

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layout Algorithm Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .demo-container { display: flex; gap: 20px; }
+        .demo-section { flex: 1; }
+        canvas { border: 1px solid #ccc; display: block; margin: 10px 0; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Auto Layout Algorithm Demo</h1>
+    <p>This demo shows the collision detection and force-directed layout algorithm in action.</p>
+    
+    <div class="demo-container">
+        <div class="demo-section">
+            <h3>Before Auto Layout</h3>
+            <canvas id="beforeCanvas" width="400" height="300"></canvas>
+            <p>Overlapping nodes with collisions</p>
+        </div>
+        
+        <div class="demo-section">
+            <h3>After Auto Layout</h3>
+            <canvas id="afterCanvas" width="400" height="300"></canvas>
+            <p>Nodes repositioned to avoid collisions</p>
+        </div>
+    </div>
+    
+    <div>
+        <button onclick="runDemo()">Run Auto Layout Demo</button>
+        <button onclick="generateRandomNodes()">Generate Random Overlapping Nodes</button>
+    </div>
+
+    <script>
+        // Copy the layout algorithm functions here for demo
+        const NODE_RADIUS = 20;
+        const MIN_DISTANCE = NODE_RADIUS * 2.5;
+        const LABEL_PADDING = 10;
+
+        function estimateTextWidth(text) {
+            return text.length * 6;
+        }
+
+        function detectCollisions(nodes) {
+            const collisions = [];
+            
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const nodeA = nodes[i];
+                    const nodeB = nodes[j];
+                    
+                    const dx = nodeA.x - nodeB.x;
+                    const dy = nodeA.y - nodeB.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    const textWidthA = estimateTextWidth(nodeA.label);
+                    const textWidthB = estimateTextWidth(nodeB.label);
+                    const requiredDistance = Math.max(
+                        MIN_DISTANCE,
+                        (textWidthA + textWidthB) / 2 + LABEL_PADDING * 2
+                    );
+                    
+                    if (distance < requiredDistance) {
+                        collisions.push({
+                            nodeA: nodeA.id,
+                            nodeB: nodeB.id,
+                            distance,
+                            requiredDistance,
+                            overlap: requiredDistance - distance
+                        });
+                    }
+                }
+            }
+            
+            return collisions;
+        }
+
+        function applyForceDirectedLayout(nodes, iterations = 100) {
+            const nodeMap = new Map(nodes.map(node => [node.id, { ...node }]));
+            const adjustedNodes = Array.from(nodeMap.values());
+            
+            for (let iter = 0; iter < iterations; iter++) {
+                const forces = new Map();
+                
+                adjustedNodes.forEach(node => {
+                    forces.set(node.id, { x: 0, y: 0 });
+                });
+                
+                // Repulsion forces
+                for (let i = 0; i < adjustedNodes.length; i++) {
+                    for (let j = i + 1; j < adjustedNodes.length; j++) {
+                        const nodeA = adjustedNodes[i];
+                        const nodeB = adjustedNodes[j];
+                        
+                        const dx = nodeA.x - nodeB.x;
+                        const dy = nodeA.y - nodeB.y;
+                        let distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < 1) distance = 1;
+                        
+                        const textWidthA = estimateTextWidth(nodeA.label);
+                        const textWidthB = estimateTextWidth(nodeB.label);
+                        const requiredDistance = Math.max(
+                            MIN_DISTANCE,
+                            (textWidthA + textWidthB) / 2 + LABEL_PADDING * 2
+                        );
+                        
+                        if (distance < requiredDistance) {
+                            const repulsionForce = (requiredDistance - distance) / distance * 0.3;
+                            const forceX = (dx / distance) * repulsionForce;
+                            const forceY = (dy / distance) * repulsionForce;
+                            
+                            const forceA = forces.get(nodeA.id);
+                            const forceB = forces.get(nodeB.id);
+                            
+                            forceA.x += forceX;
+                            forceA.y += forceY;
+                            forceB.x -= forceX;
+                            forceB.y -= forceY;
+                        }
+                    }
+                }
+                
+                // Attraction forces for parent-child
+                adjustedNodes.forEach(node => {
+                    if (node.parentId) {
+                        const parent = nodeMap.get(node.parentId);
+                        if (parent) {
+                            const dx = parent.x - node.x;
+                            const dy = parent.y - node.y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            const idealDistance = 80;
+                            const attractionForce = (distance - idealDistance) * 0.02;
+                            
+                            if (distance > 1) {
+                                const forceX = (dx / distance) * attractionForce;
+                                const forceY = (dy / distance) * attractionForce;
+                                
+                                const nodeForce = forces.get(node.id);
+                                const parentForce = forces.get(parent.id);
+                                
+                                nodeForce.x += forceX;
+                                nodeForce.y += forceY;
+                                parentForce.x -= forceX * 0.5;
+                                parentForce.y -= forceY * 0.5;
+                            }
+                        }
+                    }
+                });
+                
+                // Apply forces
+                const damping = 0.9;
+                adjustedNodes.forEach(node => {
+                    const force = forces.get(node.id);
+                    node.x += force.x * damping;
+                    node.y += force.y * damping;
+                    
+                    // Keep nodes within canvas bounds
+                    node.x = Math.max(NODE_RADIUS, Math.min(380, node.x));
+                    node.y = Math.max(NODE_RADIUS, Math.min(280, node.y));
+                });
+            }
+            
+            return adjustedNodes;
+        }
+
+        function drawNodes(canvas, nodes) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges first
+            nodes.forEach(node => {
+                if (node.parentId) {
+                    const parent = nodes.find(n => n.id === node.parentId);
+                    if (parent) {
+                        ctx.beginPath();
+                        ctx.moveTo(parent.x, parent.y);
+                        ctx.lineTo(node.x, node.y);
+                        ctx.strokeStyle = '#ccc';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                    }
+                }
+            });
+            
+            // Draw nodes
+            nodes.forEach(node => {
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, NODE_RADIUS, 0, 2 * Math.PI);
+                ctx.fillStyle = '#e3f2fd';
+                ctx.fill();
+                ctx.strokeStyle = '#1976d2';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.fillStyle = '#333';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node.label, node.x, node.y);
+            });
+            
+            // Highlight collisions
+            const collisions = detectCollisions(nodes);
+            collisions.forEach(collision => {
+                const nodeA = nodes.find(n => n.id === collision.nodeA);
+                const nodeB = nodes.find(n => n.id === collision.nodeB);
+                
+                if (nodeA && nodeB) {
+                    // Draw collision indicator
+                    ctx.beginPath();
+                    ctx.moveTo(nodeA.x, nodeA.y);
+                    ctx.lineTo(nodeB.x, nodeB.y);
+                    ctx.strokeStyle = '#f44336';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+            });
+        }
+
+        let currentNodes = [
+            { id: 1, label: 'Root', x: 200, y: 150, parentId: null },
+            { id: 2, label: 'Child 1', x: 205, y: 155, parentId: 1 },
+            { id: 3, label: 'Child 2', x: 210, y: 160, parentId: 1 },
+            { id: 4, label: 'Child 3', x: 195, y: 145, parentId: 1 },
+            { id: 5, label: 'Grandchild', x: 208, y: 158, parentId: 2 }
+        ];
+
+        function runDemo() {
+            const beforeCanvas = document.getElementById('beforeCanvas');
+            const afterCanvas = document.getElementById('afterCanvas');
+            
+            // Draw before
+            drawNodes(beforeCanvas, currentNodes);
+            
+            // Apply layout and draw after
+            const adjustedNodes = applyForceDirectedLayout(currentNodes);
+            drawNodes(afterCanvas, adjustedNodes);
+            
+            // Update current nodes for next demo
+            currentNodes = adjustedNodes;
+        }
+
+        function generateRandomNodes() {
+            currentNodes = [
+                { id: 1, label: 'Root', x: 200, y: 150, parentId: null }
+            ];
+            
+            // Add random overlapping nodes
+            for (let i = 2; i <= 8; i++) {
+                currentNodes.push({
+                    id: i,
+                    label: `Node ${i}`,
+                    x: 200 + Math.random() * 40 - 20,
+                    y: 150 + Math.random() * 40 - 20,
+                    parentId: Math.floor(Math.random() * (i - 1)) + 1
+                });
+            }
+            
+            runDemo();
+        }
+
+        // Initialize demo
+        runDemo();
+    </script>
+</body>
+</html>

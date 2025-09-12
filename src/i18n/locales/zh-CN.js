@@ -16,6 +16,7 @@ export default {
   'edit.undo': '撤销',
   'edit.redo': '重做',
   'edit.delete': '删除',
+  'edit.autoLayout': '自动布局',
 
   // View menu
   'view.center': '居中',
@@ -58,6 +59,7 @@ export default {
   'node.addSibling': '添加同级节点',
   'node.edit': '编辑',
   'node.delete': '删除',
+  'node.enterName': '输入节点名称：',
 
   // Common
   'common.close': '关闭',

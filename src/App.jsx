@@ -4,10 +4,11 @@ import MindMapCanvas from './MindMapCanvas.jsx';
 import { Minimap } from './components/panels/Minimap';
 import Settings from './components/Settings';
 import { LocaleSelector } from './i18n/LocaleProvider';
+import { organizeLayout } from './utils/layoutUtils';
 
 // --- Menu Bar Component ---
 function MenuBar({
-  onExport, onImport, onNew, onUndo, onRedo, onDelete, onCenter, onZoomIn, onZoomOut, onResetZoom, onToggleDark,
+  onExport, onImport, onNew, onUndo, onRedo, onDelete, onAutoLayout, onCenter, onZoomIn, onZoomOut, onResetZoom, onToggleDark,
   nodes, setNodes, setUndoStack, setRedoStack, setSelectedNodeId, canvasRef,
   showMinimap, setShowMinimap
 }) {
@@ -204,6 +205,20 @@ function MenuBar({
             >
               <FormattedMessage id="edit.delete" defaultMessage="Delete" />
               <span style={{ opacity: 0.5, marginLeft: 20 }}>⌫</span>
+            </div>
+            <div className="menu-separator" style={{ margin: '4px 0', borderTop: '1px solid #eee' }} />
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Auto Layout clicked');
+                onAutoLayout();
+                setOpenMenu(null);
+              }}
+            >
+              <FormattedMessage id="edit.autoLayout" defaultMessage="Auto Layout" />
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘L</span>
             </div>
           </>)}
         </div>
@@ -665,6 +680,13 @@ function App() {
     setNodes(() => Array.isArray(newNodes) ? [...newNodes] : []);
   }, [nodes, undoStack.length, redoStack.length]);
 
+  // Auto layout handler
+  const handleAutoLayout = useCallback(() => {
+    console.log('Applying auto layout to', nodes.length, 'nodes');
+    const layoutedNodes = organizeLayout(nodes);
+    pushUndo(layoutedNodes);
+  }, [nodes, pushUndo]);
+
   // Save nodes to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('mindmap_nodes', JSON.stringify(nodes));
@@ -731,6 +753,13 @@ function App() {
             }
             break;
           }
+
+          case 'l': {
+            e.preventDefault();
+            console.log('Auto layout shortcut');
+            handleAutoLayout();
+            break;
+          }
         }
       } else if (selectedNodeId) {
         // Node-specific shortcuts that require a selected node
@@ -773,7 +802,7 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canvasRef, fileInputRef, handleUndo, handleRedo, handleExport, selectedNodeId, nodes, pushUndo, intl]);
+  }, [canvasRef, fileInputRef, handleUndo, handleRedo, handleExport, handleAutoLayout, selectedNodeId, nodes, pushUndo, intl]);
 
   // Load help panel state from localStorage on initial render
   useEffect(() => {
@@ -841,6 +870,7 @@ function App() {
           pushUndo(nodes.filter(n => !idsToDelete.includes(n.id)));
           setSelectedNodeId(null);
         }}
+        onAutoLayout={handleAutoLayout}
         onCenter={() => {
           console.log('Center canvas:', { canvasRef: !!canvasRef.current, center: !!canvasRef.current?.center });
           if (canvasRef.current?.center) canvasRef.current.center();
