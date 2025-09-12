@@ -1,6 +1,17 @@
-import React from 'react';
-
-export function HelpPanel({ isVisible, onClose }) {
+import React from  return (
+    <div role="dialog" className={`help ${isVisible ? 'show' : ''}`}>
+      <div className="rules">
+        <h2>Keyboard Shortcuts</h2>
+        {shortcuts.map(({ key, desc }) => (
+          <div className="rule" key={key}>
+            <span className="key">{key}</span>
+            <span className="desc">{desc}</span>
+          </div>
+        ))}
+      </div>
+      <button onClick={onClose}>Close</button>
+    </div>
+```ort function HelpPanel({ isVisible, onClose }) {
   const shortcuts = [
     { key: 'Tab', desc: '插入后置节点' },
     { key: 'Enter', desc: '插入子节点' },
