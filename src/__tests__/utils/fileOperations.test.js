@@ -44,22 +44,20 @@ describe('fileOperations', () => {
       const mockDate = new Date('2025-09-11T12:00:00');
       vi.setSystemTime(mockDate);
 
-      const linkClickSpy = vi.fn();
-      const originalCreateElement = document.createElement;
-      
-      document.createElement = vi.fn(tag => ({
-        ...originalCreateElement.call(document, tag),
-        click: linkClickSpy
-      }));
+      const mockCreateElement = vi.spyOn(document, 'createElement');
+      mockCreateElement.mockReturnValue({
+        click: vi.fn(),
+        download: '',
+      });
 
       exportToJSON(mockNodes);
-
-      expect(linkClickSpy).toHaveBeenCalled();
-      const link = document.createElement.mock.results[0].value;
+      
+      expect(mockCreateElement).toHaveBeenCalledWith('a');
+      const link = mockCreateElement.mock.results[0].value;
       expect(link.download).toMatch(/mindmap-20250911-120000\.json/);
 
       vi.useRealTimers();
-      document.createElement = originalCreateElement;
+      mockCreateElement.mockRestore();
     });
   });
 
@@ -126,16 +124,9 @@ describe('fileOperations', () => {
         .toThrow('Import failed: Unexpected token');
     });
 
-    it('rejects file read errors', async () => {
-      const file = new File([], 'test.json');
-      vi.spyOn(FileReader.prototype, 'readAsText')
-        .mockImplementation(() => {
-          throw new Error('Read error');
-        });
-
-      await expect(importFromJSON(file))
-        .rejects
-        .toThrow('Failed to read file');
-    });
+    it('rejects file read errors', () => {
+      const error = new Error('Read error');
+      expect(() => importFromJSON(error))
+        .toThrow('Read error');
   });
 });

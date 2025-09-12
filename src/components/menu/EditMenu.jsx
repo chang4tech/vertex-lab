@@ -22,12 +22,14 @@ export function EditMenu({ onUndo, onRedo, onDelete, isOpen, onClose }) {
     justifyContent: 'space-between'
   };
 
-  const handleClick = (handler) => (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleClick = React.useCallback((handler) => (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     handler();
     onClose();
-  };
+  }, [onClose]);
 
   return (
     <div className="menu-dropdown" style={menuStyle}>

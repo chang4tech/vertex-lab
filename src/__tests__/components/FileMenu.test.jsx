@@ -26,7 +26,8 @@ describe('FileMenu', () => {
 
   it('is hidden when isOpen is false', () => {
     render(<FileMenu {...mockProps} isOpen={false} />);
-    expect(screen.queryByText('New')).not.toBeInTheDocument();
+    const menu = screen.queryByRole('menu');
+    expect(menu).not.toBeInTheDocument();
   });
 
   it('calls correct handlers when menu items are clicked', () => {

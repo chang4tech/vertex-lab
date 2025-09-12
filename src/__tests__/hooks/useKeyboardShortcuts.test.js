@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import useKeyboardShortcuts from '../../hooks/useKeyboardShortcuts';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
+// Import is handled above
 
 describe('useKeyboardShortcuts', () => {
   const mockHandlers = {

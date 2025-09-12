@@ -60,10 +60,11 @@ describe('EditMenu', () => {
   it('prevents default event behavior', () => {
     render(<EditMenu {...mockProps} />);
     
+    const undoButton = screen.getByText('Undo');
     const preventDefault = vi.fn();
     const stopPropagation = vi.fn();
     
-    fireEvent.click(screen.getByText('Undo'), {
+    fireEvent.click(undoButton, {
       preventDefault,
       stopPropagation
     });
