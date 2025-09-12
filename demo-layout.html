@@ -79,7 +79,7 @@
             return collisions;
         }
 
-        function applyForceDirectedLayout(nodes, iterations = 100) {
+        function applyForceDirectedLayout(nodes, iterations = 200) {
             const nodeMap = new Map(nodes.map(node => [node.id, { ...node }]));
             const adjustedNodes = Array.from(nodeMap.values());
             
@@ -110,7 +110,8 @@
                         );
                         
                         if (distance < requiredDistance) {
-                            const repulsionForce = (requiredDistance - distance) / distance * 0.3;
+                            const overlapRatio = (requiredDistance - distance) / requiredDistance;
+                            const repulsionForce = Math.min(20, overlapRatio * 15);
                             const forceX = (dx / distance) * repulsionForce;
                             const forceY = (dy / distance) * repulsionForce;
                             
