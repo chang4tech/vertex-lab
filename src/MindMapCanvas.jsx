@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { useTheme } from './contexts/ThemeContext';
 
 /**
  * MindMapCanvas - a simple mind map canvas using HTML5 Canvas.
@@ -6,59 +7,58 @@ import React, { useRef, useEffect } from 'react';
  *   nodes: array of node objects { id, label, x, y, parentId }
  *   onNodeClick: function(nodeId)
  */
-const NODE_RADIUS = 32;
-const NODE_COLOR = '#fff';
-const NODE_BORDER = '#007bff';
-const NODE_TEXT = '#333';
-const EDGE_COLOR = '#aaa';
 
-function drawNode(ctx, node, isSelected = false, isHighlighted = false) {
+function drawNode(ctx, node, theme, isSelected = false, isHighlighted = false) {
+  const { colors } = theme;
+  const nodeRadius = colors.nodeRadius;
+  
   // Draw outer glow for highlighted nodes
   if (isHighlighted) {
     ctx.beginPath();
-    ctx.arc(node.x, node.y, NODE_RADIUS + 8, 0, 2 * Math.PI);
-    ctx.fillStyle = 'rgba(255, 235, 59, 0.3)'; // Yellow glow
+    ctx.arc(node.x, node.y, nodeRadius + 8, 0, 2 * Math.PI);
+    ctx.fillStyle = colors.highlightNodeGlow;
     ctx.fill();
   }
   
   ctx.beginPath();
-  ctx.arc(node.x, node.y, NODE_RADIUS, 0, 2 * Math.PI);
+  ctx.arc(node.x, node.y, nodeRadius, 0, 2 * Math.PI);
   
   // Node fill color
   if (isHighlighted) {
-    ctx.fillStyle = '#fff9c4'; // Light yellow for highlighted
+    ctx.fillStyle = colors.highlightNodeBackground;
   } else {
-    ctx.fillStyle = NODE_COLOR;
+    ctx.fillStyle = colors.nodeBackground;
   }
   ctx.fill();
   
   // Node border
   if (isSelected) {
-    ctx.strokeStyle = '#ff9800';
+    ctx.strokeStyle = colors.selectedNodeBorder;
     ctx.lineWidth = 4;
   } else if (isHighlighted) {
-    ctx.strokeStyle = '#ffc107'; // Yellow border for highlighted
+    ctx.strokeStyle = colors.highlightNodeBorder;
     ctx.lineWidth = 3;
   } else {
-    ctx.strokeStyle = NODE_BORDER;
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = colors.nodeBorder;
+    ctx.lineWidth = colors.edgeWidth;
   }
   ctx.stroke();
   
   // Node text
-  ctx.fillStyle = NODE_TEXT;
+  ctx.fillStyle = colors.nodeText;
   ctx.font = '16px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(node.label, node.x, node.y);
 }
 
-function drawEdge(ctx, from, to) {
+function drawEdge(ctx, from, to, theme) {
+  const { colors } = theme;
   ctx.beginPath();
   ctx.moveTo(from.x, from.y);
   ctx.lineTo(to.x, to.y);
-  ctx.strokeStyle = EDGE_COLOR;
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = colors.edgeColor;
+  ctx.lineWidth = colors.edgeWidth;
   ctx.stroke();
 }
 
@@ -67,6 +67,8 @@ import { forwardRef, useImperativeHandle } from 'react';
 
 const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePositionChange, highlightedNodeIds = [], onViewBoxChange }, ref) => {
   const canvasRef = useRef(null);
+  const { currentTheme } = useTheme();
+  
   // Pan/zoom state
   const view = useRef({ offsetX: 0, offsetY: 0, scale: 1 });
   // Expose imperative methods for centering and zooming
@@ -129,17 +131,23 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePo
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Clear with theme background
+    ctx.fillStyle = currentTheme.colors.canvasBackground;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
     ctx.save();
     ctx.translate(view.current.offsetX, view.current.offsetY);
     ctx.scale(view.current.scale, view.current.scale);
+    
     // Draw edges
     nodes.forEach(node => {
       if (node.parentId) {
         const parent = nodes.find(n => n.id === node.parentId);
-        if (parent) drawEdge(ctx, parent, node);
+        if (parent) drawEdge(ctx, parent, node, currentTheme);
       }
     });
+    
     // Draw nodes with selection and highlighting
     nodes.forEach(node => {
       const isSelected = selectedNodeId && node.id === selectedNodeId;
@@ -147,16 +155,16 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePo
       
       if (isSelected) {
         ctx.save();
-        ctx.shadowColor = '#ff9800';
+        ctx.shadowColor = currentTheme.colors.selectedNodeShadow;
         ctx.shadowBlur = 20;
-        drawNode(ctx, node, isSelected, isHighlighted);
+        drawNode(ctx, node, currentTheme, isSelected, isHighlighted);
         ctx.restore();
       } else {
-        drawNode(ctx, node, isSelected, isHighlighted);
+        drawNode(ctx, node, currentTheme, isSelected, isHighlighted);
       }
     });
     ctx.restore();
-  }, [nodes, selectedNodeId, highlightedNodeIds]);
+  }, [nodes, selectedNodeId, highlightedNodeIds, currentTheme]);
 
   // Mouse events for drag and pan
   useEffect(() => {
@@ -196,7 +204,8 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePo
       for (const node of nodes) {
         const dx = node.x - x;
         const dy = node.y - y;
-        if (dx * dx + dy * dy < NODE_RADIUS * NODE_RADIUS) {
+        const nodeRadius = currentTheme.colors.nodeRadius;
+        if (dx * dx + dy * dy < nodeRadius * nodeRadius) {
           dragState.current = {
             dragging: true,
             nodeId: node.id,
@@ -244,14 +253,18 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePo
     // Redraw on pan/zoom
     const handleRedraw = () => {
       const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Clear with theme background
+      ctx.fillStyle = currentTheme.colors.canvasBackground;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
       ctx.save();
       ctx.translate(view.current.offsetX, view.current.offsetY);
       ctx.scale(view.current.scale, view.current.scale);
       nodes.forEach(node => {
         if (node.parentId) {
           const parent = nodes.find(n => n.id === node.parentId);
-          if (parent) drawEdge(ctx, parent, node);
+          if (parent) drawEdge(ctx, parent, node, currentTheme);
         }
       });
       nodes.forEach(node => {
@@ -260,12 +273,12 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePo
         
         if (isSelected) {
           ctx.save();
-          ctx.shadowColor = '#ff9800';
+          ctx.shadowColor = currentTheme.colors.selectedNodeShadow;
           ctx.shadowBlur = 20;
-          drawNode(ctx, node, isSelected, isHighlighted);
+          drawNode(ctx, node, currentTheme, isSelected, isHighlighted);
           ctx.restore();
         } else {
-          drawNode(ctx, node, isSelected, isHighlighted);
+          drawNode(ctx, node, currentTheme, isSelected, isHighlighted);
         }
       });
       ctx.restore();
@@ -284,7 +297,7 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePo
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [nodes, onNodePositionChange, selectedNodeId, highlightedNodeIds]);
+  }, [nodes, onNodePositionChange, selectedNodeId, highlightedNodeIds, currentTheme]);
 
   // Handle click (with pan/zoom)
   const handleClick = e => {
@@ -294,7 +307,8 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePo
     for (const node of nodes) {
       const dx = node.x - x;
       const dy = node.y - y;
-      if (dx * dx + dy * dy < NODE_RADIUS * NODE_RADIUS) {
+      const nodeRadius = currentTheme.colors.nodeRadius;
+      if (dx * dx + dy * dy < nodeRadius * nodeRadius) {
         onNodeClick && onNodeClick(node.id);
         break;
       }
@@ -306,11 +320,17 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePo
       ref={canvasRef}
       width={800}
       height={600}
-      style={{ background: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: 8, display: 'block', margin: '40px auto', cursor: 'grab' }}
+      style={{ 
+        background: currentTheme.colors.canvasBackground, 
+        border: `1px solid ${currentTheme.colors.panelBorder}`, 
+        borderRadius: 8, 
+        display: 'block', 
+        margin: '40px auto', 
+        cursor: 'grab' 
+      }}
       onClick={handleClick}
       tabIndex={0}
       onContextMenu={e => e.preventDefault()}
-
     />
   );
 });

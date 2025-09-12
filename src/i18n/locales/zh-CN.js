@@ -25,7 +25,8 @@ export default {
   'view.zoomOut': '缩小',
   'view.resetZoom': '重置缩放',
   'view.showMinimap': '显示小地图',
-  'view.toggleDarkMode': '切换暗黑模式',
+  'view.toggleTheme': '切换主题',
+  'view.chooseTheme': '选择主题',
 
   // Library menu
   'library.save': '保存到库',
@@ -82,6 +83,15 @@ export default {
   'search.matchScore': '{score}% 匹配',
   'search.startTyping': '开始输入以搜索节点',
   'search.tips': '提示：使用 ↑↓ 导航，Enter 选择，Esc 关闭',
+
+  // Themes
+  'themes.title': '选择主题',
+  'themes.tip': '主题偏好会自动保存',
+  'themes.light.description': '清爽明亮的界面',
+  'themes.dark.description': '护眼的深色模式',
+  'themes.professional.description': '商务友好的设计',
+  'themes.creative.description': '鲜艳灵感的色彩',
+  'themes.focus.description': '专注的极简设计',
 
   // App name
   'app.name': '🧠 思维导图',

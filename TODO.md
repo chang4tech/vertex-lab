@@ -1,6 +1,7 @@
 # Mind Map Application TODOs
 
 ## Recently Completed ✅
+- **Visual theme system** - 5 beautiful themes with instant switching and persistence (View → Choose Theme)
 - **Search functionality** - Fuzzy search with highlighting, history, and keyboard navigation (Edit → Search, Cmd+F)
 - **Auto-layout algorithms** - Force-directed layout with collision detection (Edit → Auto Layout, Cmd+L)
 - **Minimap navigation** - Available in View menu for easy canvas navigation
@@ -11,9 +12,11 @@
 ## Feature Enhancements
 
 ### 1. Visual Themes 🎨
-- [ ] Implement light/dark theme switching
-- [ ] Add custom theme support
-- [ ] Create theme presets (professional, creative, focus)
+- [x] Implement light/dark theme switching ✅ *Completed - Toggle between themes*
+- [x] Add comprehensive theme system ✅ *Completed - Context-based theme management*
+- [x] Create theme presets (professional, creative, focus) ✅ *Completed - 5 built-in themes*
+- [x] Theme persistence ✅ *Completed - Saves preference to localStorage*
+- [x] Theme selector UI ✅ *Completed - Visual theme picker with previews*
 ```javascript
 export const themes = {
   light: {
@@ -165,6 +168,7 @@ export function useAutosave(data, key, delay = 1000) {
 5. **Advanced Export/Import** (Markdown, FreeMind, PowerPoint) - Broader compatibility
 
 ## Completed Priorities ✅
+- ~~Visual Themes~~ ✅ Complete theme system with 5 presets and persistence
 - ~~Search Functionality~~ ✅ Fuzzy search with highlighting and history
 - ~~Layout & Auto-positioning~~ ✅ Force-directed layout implemented
 - ~~Navigation Improvements~~ ✅ Minimap and zoom controls available
@@ -173,9 +177,9 @@ export function useAutosave(data, key, delay = 1000) {
 
 ## Progress Summary
 - **Total Features Planned**: ~40 items across 10 categories
-- **Recently Completed**: 12 major features ✅
+- **Recently Completed**: 17 major features ✅
 - **In Progress**: None
-- **Next Up**: Visual themes and node enhancements
+- **Next Up**: Node enhancements and performance optimization
 
 ## Development Notes
 - Each feature should be developed in a separate branch

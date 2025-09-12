@@ -4,12 +4,14 @@ import MindMapCanvas from './MindMapCanvas.jsx';
 import { Minimap } from './components/panels/Minimap';
 import Settings from './components/Settings';
 import Search from './components/Search';
+import ThemeSelector from './components/ThemeSelector';
 import { LocaleSelector } from './i18n/LocaleProvider';
+import { useTheme } from './contexts/ThemeContext';
 import { organizeLayout } from './utils/layoutUtils';
 
 // --- Menu Bar Component ---
 function MenuBar({
-  onExport, onImport, onNew, onUndo, onRedo, onDelete, onAutoLayout, onSearch, onCenter, onZoomIn, onZoomOut, onResetZoom, onToggleDark,
+  onExport, onImport, onNew, onUndo, onRedo, onDelete, onAutoLayout, onSearch, onCenter, onZoomIn, onZoomOut, onResetZoom, onShowThemes,
   nodes, setNodes, setUndoStack, setRedoStack, setSelectedNodeId, canvasRef,
   showMinimap, setShowMinimap
 }) {
@@ -17,6 +19,7 @@ function MenuBar({
   const [openMenu, setOpenMenu] = useState(null); // 'file' | 'edit' | 'view' | 'settings' | null
   const [showSettings, setShowSettings] = useState(false);
   const intl = useIntl();
+  const { currentTheme, toggleTheme } = useTheme();
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -39,10 +42,10 @@ function MenuBar({
       position: 'absolute',
       top: 32,
       left: 0,
-      background: '#fff',
-      border: '1px solid #eee',
+      background: currentTheme.colors.menuBackground,
+      border: `1px solid ${currentTheme.colors.menuBorder}`,
       borderRadius: 4,
-      boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+      boxShadow: `0 2px 8px ${currentTheme.colors.panelShadow}`,
       minWidth: 140,
       zIndex: 1000,
       padding: '4px 0'
@@ -52,10 +55,12 @@ function MenuBar({
     <>
       {showSettings && <Settings onClose={() => setShowSettings(false)} />}
       <nav style={{
-        width: '100%', background: '#fff', borderBottom: '1px solid #eee',
+        width: '100%', 
+        background: currentTheme.colors.menuBackground, 
+        borderBottom: `1px solid ${currentTheme.colors.menuBorder}`,
         display: 'flex', alignItems: 'center', padding: '0 24px', height: 48, zIndex: 200, position: 'fixed', top: 0, left: 0, right: 0
       }}>
-      <div style={{ fontWeight: 700, fontSize: 18, marginRight: 32 }}>🧠 MindMap</div>
+      <div style={{ fontWeight: 700, fontSize: 18, marginRight: 32, color: currentTheme.colors.menuText }}>🧠 MindMap</div>
       <div style={{ display: 'flex', gap: 24 }}>
         <div style={{ cursor: 'pointer', position: 'relative' }}>
           <span className="menu-trigger" onClick={(e) => {
@@ -409,10 +414,20 @@ function MenuBar({
                 e.preventDefault();
                 e.stopPropagation();
                 console.log('Toggle Dark Mode clicked');
-                onToggleDark();
+                toggleTheme();
                 setOpenMenu(null);
               }}
-            ><FormattedMessage id="view.toggleDarkMode" defaultMessage="Toggle Dark Mode" /></div>
+            ><FormattedMessage id="view.toggleTheme" defaultMessage="Toggle Theme" /></div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Choose Theme clicked');
+                onShowThemes();
+                setOpenMenu(null);
+              }}
+            ><FormattedMessage id="view.chooseTheme" defaultMessage="Choose Theme" /></div>
           </>)}
         </div>
       </div>
@@ -543,6 +558,7 @@ const MainHeader = () => {
  */
 function App() {
   const intl = useIntl();
+  const { currentTheme } = useTheme();
 
   // Undo/redo stacks
   const [undoStack, setUndoStack] = useState([]);
@@ -609,6 +625,9 @@ function App() {
   // Search state
   const [showSearch, setShowSearch] = useState(false);
   const [highlightedNodeIds, setHighlightedNodeIds] = useState([]);
+
+  // Theme state
+  const [showThemes, setShowThemes] = useState(false);
 
   // Handler functions wrapped in useCallback
   const handleUndo = useCallback(() => {
@@ -724,6 +743,15 @@ function App() {
 
   const handleHighlightNodes = useCallback((nodeIds) => {
     setHighlightedNodeIds(nodeIds);
+  }, []);
+
+  // Theme handlers
+  const handleShowThemes = useCallback(() => {
+    setShowThemes(true);
+  }, []);
+
+  const handleCloseThemes = useCallback(() => {
+    setShowThemes(false);
   }, []);
 
   // Save nodes to localStorage whenever they change
@@ -934,7 +962,7 @@ function App() {
           console.log('Reset zoom:', { canvasRef: !!canvasRef.current, resetZoom: !!canvasRef.current?.resetZoom });
           if (canvasRef.current?.resetZoom) canvasRef.current.resetZoom();
         }}
-        onToggleDark={() => alert('Dark mode not implemented yet.')}
+        onShowThemes={handleShowThemes}
         showMinimap={showMinimap}
         setShowMinimap={setShowMinimap}
       />
@@ -987,6 +1015,11 @@ function App() {
         onHighlightNodes={handleHighlightNodes}
         onClose={handleCloseSearch}
       />
+
+      {/* Theme Selector */}
+      {showThemes && (
+        <ThemeSelector onClose={handleCloseThemes} />
+      )}
     </React.Fragment>
   );
 }

@@ -25,7 +25,8 @@ export default {
   'view.zoomOut': 'Zoom Out',
   'view.resetZoom': 'Reset Zoom',
   'view.showMinimap': 'Show Minimap',
-  'view.toggleDarkMode': 'Toggle Dark Mode',
+  'view.toggleTheme': 'Toggle Theme',
+  'view.chooseTheme': 'Choose Theme',
 
   // Library menu
   'library.save': 'Save to Library',
@@ -82,6 +83,15 @@ export default {
   'search.matchScore': '{score}% match',
   'search.startTyping': 'Start typing to search nodes',
   'search.tips': 'Tips: Use ↑↓ to navigate, Enter to select, Esc to close',
+
+  // Themes
+  'themes.title': 'Choose Theme',
+  'themes.tip': 'Theme preference is saved automatically',
+  'themes.light.description': 'Clean and bright interface',
+  'themes.dark.description': 'Easy on the eyes for long sessions',
+  'themes.professional.description': 'Corporate-friendly design',
+  'themes.creative.description': 'Vibrant and inspiring colors',
+  'themes.focus.description': 'Minimal distractions for concentration',
 
   // App name
   'app.name': '🧠 MindMap',
