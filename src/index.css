@@ -17,17 +17,32 @@ body.lock-scroll {
   bottom: 20px;
   right: 20px;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   padding: 12px;
   display: flex;
   justify-content: center;
   align-items: center;
   max-width: 250px;
   max-height: 200px;
-  backdrop-filter: blur(5px);
-  transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+  backdrop-filter: blur(10px);
+  transform-origin: bottom right;
+  opacity: 0;
+  transform: scale(0.95) translate(10px, 10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.minimap.show {
+  opacity: 1;
+  transform: scale(1) translate(0, 0);
+  pointer-events: auto;
+}
+
+.minimap canvas {
+  border-radius: 8px;
+  transition: all 0.2s ease-in-out;
 }
 
 .minimap:hover {

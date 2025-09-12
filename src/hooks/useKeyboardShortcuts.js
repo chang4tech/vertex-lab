@@ -8,52 +8,116 @@ export function useKeyboardShortcuts({
   onUndo,
   onRedo,
   selectedNodeId,
-  onDeleteNode
+  onDeleteNode,
+  onCenter,
+  onZoomIn,
+  onZoomOut,
+  onResetZoom,
+  onToggleMinimap
 }) {
   const handleKeyDown = useCallback((e) => {
+    // Don't trigger shortcuts when typing in inputs
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+      return;
+    }
+
     // Common command key for both Windows (Ctrl) and Mac (Cmd)
     const isCommandKey = e.metaKey || e.ctrlKey;
     
-    if (isCommandKey) {
+    if (isCommandKey && e.shiftKey) {
+      // Command + Shift shortcuts for file operations to avoid browser conflicts
       switch (e.key.toLowerCase()) {
         case 'n': {
           e.preventDefault();
-          onNew();
+          onNew?.();
           break;
         }
 
         case 's': {
           e.preventDefault();
-          if (e.shiftKey) {
-            onExportPNG();
-          } else {
-            onExport();
-          }
+          onExport?.();
+          break;
+        }
+
+        case 'p': {
+          e.preventDefault();
+          onExportPNG?.();
           break;
         }
 
         case 'o': {
           e.preventDefault();
-          onImport();
+          onImport?.();
           break;
         }
+      }
+      return;
+    }
 
+    if (isCommandKey) {
+      switch (e.key.toLowerCase()) {
         case 'z': {
           e.preventDefault();
           if (e.shiftKey) {
-            onRedo();
+            onRedo?.();
           } else {
-            onUndo();
+            onUndo?.();
           }
           break;
         }
       }
+      return;
     }
 
-    // Handle delete/backspace for selected node
-    if (selectedNodeId && (e.key === 'Delete' || e.key === 'Backspace')) {
-      e.preventDefault();
-      onDeleteNode(selectedNodeId);
+    // Handle alt key shortcuts for view operations
+    if (e.altKey) {
+      switch (e.key.toLowerCase()) {
+        case '=':
+        case '+': {
+          e.preventDefault();
+          onZoomIn?.();
+          break;
+        }
+
+        case '-': {
+          e.preventDefault();
+          onZoomOut?.();
+          break;
+        }
+
+        case '0': {
+          e.preventDefault();
+          onResetZoom?.();
+          break;
+        }
+
+        case 'c': {
+          e.preventDefault();
+          onCenter?.();
+          break;
+        }
+      }
+      return;
+    }
+
+    // Handle non-modifier key shortcuts
+    if (e.target === document.body && !isCommandKey && !e.altKey && !e.shiftKey) {
+      switch (e.key) {
+        case 'Delete':
+        case 'Backspace': {
+          if (selectedNodeId) {
+            e.preventDefault();
+            onDeleteNode?.(selectedNodeId);
+          }
+          break;
+        }
+
+        case 'm': {
+          e.preventDefault();
+          onToggleMinimap?.();
+          break;
+        }
+      }
     }
   }, [
     onNew,
@@ -63,7 +127,12 @@ export function useKeyboardShortcuts({
     onUndo,
     onRedo,
     selectedNodeId,
-    onDeleteNode
+    onDeleteNode,
+    onCenter,
+    onZoomIn,
+    onZoomOut,
+    onResetZoom,
+    onToggleMinimap
   ]);
 
   useEffect(() => {

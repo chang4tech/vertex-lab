@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import MindMapCanvas from './MindMapCanvas.jsx';
 import { Minimap } from './components/panels/Minimap';
+import Settings from './components/Settings';
 // --- Menu Bar Component ---
 function MenuBar({
   onExport, onImport, onNew, onUndo, onRedo, onDelete, onCenter, onZoomIn, onZoomOut, onResetZoom, onToggleDark,
@@ -9,6 +10,7 @@ function MenuBar({
 }) {
   const fileInputRef = useRef();
   const [openMenu, setOpenMenu] = useState(null); // 'file' | 'edit' | 'view' | 'settings' | null
+  const [showSettings, setShowSettings] = useState(false);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -41,10 +43,12 @@ function MenuBar({
     }}>{items}</div>
   );
   return (
-    <nav style={{
-      width: '100%', background: '#fff', borderBottom: '1px solid #eee',
-      display: 'flex', alignItems: 'center', padding: '0 24px', height: 48, zIndex: 200, position: 'fixed', top: 0, left: 0, right: 0
-    }}>
+    <>
+      {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+      <nav style={{
+        width: '100%', background: '#fff', borderBottom: '1px solid #eee',
+        display: 'flex', alignItems: 'center', padding: '0 24px', height: 48, zIndex: 200, position: 'fixed', top: 0, left: 0, right: 0
+      }}>
       <div style={{ fontWeight: 700, fontSize: 18, marginRight: 32 }}>🧠 MindMap</div>
       <div style={{ display: 'flex', gap: 24 }}>
         <div style={{ cursor: 'pointer', position: 'relative' }}>
@@ -344,6 +348,19 @@ function MenuBar({
           }}>Settings</span>
           {menuDropdown('settings', <>
             <div
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Keyboard Shortcuts clicked');
+                setShowSettings(true);
+                setOpenMenu(null);
+              }}
+            >
+              <span>Keyboard Shortcuts</span>
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>?</span>
+            </div>
+            <div
               style={{ padding: '8px 20px', cursor: 'pointer' }}
               onClick={(e) => {
                 e.preventDefault();
@@ -357,6 +374,7 @@ function MenuBar({
         </div>
       </div>
     </nav>
+    </>
   );
 }
 

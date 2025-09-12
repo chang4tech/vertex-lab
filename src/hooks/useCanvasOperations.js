@@ -27,18 +27,35 @@ export default function useCanvasOperations({
     onViewBoxChange(viewBox);
   }, [onViewBoxChange]);
 
-  const drawNode = useCallback((ctx, node, isSelected) => {
+  const drawNode = useCallback((ctx, node, isSelected, isDragging) => {
+    ctx.save();
+    ctx.restore();
+    
+    // Add shadow for depth
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+    ctx.shadowBlur = 5;
+    ctx.shadowOffsetY = 2;
+    
+    // Draw node background
     ctx.beginPath();
     ctx.arc(node.x, node.y, NODE_RADIUS, 0, 2 * Math.PI);
     ctx.fillStyle = '#fff';
     ctx.fill();
-    ctx.strokeStyle = isSelected ? '#ff9800' : '#007bff';
-    ctx.lineWidth = isSelected ? 4 : 2;
+
+    // Reset shadow for border
+    ctx.shadowColor = 'transparent';
+    
+    // Draw border
+    ctx.strokeStyle = isSelected ? '#ff9800' : isDragging ? '#4CAF50' : '#007bff';
+    ctx.lineWidth = isSelected || isDragging ? 4 : 2;
     ctx.stroke();
     
     if (isSelected) {
       ctx.shadowColor = '#ff9800';
       ctx.shadowBlur = 20;
+    } else if (isDragging) {
+      ctx.shadowColor = '#4CAF50';
+      ctx.shadowBlur = 15;
     }
     
     ctx.fillStyle = '#333';
