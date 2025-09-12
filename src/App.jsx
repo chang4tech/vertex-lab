@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { FormattedMessage, useIntl } from 'react-intl';
 import MindMapCanvas from './MindMapCanvas.jsx';
 import { Minimap } from './components/panels/Minimap';
 import Settings from './components/Settings';
+import { LocaleSelector } from './i18n/LocaleProvider';
+
 // --- Menu Bar Component ---
 function MenuBar({
   onExport, onImport, onNew, onUndo, onRedo, onDelete, onCenter, onZoomIn, onZoomOut, onResetZoom, onToggleDark,
@@ -11,6 +14,7 @@ function MenuBar({
   const fileInputRef = useRef();
   const [openMenu, setOpenMenu] = useState(null); // 'file' | 'edit' | 'view' | 'settings' | null
   const [showSettings, setShowSettings] = useState(false);
+  const intl = useIntl();
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -56,7 +60,7 @@ function MenuBar({
             e.preventDefault();
             console.log('File menu clicked');
             setOpenMenu(openMenu === 'file' ? null : 'file');
-          }}>File</span>
+          }}><FormattedMessage id="menu.file" defaultMessage="File" /></span>
           {menuDropdown('file', <>
             <div
               style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
@@ -68,7 +72,7 @@ function MenuBar({
                 setOpenMenu(null);
               }}
             >
-              <span>New</span>
+              <FormattedMessage id="file.new" defaultMessage="New" />
               <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘N</span>
             </div>
             <div
@@ -81,7 +85,7 @@ function MenuBar({
                 setOpenMenu(null);
               }}
             >
-              <span>Export JSON</span>
+              <FormattedMessage id="file.export" defaultMessage="Export JSON" />
               <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘S</span>
             </div>
             <div
@@ -96,7 +100,7 @@ function MenuBar({
                 setOpenMenu(null);
               }}
             >
-              <span>Export PNG</span>
+              <FormattedMessage id="file.exportPng" defaultMessage="Export PNG" />
               <span style={{ opacity: 0.5, marginLeft: 20 }}>⇧⌘S</span>
             </div>
             <div
@@ -109,7 +113,7 @@ function MenuBar({
                 setOpenMenu(null);
               }}
             >
-              <span>Import JSON</span>
+              <FormattedMessage id="file.import" defaultMessage="Import JSON" />
               <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘O</span>
             </div>
             <input
@@ -160,7 +164,7 @@ function MenuBar({
             e.preventDefault();
             console.log('Edit menu clicked');
             setOpenMenu(openMenu === 'edit' ? null : 'edit');
-          }}>Edit</span>
+          }}><FormattedMessage id="menu.edit" defaultMessage="Edit" /></span>
           {menuDropdown('edit', <>
             <div
               style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
@@ -172,7 +176,7 @@ function MenuBar({
                 setOpenMenu(null);
               }}
             >
-              <span>Undo</span>
+              <FormattedMessage id="edit.undo" defaultMessage="Undo" />
               <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘Z</span>
             </div>
             <div
@@ -185,7 +189,7 @@ function MenuBar({
                 setOpenMenu(null);
               }}
             >
-              <span>Redo</span>
+              <FormattedMessage id="edit.redo" defaultMessage="Redo" />
               <span style={{ opacity: 0.5, marginLeft: 20 }}>⇧⌘Z</span>
             </div>
             <div
@@ -198,7 +202,7 @@ function MenuBar({
                 setOpenMenu(null);
               }}
             >
-              <span>Delete</span>
+              <FormattedMessage id="edit.delete" defaultMessage="Delete" />
               <span style={{ opacity: 0.5, marginLeft: 20 }}>⌫</span>
             </div>
           </>)}
@@ -208,7 +212,7 @@ function MenuBar({
             e.preventDefault();
             console.log('View menu clicked');
             setOpenMenu(openMenu === 'view' ? null : 'view');
-          }}>View</span>
+          }}><FormattedMessage id="menu.view" defaultMessage="View" /></span>
           {menuDropdown('view', <>
             <div
               style={{ padding: '8px 20px', cursor: 'pointer' }}
@@ -219,7 +223,7 @@ function MenuBar({
                 onCenter();
                 setOpenMenu(null);
               }}
-            >Center</div>
+            ><FormattedMessage id="view.center" defaultMessage="Center" /></div>
             <div
               style={{ padding: '8px 20px', cursor: 'pointer' }}
               onClick={(e) => {
@@ -229,7 +233,7 @@ function MenuBar({
                 onZoomIn();
                 setOpenMenu(null);
               }}
-            >Zoom In</div>
+            ><FormattedMessage id="view.zoomIn" defaultMessage="Zoom In" /></div>
             <div
               style={{ padding: '8px 20px', cursor: 'pointer' }}
               onClick={(e) => {
@@ -239,7 +243,7 @@ function MenuBar({
                 onZoomOut();
                 setOpenMenu(null);
               }}
-            >Zoom Out</div>
+            ><FormattedMessage id="view.zoomOut" defaultMessage="Zoom Out" /></div>
             <div
               style={{ padding: '8px 20px', cursor: 'pointer' }}
               onClick={(e) => {
@@ -249,7 +253,7 @@ function MenuBar({
                 onResetZoom();
                 setOpenMenu(null);
               }}
-            >Reset Zoom</div>
+            ><FormattedMessage id="view.resetZoom" defaultMessage="Reset Zoom" /></div>
             <div className="menu-separator" style={{ margin: '4px 0', borderTop: '1px solid #eee' }} />
             <div
               style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
@@ -260,7 +264,7 @@ function MenuBar({
                 setOpenMenu(null);
               }}
             >
-              <span>Show Minimap</span>
+              <FormattedMessage id="view.showMinimap" defaultMessage="Show Minimap" />
               {showMinimap && <span style={{ marginLeft: 8 }}>✓</span>}
             </div>
           </>)}
@@ -270,7 +274,7 @@ function MenuBar({
             e.preventDefault();
             console.log('Library menu clicked');
             setOpenMenu(openMenu === 'library' ? null : 'library');
-          }}>Library</span>
+          }}><FormattedMessage id="menu.library" defaultMessage="Library" /></span>
           {menuDropdown('library', <>
             <div
               style={{ padding: '8px 20px', cursor: 'pointer' }}
@@ -278,16 +282,16 @@ function MenuBar({
                 e.preventDefault();
                 e.stopPropagation();
                 console.log('Save to Library clicked');
-                const name = window.prompt('Enter a name for this template:');
+                const name = window.prompt(intl.formatMessage({ id: 'library.enterName' }));
                 if (name) {
                   const library = JSON.parse(localStorage.getItem('mindmap_library') || '{}');
                   library[name] = nodes;
                   localStorage.setItem('mindmap_library', JSON.stringify(library));
-                  alert('Template saved to library');
+                  alert(intl.formatMessage({ id: 'library.saved' }));
                 }
                 setOpenMenu(null);
               }}
-            >Save to Library</div>
+            ><FormattedMessage id="library.save" defaultMessage="Save to Library" /></div>
             <div
               style={{ padding: '8px 20px', cursor: 'pointer' }}
               onClick={(e) => {
@@ -297,10 +301,12 @@ function MenuBar({
                 const library = JSON.parse(localStorage.getItem('mindmap_library') || '{}');
                 const templates = Object.keys(library);
                 if (templates.length === 0) {
-                  alert('No templates in library');
+                  alert(intl.formatMessage({ id: 'library.noTemplates' }));
                   return;
                 }
-                const name = window.prompt('Enter template name to load:\n\nAvailable templates:\n' + templates.join('\n'));
+                const name = window.prompt(intl.formatMessage(
+                  { id: 'library.availableTemplates' }) + '\n' + templates.join('\n')
+                );
                 if (name && library[name]) {
                   setNodes([...library[name]]);
                   setUndoStack([]);
@@ -310,11 +316,11 @@ function MenuBar({
                     canvasRef.current.center();
                   }
                 } else if (name) {
-                  alert('Template not found');
+                  alert(intl.formatMessage({ id: 'library.notFound' }));
                 }
                 setOpenMenu(null);
               }}
-            >Load from Library</div>
+            ><FormattedMessage id="library.load" defaultMessage="Load from Library" /></div>
             <div
               style={{ padding: '8px 20px', cursor: 'pointer' }}
               onClick={(e) => {
@@ -324,20 +330,24 @@ function MenuBar({
                 const library = JSON.parse(localStorage.getItem('mindmap_library') || '{}');
                 const templates = Object.keys(library);
                 if (templates.length === 0) {
-                  alert('No templates in library');
+                  alert(intl.formatMessage({ id: 'library.noTemplates' }));
                   return;
                 }
-                const name = window.prompt('Enter template name to delete:\n\nAvailable templates:\n' + templates.join('\n'));
+                const name = window.prompt(intl.formatMessage(
+                  { id: 'library.deletePrompt' }) + '\n\n' + 
+                  intl.formatMessage({ id: 'library.availableTemplates' }) + '\n' + 
+                  templates.join('\n')
+                );
                 if (name && library[name]) {
                   delete library[name];
                   localStorage.setItem('mindmap_library', JSON.stringify(library));
-                  alert('Template deleted from library');
+                  alert(intl.formatMessage({ id: 'library.deleted' }));
                 } else if (name) {
-                  alert('Template not found');
+                  alert(intl.formatMessage({ id: 'library.notFound' }));
                 }
                 setOpenMenu(null);
               }}
-            >Delete from Library</div>
+            ><FormattedMessage id="library.delete" defaultMessage="Delete from Library" /></div>
           </>)}
         </div>
         <div style={{ cursor: 'pointer', position: 'relative' }}>
@@ -345,7 +355,7 @@ function MenuBar({
             e.preventDefault();
             console.log('Settings menu clicked');
             setOpenMenu(openMenu === 'settings' ? null : 'settings');
-          }}>Settings</span>
+          }}><FormattedMessage id="menu.settings" defaultMessage="Settings" /></span>
           {menuDropdown('settings', <>
             <div
               style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
@@ -357,8 +367,12 @@ function MenuBar({
                 setOpenMenu(null);
               }}
             >
-              <span>Keyboard Shortcuts</span>
+              <span><FormattedMessage id="settings.shortcuts" defaultMessage="Keyboard Shortcuts" /></span>
               <span style={{ opacity: 0.5, marginLeft: 20 }}>?</span>
+            </div>
+            <div style={{ padding: '8px 20px' }}>
+              <FormattedMessage id="settings.language" defaultMessage="Language" />
+              <LocaleSelector />
             </div>
             <div
               style={{ padding: '8px 20px', cursor: 'pointer' }}
@@ -369,7 +383,7 @@ function MenuBar({
                 onToggleDark();
                 setOpenMenu(null);
               }}
-            >Toggle Dark Mode</div>
+            ><FormattedMessage id="view.toggleDarkMode" defaultMessage="Toggle Dark Mode" /></div>
           </>)}
         </div>
       </div>
@@ -861,9 +875,15 @@ function App() {
         nodes={nodes}
         viewBox={viewBox}
         visible={showMinimap}
+        onViewportChange={(newViewport) => {
+          if (canvasRef.current?.setViewport) {
+            canvasRef.current.setViewport(newViewport);
+          }
+        }}
       />
     </React.Fragment>
   );
 }
 
 export default App;
+

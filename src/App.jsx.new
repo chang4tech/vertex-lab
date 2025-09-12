@@ -1,0 +1,393 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { FormattedMessage, useIntl } from 'react-intl';
+import MindMapCanvas from './MindMapCanvas.jsx';
+import { Minimap } from './components/panels/Minimap';
+import Settings from './components/Settings';
+import { LocaleSelector } from './i18n/LocaleProvider';
+
+// --- Menu Bar Component ---
+function MenuBar({
+  onExport, onImport, onNew, onUndo, onRedo, onDelete, onCenter, onZoomIn, onZoomOut, onResetZoom, onToggleDark,
+  nodes, setNodes, setUndoStack, setRedoStack, setSelectedNodeId, canvasRef,
+  showMinimap, setShowMinimap
+}) {
+  const fileInputRef = useRef();
+  const [openMenu, setOpenMenu] = useState(null); // 'file' | 'edit' | 'view' | 'settings' | null
+  const [showSettings, setShowSettings] = useState(false);
+  const intl = useIntl();
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    if (!openMenu) return;
+
+    const handleClickOutside = (event) => {
+      // Don't close if clicking inside a menu
+      if (event.target.closest('.menu-dropdown')) return;
+      // Don't close if clicking on a menu trigger
+      if (event.target.closest('.menu-trigger')) return;
+      setOpenMenu(null);
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [openMenu]);
+
+  const menuDropdown = (type, items) => openMenu === type && (
+    <div className="menu-dropdown" style={{
+      position: 'absolute',
+      top: 32,
+      left: 0,
+      background: '#fff',
+      border: '1px solid #eee',
+      borderRadius: 4,
+      boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+      minWidth: 140,
+      zIndex: 1000,
+      padding: '4px 0'
+    }}>{items}</div>
+  );
+  return (
+    <>
+      {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+      <nav style={{
+        width: '100%', background: '#fff', borderBottom: '1px solid #eee',
+        display: 'flex', alignItems: 'center', padding: '0 24px', height: 48, zIndex: 200, position: 'fixed', top: 0, left: 0, right: 0
+      }}>
+      <div style={{ fontWeight: 700, fontSize: 18, marginRight: 32 }}>🧠 MindMap</div>
+      <div style={{ display: 'flex', gap: 24 }}>
+        <div style={{ cursor: 'pointer', position: 'relative' }}>
+          <span className="menu-trigger" onClick={(e) => {
+            e.preventDefault();
+            console.log('File menu clicked');
+            setOpenMenu(openMenu === 'file' ? null : 'file');
+          }}><FormattedMessage id="menu.file" defaultMessage="File" /></span>
+          {menuDropdown('file', <>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('New clicked');
+                onNew();
+                setOpenMenu(null);
+              }}
+            >
+              <FormattedMessage id="file.new" defaultMessage="New" />
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘N</span>
+            </div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Export JSON clicked');
+                onExport();
+                setOpenMenu(null);
+              }}
+            >
+              <FormattedMessage id="file.export" defaultMessage="Export JSON" />
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘S</span>
+            </div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Export PNG clicked');
+                if (canvasRef.current?.exportAsPNG) {
+                  canvasRef.current.exportAsPNG();
+                }
+                setOpenMenu(null);
+              }}
+            >
+              <FormattedMessage id="file.exportPng" defaultMessage="Export PNG" />
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>⇧⌘S</span>
+            </div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Import JSON clicked');
+                fileInputRef.current.click();
+                setOpenMenu(null);
+              }}
+            >
+              <FormattedMessage id="file.import" defaultMessage="Import JSON" />
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘O</span>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json"
+              style={{ display: 'none' }}
+              onChange={e => {
+                console.log('File input change event');
+                const file = e.target.files[0];
+                if (!file) {
+                  console.log('No file selected');
+                  return;
+                }
+                console.log('Reading file:', file.name);
+                const reader = new FileReader();
+                reader.onload = evt => {
+                  try {
+                    const content = evt.target.result;
+                    console.log('File content:', content);
+                    const data = JSON.parse(content);
+                    console.log('Parsed data:', data);
+                    if (!Array.isArray(data)) {
+                      throw new Error('Imported data must be an array');
+                    }
+                    if (!data.every(n => n.id && typeof n.x === 'number' && typeof n.y === 'number' && typeof n.label === 'string')) {
+                      throw new Error('Invalid node format');
+                    }
+                    console.log('Importing valid data:', data.length, 'nodes');
+                    onImport(data);
+                  } catch (error) {
+                    console.error('Import error:', error);
+                    alert(`Import failed: ${error.message}`);
+                  }
+                };
+                reader.onerror = error => {
+                  console.error('File read error:', error);
+                  alert('Failed to read file');
+                };
+                reader.readAsText(file);
+                e.target.value = '';
+              }}
+            />
+          </>)}
+        </div>
+        <div style={{ cursor: 'pointer', position: 'relative' }}>
+          <span className="menu-trigger" onClick={(e) => {
+            e.preventDefault();
+            console.log('Edit menu clicked');
+            setOpenMenu(openMenu === 'edit' ? null : 'edit');
+          }}><FormattedMessage id="menu.edit" defaultMessage="Edit" /></span>
+          {menuDropdown('edit', <>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Undo clicked');
+                onUndo();
+                setOpenMenu(null);
+              }}
+            >
+              <FormattedMessage id="edit.undo" defaultMessage="Undo" />
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘Z</span>
+            </div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Redo clicked');
+                onRedo();
+                setOpenMenu(null);
+              }}
+            >
+              <FormattedMessage id="edit.redo" defaultMessage="Redo" />
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>⇧⌘Z</span>
+            </div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Delete clicked');
+                onDelete();
+                setOpenMenu(null);
+              }}
+            >
+              <FormattedMessage id="edit.delete" defaultMessage="Delete" />
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>⌫</span>
+            </div>
+          </>)}
+        </div>
+        <div style={{ cursor: 'pointer', position: 'relative' }}>
+          <span className="menu-trigger" onClick={(e) => {
+            e.preventDefault();
+            console.log('View menu clicked');
+            setOpenMenu(openMenu === 'view' ? null : 'view');
+          }}><FormattedMessage id="menu.view" defaultMessage="View" /></span>
+          {menuDropdown('view', <>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Center clicked');
+                onCenter();
+                setOpenMenu(null);
+              }}
+            ><FormattedMessage id="view.center" defaultMessage="Center" /></div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Zoom In clicked');
+                onZoomIn();
+                setOpenMenu(null);
+              }}
+            ><FormattedMessage id="view.zoomIn" defaultMessage="Zoom In" /></div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Zoom Out clicked');
+                onZoomOut();
+                setOpenMenu(null);
+              }}
+            ><FormattedMessage id="view.zoomOut" defaultMessage="Zoom Out" /></div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Reset Zoom clicked');
+                onResetZoom();
+                setOpenMenu(null);
+              }}
+            ><FormattedMessage id="view.resetZoom" defaultMessage="Reset Zoom" /></div>
+            <div className="menu-separator" style={{ margin: '4px 0', borderTop: '1px solid #eee' }} />
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowMinimap(!showMinimap);
+                setOpenMenu(null);
+              }}
+            >
+              <FormattedMessage id="view.showMinimap" defaultMessage="Show Minimap" />
+              {showMinimap && <span style={{ marginLeft: 8 }}>✓</span>}
+            </div>
+          </>)}
+        </div>
+        <div style={{ cursor: 'pointer', position: 'relative' }}>
+          <span className="menu-trigger" onClick={(e) => {
+            e.preventDefault();
+            console.log('Library menu clicked');
+            setOpenMenu(openMenu === 'library' ? null : 'library');
+          }}><FormattedMessage id="menu.library" defaultMessage="Library" /></span>
+          {menuDropdown('library', <>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Save to Library clicked');
+                const name = window.prompt(intl.formatMessage({ id: 'library.enterName' }));
+                if (name) {
+                  const library = JSON.parse(localStorage.getItem('mindmap_library') || '{}');
+                  library[name] = nodes;
+                  localStorage.setItem('mindmap_library', JSON.stringify(library));
+                  alert(intl.formatMessage({ id: 'library.saved' }));
+                }
+                setOpenMenu(null);
+              }}
+            ><FormattedMessage id="library.save" defaultMessage="Save to Library" /></div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Load from Library clicked');
+                const library = JSON.parse(localStorage.getItem('mindmap_library') || '{}');
+                const templates = Object.keys(library);
+                if (templates.length === 0) {
+                  alert(intl.formatMessage({ id: 'library.noTemplates' }));
+                  return;
+                }
+                const name = window.prompt(intl.formatMessage(
+                  { id: 'library.availableTemplates' }) + '\n' + templates.join('\n')
+                );
+                if (name && library[name]) {
+                  setNodes([...library[name]]);
+                  setUndoStack([]);
+                  setRedoStack([]);
+                  setSelectedNodeId(null);
+                  if (canvasRef.current?.center) {
+                    canvasRef.current.center();
+                  }
+                } else if (name) {
+                  alert(intl.formatMessage({ id: 'library.notFound' }));
+                }
+                setOpenMenu(null);
+              }}
+            ><FormattedMessage id="library.load" defaultMessage="Load from Library" /></div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Delete from Library clicked');
+                const library = JSON.parse(localStorage.getItem('mindmap_library') || '{}');
+                const templates = Object.keys(library);
+                if (templates.length === 0) {
+                  alert(intl.formatMessage({ id: 'library.noTemplates' }));
+                  return;
+                }
+                const name = window.prompt(intl.formatMessage(
+                  { id: 'library.deletePrompt' }) + '\n\n' + 
+                  intl.formatMessage({ id: 'library.availableTemplates' }) + '\n' + 
+                  templates.join('\n')
+                );
+                if (name && library[name]) {
+                  delete library[name];
+                  localStorage.setItem('mindmap_library', JSON.stringify(library));
+                  alert(intl.formatMessage({ id: 'library.deleted' }));
+                } else if (name) {
+                  alert(intl.formatMessage({ id: 'library.notFound' }));
+                }
+                setOpenMenu(null);
+              }}
+            ><FormattedMessage id="library.delete" defaultMessage="Delete from Library" /></div>
+          </>)}
+        </div>
+        <div style={{ cursor: 'pointer', position: 'relative' }}>
+          <span className="menu-trigger" onClick={(e) => {
+            e.preventDefault();
+            console.log('Settings menu clicked');
+            setOpenMenu(openMenu === 'settings' ? null : 'settings');
+          }}><FormattedMessage id="menu.settings" defaultMessage="Settings" /></span>
+          {menuDropdown('settings', <>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Keyboard Shortcuts clicked');
+                setShowSettings(true);
+                setOpenMenu(null);
+              }}
+            >
+              <span><FormattedMessage id="settings.shortcuts" defaultMessage="Keyboard Shortcuts" /></span>
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>?</span>
+            </div>
+            <div style={{ padding: '8px 20px' }}>
+              <FormattedMessage id="settings.language" defaultMessage="Language" />
+              <LocaleSelector />
+            </div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Toggle Dark Mode clicked');
+                onToggleDark();
+                setOpenMenu(null);
+              }}
+            ><FormattedMessage id="view.toggleDarkMode" defaultMessage="Toggle Dark Mode" /></div>
+          </>)}
+        </div>
+      </div>
+    </nav>
+    </>
+  );
+}
