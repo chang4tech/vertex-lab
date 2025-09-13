@@ -10,6 +10,7 @@ import NodeInfoPanel from './components/NodeInfoPanel';
 import { LocaleSelector } from './i18n/LocaleProvider';
 import { useTheme } from './contexts/ThemeContext';
 import { organizeLayout, detectCollisions } from './utils/layoutUtils';
+import { formatShortcut } from './utils/shortcutUtils';
 import { updateNode } from './utils/nodeUtils';
 import { createEnhancedNode } from './utils/nodeUtils';
 
@@ -252,8 +253,10 @@ function MenuBar({
             setOpenMenu(openMenu === 'view' ? null : 'view');
           }}><FormattedMessage id="menu.view" defaultMessage="View" /></span>
           {menuDropdown('view', <>
+            {/** helper for shortcut display */}
+            {(() => { return null; })()}
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -261,9 +264,12 @@ function MenuBar({
                 onCenter();
                 setOpenMenu(null);
               }}
-            ><FormattedMessage id="view.center" defaultMessage="Center" /></div>
+            >
+              <FormattedMessage id="view.center" defaultMessage="Center" />
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>{formatShortcut({ key: 'c', modifiers: ['alt'] })}</span>
+            </div>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -271,9 +277,12 @@ function MenuBar({
                 onZoomIn();
                 setOpenMenu(null);
               }}
-            ><FormattedMessage id="view.zoomIn" defaultMessage="Zoom In" /></div>
+            >
+              <FormattedMessage id="view.zoomIn" defaultMessage="Zoom In" />
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>{formatShortcut({ key: '+', modifiers: ['alt'] })}</span>
+            </div>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -281,9 +290,12 @@ function MenuBar({
                 onZoomOut();
                 setOpenMenu(null);
               }}
-            ><FormattedMessage id="view.zoomOut" defaultMessage="Zoom Out" /></div>
+            >
+              <FormattedMessage id="view.zoomOut" defaultMessage="Zoom Out" />
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>{formatShortcut({ key: '-', modifiers: ['alt'] })}</span>
+            </div>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -291,7 +303,10 @@ function MenuBar({
                 onResetZoom();
                 setOpenMenu(null);
               }}
-            ><FormattedMessage id="view.resetZoom" defaultMessage="Reset Zoom" /></div>
+            >
+              <FormattedMessage id="view.resetZoom" defaultMessage="Reset Zoom" />
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>{formatShortcut({ key: '0', modifiers: ['alt'] })}</span>
+            </div>
             <div className="menu-separator" style={{ margin: '4px 0', borderTop: '1px solid #eee' }} />
             <div
               style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
@@ -303,6 +318,7 @@ function MenuBar({
               }}
             >
               <FormattedMessage id="view.showMinimap" defaultMessage="Show Minimap" />
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>{formatShortcut({ key: 'm', modifiers: [] })}</span>
               {showMinimap && <span style={{ marginLeft: 8 }}>✓</span>}
             </div>
             <div
@@ -315,6 +331,7 @@ function MenuBar({
               }}
             >
               <FormattedMessage id="view.showNodeInfoPanel" defaultMessage="Show Node Info" />
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>{formatShortcut({ key: 'i', modifiers: ['cmd'] })}</span>
               {showNodeInfoPanel && <span style={{ marginLeft: 8 }}>✓</span>}
             </div>
           </>)}

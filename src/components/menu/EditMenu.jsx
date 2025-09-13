@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatShortcut } from '../../utils/shortcutUtils';
 
 export function EditMenu({ onUndo, onRedo, onDelete, isOpen, onClose }) {
   const menuStyle = {
@@ -30,6 +31,8 @@ export function EditMenu({ onUndo, onRedo, onDelete, isOpen, onClose }) {
     handler();
     onClose();
   }, [onClose]);
+
+  const key = (k, mods=[]) => formatShortcut({ key: k, modifiers: mods });
 
   return (
     <div className="menu-dropdown" style={menuStyle}>
