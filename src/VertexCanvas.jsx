@@ -601,13 +601,16 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
           ? selectedNodeIds.filter(id => id !== clickedNodeId)
           : [...selectedNodeIds, clickedNodeId];
         onSelectionChange && onSelectionChange(newSelection);
+        // Do not trigger single-select click callback in multi-select mode
       } else {
         // Single selection
         onSelectionChange && onSelectionChange([clickedNodeId]);
       }
       
       // Also call the original onNodeClick for backward compatibility
-      onNodeClick && onNodeClick(clickedNodeId);
+      if (!isMultiSelect) {
+        onNodeClick && onNodeClick(clickedNodeId);
+      }
     } else if (!isMultiSelect) {
       // Clear selection when clicking empty space (unless multi-selecting)
       onSelectionChange && onSelectionChange([]);

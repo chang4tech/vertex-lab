@@ -83,6 +83,24 @@ describe('VertexCanvas', () => {
     expect(mockProps.onNodeClick).toHaveBeenCalledWith(1);
   });
 
+  it('does not call onNodeClick when meta/ctrl multi-selecting', () => {
+    const onSelectionChange = vi.fn();
+    const onNodeClick = vi.fn();
+    const { container } = renderWithTheme(
+      <VertexCanvas
+        nodes={mockNodes}
+        onNodeClick={onNodeClick}
+        selectedNodeIds={[]}
+        onSelectionChange={onSelectionChange}
+      />
+    );
+    const canvas = container.querySelector('canvas');
+
+    fireEvent.click(canvas, { clientX: 250, clientY: 200, metaKey: true });
+    expect(onSelectionChange).toHaveBeenLastCalledWith([2]);
+    expect(onNodeClick).not.toHaveBeenCalled();
+  });
+
   it('handles node drag', () => {
     const { container } = renderWithTheme(<VertexCanvas {...mockProps} />);
     const canvas = container.querySelector('canvas');
