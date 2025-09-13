@@ -1,6 +1,6 @@
-# Mind Map Application
-
-A powerful and intuitive mind mapping tool built with React and HTML5 Canvas. Create, organize, and visualize your thoughts with an interactive and user-friendly interface.
+# Vertex Lab
+ 
+A powerful and intuitive diagramming tool built with React and HTML5 Canvas. Create, organize, and visualize your thoughts with an interactive and user-friendly interface.
 
 ## Features
 
@@ -51,7 +51,7 @@ A powerful and intuitive mind mapping tool built with React and HTML5 Canvas. Cr
 1. Clone the repository:
    ```bash
    git clone <repository-url>
-   cd react-mindmap-app
+   cd vertex-lab-app
    ```
 
 2. Install dependencies:
@@ -95,26 +95,26 @@ A powerful and intuitive mind mapping tool built with React and HTML5 Canvas. Cr
 4. **File Operations**
    - Use File menu or keyboard shortcuts for import/export
    - Save frequently used layouts as templates
-   - Export your mind map as PNG for sharing
+   - Export your diagram as PNG for sharing
 
 ### Template Library
 
 1. **Saving Templates**
-   - Create your mind map layout
+   - Create your diagram layout
    - Click Library > Save to Library
    - Enter a name for your template
 
 2. **Loading Templates**
    - Click Library > Load from Library
    - Select a template from the list
-   - The template will replace current mind map
+   - The template will replace current diagram
 
 ## Development
 
 ### Project Structure
 
 ```
-react-mindmap-app/
+vertex-lab-app/
 ├── src/
 │   ├── App.jsx          # Main application component
 │   ├── MindMapCanvas.jsx # Canvas rendering and interactions

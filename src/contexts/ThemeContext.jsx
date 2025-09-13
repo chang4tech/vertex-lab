@@ -15,7 +15,7 @@ export function useTheme() {
 export function ThemeProvider({ children }) {
   const [currentThemeId, setCurrentThemeId] = useState(() => {
     // Load theme from localStorage or use default
-    const savedTheme = localStorage.getItem('mindmap_theme');
+    const savedTheme = localStorage.getItem('vertex_theme');
     return savedTheme && savedTheme in themes ? savedTheme : defaultTheme.id;
   });
 
@@ -25,7 +25,7 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     const theme = getTheme(currentThemeId);
     setCurrentTheme(theme);
-    localStorage.setItem('mindmap_theme', currentThemeId);
+    localStorage.setItem('vertex_theme', currentThemeId);
     
     // Apply theme to document body for global styles
     applyThemeToDocument(theme);

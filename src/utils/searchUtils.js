@@ -108,7 +108,7 @@ export function highlightMatches(text, matchedIndices) {
 }
 
 // Search history management
-const SEARCH_HISTORY_KEY = 'mindmap_search_history';
+const SEARCH_HISTORY_KEY = 'vertex_search_history';
 const MAX_HISTORY_ITEMS = 10;
 
 export function getSearchHistory() {

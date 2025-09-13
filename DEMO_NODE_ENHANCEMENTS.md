@@ -25,7 +25,7 @@ The node enhancements feature has been successfully implemented! Here's how to t
 - **All existing shortcuts**: Still work as before
 
 ### 4. Backward Compatibility
-- **Automatic Upgrade**: Existing mind maps are automatically upgraded
+- **Automatic Upgrade**: Existing diagrams are automatically upgraded
 - **Import Support**: JSON imports work with both old and new formats
 - **No Data Loss**: All existing functionality preserved
 
@@ -71,7 +71,7 @@ npm run dev
 3. **Export/Import**: Export as JSON and reimport - enhanced properties should be preserved
 
 ### 6. Test Backward Compatibility
-1. **Import an old mind map** (without enhanced properties)
+1. **Import an old diagram** (without enhanced properties)
 2. **Verify it loads correctly** and nodes get default enhanced properties
 3. **Edit the imported nodes** - they should work with the new features
 

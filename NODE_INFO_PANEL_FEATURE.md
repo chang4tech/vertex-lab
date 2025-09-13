@@ -173,7 +173,7 @@ npm test -- src/__tests__/components/NodeInfoPanel.test.jsx
 ### **Panel Visibility**
 ```javascript
 // Default: Panel visible on startup
-// Saved to: localStorage 'mindmap_show_node_info_panel'
+// Saved to: localStorage 'vertex_show_node_info_panel'
 // Toggle: View menu or Cmd/Ctrl + I
 ```
 

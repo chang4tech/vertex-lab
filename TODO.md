@@ -1,4 +1,4 @@
-# Mind Map Application TODOs
+# Vertex Lab TODOs
 
 ## Recently Completed ✅
 - **Visual theme system** - 5 beautiful themes with instant switching and persistence (View → Choose Theme)

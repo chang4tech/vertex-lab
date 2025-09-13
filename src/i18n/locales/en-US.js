@@ -173,5 +173,5 @@ export default {
   'themes.focus.description': 'Minimal distractions for concentration',
 
   // App name
-  'app.name': '🧠 MindMap',
+  'app.name': '🧠 Vertex Lab',
 };

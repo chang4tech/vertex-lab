@@ -11,7 +11,7 @@ import {
 } from './utils/nodeUtils';
 
 /**
- * MindMapCanvas - a simple mind map canvas using HTML5 Canvas.
+ * VertexCanvas - a simple diagramming canvas using HTML5 Canvas.
  * Props:
  *   nodes: array of node objects { id, label, x, y, parentId }
  *   onNodeClick: function(nodeId)
@@ -207,7 +207,7 @@ function drawEdge(ctx, from, to, theme) {
 
 import { forwardRef, useImperativeHandle } from 'react';
 
-const MindMapCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, selectedNodeIds = [], onNodePositionChange, highlightedNodeIds = [], onSelectionChange }, ref) => {
+const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, selectedNodeIds = [], onNodePositionChange, highlightedNodeIds = [], onSelectionChange }, ref) => {
   const canvasRef = useRef(null);
   const { currentTheme } = useTheme();
   
@@ -240,7 +240,7 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, selec
       const link = document.createElement('a');
       const now = new Date();
       const pad = n => n.toString().padStart(2, '0');
-      const filename = `mindmap-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.png`;
+      const filename = `vertex-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.png`;
       link.download = filename;
       link.href = canvas.toDataURL('image/png');
       document.body.appendChild(link);
@@ -538,4 +538,4 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, selec
   );
 });
 
-export default MindMapCanvas;
+export default VertexCanvas;

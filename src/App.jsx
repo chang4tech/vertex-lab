@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import MindMapCanvas from './MindMapCanvas.jsx';
+import VertexCanvas from './VertexCanvas.jsx';
 import { Minimap } from './components/panels/Minimap';
 import Settings from './components/Settings';
 import Search from './components/Search';
@@ -63,7 +63,7 @@ function MenuBar({
         borderBottom: `1px solid ${currentTheme.colors.menuBorder}`,
         display: 'flex', alignItems: 'center', padding: '0 24px', height: 48, zIndex: 200, position: 'fixed', top: 0, left: 0, right: 0
       }}>
-      <div style={{ fontWeight: 700, fontSize: 18, marginRight: 32, color: currentTheme.colors.menuText }}>🧠 MindMap</div>
+      <div style={{ fontWeight: 700, fontSize: 18, marginRight: 32, color: currentTheme.colors.menuText }}>🧠 Vertex Lab</div>
       <div style={{ display: 'flex', gap: 24 }}>
         <div style={{ cursor: 'pointer', position: 'relative' }}>
           <span className="menu-trigger" onClick={(e) => {
@@ -333,9 +333,9 @@ function MenuBar({
                 console.log('Save to Library clicked');
                 const name = window.prompt(intl.formatMessage({ id: 'library.enterName' }));
                 if (name) {
-                  const library = JSON.parse(localStorage.getItem('mindmap_library') || '{}');
+                  const library = JSON.parse(localStorage.getItem('vertex_library') || '{}');
                   library[name] = nodes;
-                  localStorage.setItem('mindmap_library', JSON.stringify(library));
+                  localStorage.setItem('vertex_library', JSON.stringify(library));
                   alert(intl.formatMessage({ id: 'library.saved' }));
                 }
                 setOpenMenu(null);
@@ -347,7 +347,7 @@ function MenuBar({
                 e.preventDefault();
                 e.stopPropagation();
                 console.log('Load from Library clicked');
-                const library = JSON.parse(localStorage.getItem('mindmap_library') || '{}');
+                const library = JSON.parse(localStorage.getItem('vertex_library') || '{}');
                 const templates = Object.keys(library);
                 if (templates.length === 0) {
                   alert(intl.formatMessage({ id: 'library.noTemplates' }));
@@ -376,7 +376,7 @@ function MenuBar({
                 e.preventDefault();
                 e.stopPropagation();
                 console.log('Delete from Library clicked');
-                const library = JSON.parse(localStorage.getItem('mindmap_library') || '{}');
+                const library = JSON.parse(localStorage.getItem('vertex_library') || '{}');
                 const templates = Object.keys(library);
                 if (templates.length === 0) {
                   alert(intl.formatMessage({ id: 'library.noTemplates' }));
@@ -389,7 +389,7 @@ function MenuBar({
                 );
                 if (name && library[name]) {
                   delete library[name];
-                  localStorage.setItem('mindmap_library', JSON.stringify(library));
+                  localStorage.setItem('vertex_library', JSON.stringify(library));
                   alert(intl.formatMessage({ id: 'library.deleted' }));
                 } else if (name) {
                   alert(intl.formatMessage({ id: 'library.notFound' }));
@@ -586,19 +586,19 @@ function App() {
 
   // Minimap and viewport state
   const [showMinimap, setShowMinimap] = useState(() => {
-    const saved = localStorage.getItem('mindmap_show_minimap');
+    const saved = localStorage.getItem('vertex_show_minimap');
     return saved !== null ? saved === 'true' : false;
   });
   const [viewBox, setViewBox] = useState({ x: 0, y: 0, width: 800, height: 600 });
 
   // Save minimap visibility preference
   useEffect(() => {
-    localStorage.setItem('mindmap_show_minimap', showMinimap);
+    localStorage.setItem('vertex_show_minimap', showMinimap);
   }, [showMinimap]);
 
   // Mind map state with localStorage persistence
   const [nodes, setNodes] = useState(() => {
-    const savedNodes = localStorage.getItem('mindmap_nodes');
+    const savedNodes = localStorage.getItem('vertex_nodes');
     if (savedNodes) {
       try {
         const parsedNodes = JSON.parse(savedNodes);
@@ -652,13 +652,13 @@ function App() {
 
   // Node info panel state
   const [showNodeInfoPanel, setShowNodeInfoPanel] = useState(() => {
-    const saved = localStorage.getItem('mindmap_show_node_info_panel');
+    const saved = localStorage.getItem('vertex_show_node_info_panel');
     return saved !== null ? saved === 'true' : true;
   });
 
   // Save node info panel visibility preference
   useEffect(() => {
-    localStorage.setItem('mindmap_show_node_info_panel', showNodeInfoPanel);
+    localStorage.setItem('vertex_show_node_info_panel', showNodeInfoPanel);
   }, [showNodeInfoPanel]);
 
   // Handler functions wrapped in useCallback
@@ -715,23 +715,23 @@ function App() {
     console.log('handleImport called with:', data);
     if (Array.isArray(data) &&
         data.every(n => n.id && typeof n.x === 'number' && typeof n.y === 'number' && typeof n.label === 'string')) {
-      console.log('Importing valid mind map data:', data.length, 'nodes');
+      console.log('Importing valid diagram data:', data.length, 'nodes');
       // Clone and upgrade the data to ensure compatibility with enhanced nodes
       const importedNodes = data.map(node => createEnhancedNode({ ...node }));
       setNodes(importedNodes);
       setUndoStack([]);
       setRedoStack([]);
       setSelectedNodeId(null);
-      // Center the view on the imported mind map
+      // Center the view on the imported diagram
       setTimeout(() => {
         if (canvasRef.current?.center) {
-          console.log('Centering view on imported mind map');
+          console.log('Centering view on imported diagram');
           canvasRef.current.center();
         }
       }, 0);
     } else {
-      console.error('Invalid mind map data:', data);
-      alert('Invalid mind map data: Must contain nodes with id, label, x, y properties');
+      console.error('Invalid diagram data:', data);
+      alert('Invalid diagram data: Must contain nodes with id, label, x, y properties');
     }
   }, [canvasRef]);
 
@@ -800,7 +800,7 @@ function App() {
 
   // Save nodes to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem('mindmap_nodes', JSON.stringify(nodes));
+    localStorage.setItem('vertex_nodes', JSON.stringify(nodes));
   }, [nodes]);
 
   // Node info panel handlers
@@ -826,13 +826,13 @@ function App() {
         switch (e.key.toLowerCase()) {
           case 'n': {
             e.preventDefault();
-            console.log('New mind map');
+            console.log('New diagram');
             const initialNodes = [createEnhancedNode({ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, parentId: null })];
             setNodes([...initialNodes]);
             setUndoStack([]);
             setRedoStack([]);
             setSelectedNodeId(null);
-            localStorage.removeItem('mindmap_nodes');
+            localStorage.removeItem('vertex_nodes');
             setTimeout(() => {
               if (canvasRef.current?.center) canvasRef.current.center();
             }, 0);
@@ -1040,14 +1040,14 @@ function App() {
         setSelectedNodeId={setSelectedNodeId}
         canvasRef={canvasRef}
         onNew={() => {
-          console.log('New mind map');
+          console.log('New diagram');
           const initialNodes = [createEnhancedNode({ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, parentId: null })];
           setNodes([...initialNodes]);
           setUndoStack(() => []);
           setRedoStack(() => []);
           setSelectedNodeId(null);
-          // Clear the saved state when creating a new mind map
-          localStorage.removeItem('mindmap_nodes');
+          // Clear the saved state when creating a new diagram
+          localStorage.removeItem('vertex_nodes');
           // Give a small delay for the canvas to initialize
           setTimeout(() => {
             console.log('Centering canvas', { canvasRef: !!canvasRef.current, center: !!canvasRef.current?.center });
@@ -1113,7 +1113,7 @@ function App() {
       <HelpPanel isVisible={isHelpVisible} />
 
       {/* Mind map canvas */}
-      <MindMapCanvas
+      <VertexCanvas
         ref={canvasRef}
         nodes={nodes}
         onNodeClick={handleNodeClick}

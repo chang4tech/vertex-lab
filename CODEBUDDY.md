@@ -1,6 +1,6 @@
-# React Mind Map Application
+# Vertex Lab
 
-This is a powerful and intuitive mind mapping tool built with React and HTML5 Canvas. The application allows users to create, organize, and visualize thoughts with an interactive interface featuring drag-and-drop nodes, pan/zoom controls, and comprehensive keyboard shortcuts.
+This is a powerful and intuitive diagramming tool built with React and HTML5 Canvas. The application allows users to create, organize, and visualize thoughts with an interactive interface featuring drag-and-drop nodes, pan/zoom controls, and comprehensive keyboard shortcuts.
 
 ## Development Commands
 

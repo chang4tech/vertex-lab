@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import MindMapCanvas from '../../components/canvas/MindMapCanvas';
+import VertexCanvas from '../../VertexCanvas';
 
 // Mock canvas API
 const mockContext = {
@@ -16,7 +16,7 @@ const mockContext = {
   fillText: vi.fn()
 };
 
-describe('MindMapCanvas', () => {
+describe('VertexCanvas', () => {
   const mockNodes = [
     { id: 1, label: 'Root', x: 400, y: 300, parentId: null },
     { id: 2, label: 'Child 1', x: 250, y: 200, parentId: 1 },
@@ -52,7 +52,7 @@ describe('MindMapCanvas', () => {
   });
 
   it('renders canvas element', () => {
-    const { container } = render(<MindMapCanvas {...mockProps} />);
+    const { container } = render(<VertexCanvas {...mockProps} />);
     const canvas = container.querySelector('canvas');
     expect(canvas).toBeInTheDocument();
     expect(canvas).toHaveAttribute('width', '800');
@@ -60,7 +60,7 @@ describe('MindMapCanvas', () => {
   });
 
   it('handles node click', () => {
-    const { container } = render(<MindMapCanvas {...mockProps} />);
+    const { container } = render(<VertexCanvas {...mockProps} />);
     const canvas = container.querySelector('canvas');
     
     // Simulate click on node position
@@ -73,7 +73,7 @@ describe('MindMapCanvas', () => {
   });
 
   it('handles node drag', () => {
-    const { container } = render(<MindMapCanvas {...mockProps} />);
+    const { container } = render(<VertexCanvas {...mockProps} />);
     const canvas = container.querySelector('canvas');
     
     // Simulate drag start on node
@@ -95,7 +95,7 @@ describe('MindMapCanvas', () => {
   });
 
   it('handles canvas pan', () => {
-    const { container } = render(<MindMapCanvas {...mockProps} />);
+    const { container } = render(<VertexCanvas {...mockProps} />);
     const canvas = container.querySelector('canvas');
     
     // Simulate space key down
@@ -126,7 +126,7 @@ describe('MindMapCanvas', () => {
   });
 
   it('handles zoom with mouse wheel', () => {
-    const { container } = render(<MindMapCanvas {...mockProps} />);
+    const { container } = render(<VertexCanvas {...mockProps} />);
     const canvas = container.querySelector('canvas');
     
     // Simulate wheel zoom in
@@ -142,7 +142,7 @@ describe('MindMapCanvas', () => {
   describe('Ref methods', () => {
     it('exposes center method', () => {
       const ref = { current: null };
-      render(<MindMapCanvas {...mockProps} ref={ref} />);
+      render(<VertexCanvas {...mockProps} ref={ref} />);
       
       expect(typeof ref.current.center).toBe('function');
       ref.current.center();
@@ -153,7 +153,7 @@ describe('MindMapCanvas', () => {
 
     it('exposes zoom methods', () => {
       const ref = { current: null };
-      render(<MindMapCanvas {...mockProps} ref={ref} />);
+      render(<VertexCanvas {...mockProps} ref={ref} />);
       
       expect(typeof ref.current.zoom).toBe('function');
       expect(typeof ref.current.resetZoom).toBe('function');
@@ -167,7 +167,7 @@ describe('MindMapCanvas', () => {
 
     it('exposes exportAsPNG method', () => {
       const ref = { current: null };
-      render(<MindMapCanvas {...mockProps} ref={ref} />);
+      render(<VertexCanvas {...mockProps} ref={ref} />);
       
       expect(typeof ref.current.exportAsPNG).toBe('function');
       
