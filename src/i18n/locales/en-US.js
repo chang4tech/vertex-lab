@@ -25,6 +25,7 @@ export default {
   'view.zoomOut': 'Zoom Out',
   'view.resetZoom': 'Reset Zoom',
   'view.showMinimap': 'Show Minimap',
+  'view.showNodeInfoPanel': 'Show Node Info',
   'view.toggleTheme': 'Toggle Theme',
   'view.chooseTheme': 'Choose Theme',
 
@@ -107,6 +108,39 @@ export default {
   'priority.medium': 'Medium',
   'priority.high': 'High',
   'priority.critical': 'Critical',
+
+  // Node Info Panel
+  'nodeInfo.nodeDetails': 'Node Details',
+  'nodeInfo.multiSelection': '{count} Nodes Selected',
+  'nodeInfo.noSelection': 'No Selection',
+  'nodeInfo.selectPrompt': 'Select a node to view its details',
+  'nodeInfo.summary': 'Summary',
+  'nodeInfo.totalNodes': 'Total nodes: {count}',
+  'nodeInfo.withTags': 'With tags: {count}',
+  'nodeInfo.collapsed': 'Collapsed: {count}',
+  'nodeInfo.withIcons': 'With icons: {count}',
+  'nodeInfo.shapes': 'Shapes',
+  'nodeInfo.colors': 'Colors',
+  'nodeInfo.tags': 'Tags',
+  'nodeInfo.properties': 'Properties',
+  'nodeInfo.position': 'Position',
+  'nodeInfo.shape': 'Shape',
+  'nodeInfo.color': 'Color',
+  'nodeInfo.fontSize': 'Font Size',
+  'nodeInfo.parent': 'Parent ID',
+  'nodeInfo.notes': 'Notes',
+  'nodeInfo.timestamps': 'Timestamps',
+  'nodeInfo.created': 'Created',
+  'nodeInfo.updated': 'Updated',
+  'nodeInfo.edit': 'Edit Node',
+  'nodeInfo.expand': 'Expand Node',
+  'nodeInfo.collapse': 'Collapse Node',
+  'nodeInfo.delete': 'Delete Node',
+  'nodeInfo.deleteSelected': 'Delete Selected ({count})',
+
+  // Common values
+  'common.unknown': 'Unknown',
+  'common.invalid': 'Invalid',
 
   // Common
   'common.close': 'Close',

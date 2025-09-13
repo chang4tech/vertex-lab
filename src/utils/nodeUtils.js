@@ -68,6 +68,14 @@ export const COMMON_TAGS = [
   { id: 'resource', name: 'Resource', color: '#00bcd4' }
 ];
 
+// Priority levels
+export const PRIORITY_LEVELS = {
+  LOW: 'low',
+  MEDIUM: 'medium',
+  HIGH: 'high',
+  CRITICAL: 'critical'
+};
+
 // Node icons (emoji-based)
 export const NODE_ICONS = {
   NONE: '',

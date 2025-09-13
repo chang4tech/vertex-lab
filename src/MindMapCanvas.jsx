@@ -207,7 +207,7 @@ function drawEdge(ctx, from, to, theme) {
 
 import { forwardRef, useImperativeHandle } from 'react';
 
-const MindMapCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, selectedNodeId, onNodePositionChange, highlightedNodeIds = [] }, ref) => {
+const MindMapCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, selectedNodeIds = [], onNodePositionChange, highlightedNodeIds = [], onSelectionChange }, ref) => {
   const canvasRef = useRef(null);
   const { currentTheme } = useTheme();
   
@@ -297,7 +297,7 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, selec
     
     // Draw visible nodes with selection and highlighting
     visibleNodes.forEach(node => {
-      const isSelected = selectedNodeId && node.id === selectedNodeId;
+      const isSelected = selectedNodeIds.includes(node.id);
       const isHighlighted = highlightedNodeIds.includes(node.id);
       
       if (isSelected) {
@@ -311,7 +311,7 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, selec
       }
     });
     ctx.restore();
-  }, [nodes, selectedNodeId, highlightedNodeIds, currentTheme]);
+  }, [nodes, selectedNodeIds, highlightedNodeIds, currentTheme]);
 
   // Mouse events for drag and pan
   useEffect(() => {
@@ -424,7 +424,7 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, selec
       
       // Draw visible nodes
       visibleNodes.forEach(node => {
-        const isSelected = selectedNodeId && node.id === selectedNodeId;
+        const isSelected = selectedNodeIds.includes(node.id);
         const isHighlighted = highlightedNodeIds.includes(node.id);
         
         if (isSelected) {
@@ -453,7 +453,7 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, selec
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [nodes, onNodePositionChange, selectedNodeId, highlightedNodeIds, currentTheme]);
+  }, [nodes, onNodePositionChange, selectedNodeIds, highlightedNodeIds, currentTheme]);
 
   // Handle click (with pan/zoom)
   const handleClick = e => {
@@ -463,14 +463,38 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, selec
     
     // Check visible nodes only
     const visibleNodes = getVisibleNodes(nodes);
+    let clickedNodeId = null;
+    
     for (const node of visibleNodes) {
       const dx = node.x - x;
       const dy = node.y - y;
       const nodeRadius = currentTheme.colors.nodeRadius;
       if (dx * dx + dy * dy < nodeRadius * nodeRadius) {
-        onNodeClick && onNodeClick(node.id);
+        clickedNodeId = node.id;
         break;
       }
+    }
+    
+    // Handle multi-selection with Ctrl/Cmd key
+    const isMultiSelect = e.ctrlKey || e.metaKey;
+    
+    if (clickedNodeId) {
+      if (isMultiSelect) {
+        // Toggle selection for multi-select
+        const newSelection = selectedNodeIds.includes(clickedNodeId)
+          ? selectedNodeIds.filter(id => id !== clickedNodeId)
+          : [...selectedNodeIds, clickedNodeId];
+        onSelectionChange && onSelectionChange(newSelection);
+      } else {
+        // Single selection
+        onSelectionChange && onSelectionChange([clickedNodeId]);
+      }
+      
+      // Also call the original onNodeClick for backward compatibility
+      onNodeClick && onNodeClick(clickedNodeId);
+    } else if (!isMultiSelect) {
+      // Clear selection when clicking empty space (unless multi-selecting)
+      onSelectionChange && onSelectionChange([]);
     }
   };
 

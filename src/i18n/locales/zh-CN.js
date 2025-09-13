@@ -25,6 +25,7 @@ export default {
   'view.zoomOut': '缩小',
   'view.resetZoom': '重置缩放',
   'view.showMinimap': '显示小地图',
+  'view.showNodeInfoPanel': '显示节点信息',
   'view.toggleTheme': '切换主题',
   'view.chooseTheme': '选择主题',
 
@@ -107,6 +108,39 @@ export default {
   'priority.medium': '中',
   'priority.high': '高',
   'priority.critical': '紧急',
+
+  // Node Info Panel
+  'nodeInfo.nodeDetails': '节点详情',
+  'nodeInfo.multiSelection': '已选择 {count} 个节点',
+  'nodeInfo.noSelection': '未选择',
+  'nodeInfo.selectPrompt': '选择一个节点以查看其详情',
+  'nodeInfo.summary': '摘要',
+  'nodeInfo.totalNodes': '总节点数: {count}',
+  'nodeInfo.withTags': '带标签: {count}',
+  'nodeInfo.collapsed': '已折叠: {count}',
+  'nodeInfo.withIcons': '带图标: {count}',
+  'nodeInfo.shapes': '形状',
+  'nodeInfo.colors': '颜色',
+  'nodeInfo.tags': '标签',
+  'nodeInfo.properties': '属性',
+  'nodeInfo.position': '位置',
+  'nodeInfo.shape': '形状',
+  'nodeInfo.color': '颜色',
+  'nodeInfo.fontSize': '字体大小',
+  'nodeInfo.parent': '父节点ID',
+  'nodeInfo.notes': '备注',
+  'nodeInfo.timestamps': '时间戳',
+  'nodeInfo.created': '创建时间',
+  'nodeInfo.updated': '更新时间',
+  'nodeInfo.edit': '编辑节点',
+  'nodeInfo.expand': '展开节点',
+  'nodeInfo.collapse': '折叠节点',
+  'nodeInfo.delete': '删除节点',
+  'nodeInfo.deleteSelected': '删除选中项 ({count})',
+
+  // Common values
+  'common.unknown': '未知',
+  'common.invalid': '无效',
 
   // Common
   'common.close': '关闭',

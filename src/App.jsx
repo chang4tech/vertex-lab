@@ -6,6 +6,7 @@ import Settings from './components/Settings';
 import Search from './components/Search';
 import ThemeSelector from './components/ThemeSelector';
 import NodeEditor from './components/NodeEditor';
+import NodeInfoPanel from './components/NodeInfoPanel';
 import { LocaleSelector } from './i18n/LocaleProvider';
 import { useTheme } from './contexts/ThemeContext';
 import { organizeLayout } from './utils/layoutUtils';
@@ -15,7 +16,7 @@ import { createEnhancedNode } from './utils/nodeUtils';
 function MenuBar({
   onExport, onImport, onNew, onUndo, onRedo, onDelete, onAutoLayout, onSearch, onCenter, onZoomIn, onZoomOut, onResetZoom, onShowThemes,
   nodes, setNodes, setUndoStack, setRedoStack, setSelectedNodeId, canvasRef,
-  showMinimap, setShowMinimap
+  showMinimap, setShowMinimap, showNodeInfoPanel, onToggleNodeInfoPanel
 }) {
   const fileInputRef = useRef();
   const [openMenu, setOpenMenu] = useState(null); // 'file' | 'edit' | 'view' | 'settings' | null
@@ -302,6 +303,18 @@ function MenuBar({
             >
               <FormattedMessage id="view.showMinimap" defaultMessage="Show Minimap" />
               {showMinimap && <span style={{ marginLeft: 8 }}>✓</span>}
+            </div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onToggleNodeInfoPanel();
+                setOpenMenu(null);
+              }}
+            >
+              <FormattedMessage id="view.showNodeInfoPanel" defaultMessage="Show Node Info" />
+              {showNodeInfoPanel && <span style={{ marginLeft: 8 }}>✓</span>}
             </div>
           </>)}
         </div>
@@ -604,7 +617,8 @@ function App() {
       createEnhancedNode({ id: 5, label: 'Branch 4', x: 550, y: 400, parentId: 1 }),
     ];
   });
-  const [selectedNodeId, setSelectedNodeId] = useState(null);
+  const [selectedNodeIds, setSelectedNodeIds] = useState([]);
+  const [selectedNodeId, setSelectedNodeId] = useState(null); // Keep for backward compatibility
 
   useEffect(() => {
     setNodes(nodes => {
@@ -635,6 +649,17 @@ function App() {
   // Node editor state
   const [showNodeEditor, setShowNodeEditor] = useState(false);
   const [editingNodeId, setEditingNodeId] = useState(null);
+
+  // Node info panel state
+  const [showNodeInfoPanel, setShowNodeInfoPanel] = useState(() => {
+    const saved = localStorage.getItem('mindmap_show_node_info_panel');
+    return saved !== null ? saved === 'true' : true;
+  });
+
+  // Save node info panel visibility preference
+  useEffect(() => {
+    localStorage.setItem('mindmap_show_node_info_panel', showNodeInfoPanel);
+  }, [showNodeInfoPanel]);
 
   // Handler functions wrapped in useCallback
   const handleUndo = useCallback(() => {
@@ -778,6 +803,11 @@ function App() {
     localStorage.setItem('mindmap_nodes', JSON.stringify(nodes));
   }, [nodes]);
 
+  // Node info panel handlers
+  const handleToggleNodeInfoPanel = useCallback(() => {
+    setShowNodeInfoPanel(prev => !prev);
+  }, []);
+
   // Global keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -853,6 +883,22 @@ function App() {
             handleShowSearch();
             break;
           }
+
+          case 'i': {
+            e.preventDefault();
+            console.log('Toggle node info panel shortcut');
+            handleToggleNodeInfoPanel();
+            break;
+          }
+
+          case 'a': {
+            if (e.shiftKey) {
+              e.preventDefault();
+              console.log('Select all nodes shortcut');
+              setSelectedNodeIds(nodes.map(n => n.id));
+            }
+            break;
+          }
         }
       } else if (selectedNodeId) {
         // Node-specific shortcuts that require a selected node
@@ -898,7 +944,7 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canvasRef, fileInputRef, handleUndo, handleRedo, handleExport, handleAutoLayout, handleShowSearch, selectedNodeId, nodes, pushUndo, intl, createNewNode]);
+  }, [canvasRef, fileInputRef, handleUndo, handleRedo, handleExport, handleAutoLayout, handleShowSearch, handleToggleNodeInfoPanel, selectedNodeId, nodes, pushUndo, intl, createNewNode]);
 
   // Load help panel state from localStorage on initial render
   useEffect(() => {
@@ -915,10 +961,19 @@ function App() {
 
   const triggerClass = `trigger ${isHelpVisible ? 'active' : ''}`;
 
-  // Node click handler
+  // Selection change handler
+  const handleSelectionChange = useCallback((nodeIds) => {
+    console.log('Selection changed:', nodeIds);
+    setSelectedNodeIds(nodeIds);
+    // Update single selection for backward compatibility
+    setSelectedNodeId(nodeIds.length === 1 ? nodeIds[0] : null);
+  }, []);
+
+  // Node click handler (backward compatibility)
   const handleNodeClick = (nodeId) => {
     console.log('Node clicked:', { nodeId, currentSelected: selectedNodeId });
     setSelectedNodeId(nodeId);
+    setSelectedNodeIds([nodeId]);
   };
 
   // Node double-click handler for editing
@@ -941,6 +996,36 @@ function App() {
     ));
     setShowNodeEditor(false);
     setEditingNodeId(null);
+  }, [nodes, pushUndo]);
+
+  const handleEditNodeFromPanel = useCallback((nodeId) => {
+    setEditingNodeId(nodeId);
+    setShowNodeEditor(true);
+  }, []);
+
+  const handleDeleteNodesFromPanel = useCallback((nodeIds) => {
+    const collectIds = (id, acc) => {
+      acc.push(id);
+      nodes.filter(n => n.parentId === id).forEach(n => collectIds(n.id, acc));
+      return acc;
+    };
+    
+    let allIdsToDelete = [];
+    nodeIds.forEach(id => {
+      allIdsToDelete = [...allIdsToDelete, ...collectIds(id, [])];
+    });
+    
+    pushUndo(nodes.filter(n => !allIdsToDelete.includes(n.id)));
+    setSelectedNodeIds([]);
+    setSelectedNodeId(null);
+  }, [nodes, pushUndo]);
+
+  const handleToggleCollapseFromPanel = useCallback((nodeId) => {
+    pushUndo(nodes.map(node => 
+      node.id === nodeId 
+        ? { ...node, isCollapsed: !node.isCollapsed }
+        : node
+    ));
   }, [nodes, pushUndo]);
 
   return (
@@ -1009,6 +1094,8 @@ function App() {
         onShowThemes={handleShowThemes}
         showMinimap={showMinimap}
         setShowMinimap={setShowMinimap}
+        showNodeInfoPanel={showNodeInfoPanel}
+        onToggleNodeInfoPanel={handleToggleNodeInfoPanel}
       />
       <div style={{ height: 48 }} />
       <MainHeader />
@@ -1031,8 +1118,9 @@ function App() {
         nodes={nodes}
         onNodeClick={handleNodeClick}
         onNodeDoubleClick={handleNodeDoubleClick}
-        selectedNodeId={selectedNodeId}
+        selectedNodeIds={selectedNodeIds}
         highlightedNodeIds={highlightedNodeIds}
+        onSelectionChange={handleSelectionChange}
         onNodePositionChange={(id, x, y) => {
           pushUndo(nodes.map(n => n.id === id ? { ...n, x, y } : n));
         }}
@@ -1075,6 +1163,16 @@ function App() {
           onClose={handleCloseNodeEditor}
         />
       )}
+
+      {/* Node Info Panel */}
+      <NodeInfoPanel
+        selectedNodes={selectedNodeIds.map(id => nodes.find(n => n.id === id)).filter(Boolean)}
+        visible={showNodeInfoPanel}
+        onClose={() => setShowNodeInfoPanel(false)}
+        onEditNode={handleEditNodeFromPanel}
+        onDeleteNodes={handleDeleteNodesFromPanel}
+        onToggleCollapse={handleToggleCollapseFromPanel}
+      />
     </React.Fragment>
   );
 }
