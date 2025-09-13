@@ -280,6 +280,10 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
   const dragState = useRef({ dragging: false, nodeId: null, offsetX: 0, offsetY: 0 });
   // Pan state
   const panState = useRef({ panning: false, startX: 0, startY: 0, startOffsetX: 0, startOffsetY: 0 });
+  // Rectangle selection (marquee) state in world coords
+  const selectState = useRef({ selecting: false, startX: 0, startY: 0, currentX: 0, currentY: 0 });
+  // Suppress the next click if it was a drag selection
+  const suppressClickRef = useRef(false);
 
   // Draw with pan/zoom
   useEffect(() => {
@@ -322,6 +326,28 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
         drawNode(ctx, node, currentTheme, isSelected, isHighlighted);
       }
     });
+    // Draw selection marquee if active (draw in world space)
+    if (selectState.current.selecting) {
+      const sx = Math.min(selectState.current.startX, selectState.current.currentX);
+      const sy = Math.min(selectState.current.startY, selectState.current.currentY);
+      const sw = Math.abs(selectState.current.currentX - selectState.current.startX);
+      const sh = Math.abs(selectState.current.currentY - selectState.current.startY);
+      ctx.save();
+      ctx.translate(view.current.offsetX, view.current.offsetY);
+      ctx.scale(view.current.scale, view.current.scale);
+      ctx.strokeStyle = currentTheme.colors.primaryButton;
+      ctx.lineWidth = 1 / view.current.scale; // keep 1px on screen
+      // Semi-transparent fill
+      ctx.fillStyle = currentTheme.colors.primaryButton;
+      const prevAlpha = ctx.globalAlpha;
+      ctx.globalAlpha = 0.08;
+      ctx.fillRect(sx, sy, sw, sh);
+      ctx.globalAlpha = prevAlpha !== undefined ? prevAlpha : 1;
+      // Border
+      ctx.strokeRect(sx, sy, sw, sh);
+      ctx.restore();
+    }
+
     ctx.restore();
 
     if (typeof onViewBoxChange === 'function') {
@@ -368,6 +394,13 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
         };
         return;
       }
+      // Shift + drag to start marquee selection
+      if (e.shiftKey && e.button === 0) {
+        const { x, y } = getTransformed(e.clientX, e.clientY);
+        selectState.current = { selecting: true, startX: x, startY: y, currentX: x, currentY: y };
+        canvas.dispatchEvent(new Event('redraw'));
+        return;
+      }
       // Node drag
       const { x, y } = getTransformed(e.clientX, e.clientY);
       for (const node of nodes) {
@@ -386,6 +419,14 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
       }
     };
     const handleMouseMove = (e) => {
+      // Marquee selection update
+      if (selectState.current.selecting) {
+        const { x, y } = getTransformed(e.clientX, e.clientY);
+        selectState.current.currentX = x;
+        selectState.current.currentY = y;
+        canvas.dispatchEvent(new Event('redraw'));
+        return;
+      }
       // Pan
       if (panState.current.panning) {
         const dx = e.clientX - panState.current.startX;
@@ -403,7 +444,26 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
         onNodePositionChange(nodeId, x + offsetX, y + offsetY);
       }
     };
-    const handleMouseUp = () => {
+    const handleMouseUp = (e) => {
+      // Finish marquee selection
+      if (selectState.current.selecting) {
+        const { startX, startY, currentX, currentY } = selectState.current;
+        const minX = Math.min(startX, currentX);
+        const minY = Math.min(startY, currentY);
+        const maxX = Math.max(startX, currentX);
+        const maxY = Math.max(startY, currentY);
+        // Only trigger if dragged more than a tiny threshold
+        if (Math.abs(maxX - minX) > 2 && Math.abs(maxY - minY) > 2) {
+          const visibleNodes = getVisibleNodes(nodes);
+          const inRect = visibleNodes
+            .filter(n => n.x >= minX && n.x <= maxX && n.y >= minY && n.y <= maxY)
+            .map(n => n.id);
+          if (onSelectionChange) onSelectionChange(inRect);
+          suppressClickRef.current = true;
+        }
+        selectState.current = { selecting: false, startX: 0, startY: 0, currentX: 0, currentY: 0 };
+        canvas.dispatchEvent(new Event('redraw'));
+      }
       dragState.current = { dragging: false, nodeId: null, offsetX: 0, offsetY: 0 };
       panState.current = { panning: false, startX: 0, startY: 0, startOffsetX: 0, startOffsetY: 0 };
     };
@@ -459,6 +519,26 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
           drawNode(ctx, node, currentTheme, isSelected, isHighlighted);
         }
       });
+      // Draw selection marquee if active (world space)
+      if (selectState.current.selecting) {
+        const sx = Math.min(selectState.current.startX, selectState.current.currentX);
+        const sy = Math.min(selectState.current.startY, selectState.current.currentY);
+        const sw = Math.abs(selectState.current.currentX - selectState.current.startX);
+        const sh = Math.abs(selectState.current.currentY - selectState.current.startY);
+        ctx.save();
+        ctx.translate(view.current.offsetX, view.current.offsetY);
+        ctx.scale(view.current.scale, view.current.scale);
+        ctx.strokeStyle = currentTheme.colors.primaryButton;
+        ctx.lineWidth = 1 / view.current.scale;
+        ctx.fillStyle = currentTheme.colors.primaryButton;
+        const prevAlpha = ctx.globalAlpha;
+        ctx.globalAlpha = 0.08;
+        ctx.fillRect(sx, sy, sw, sh);
+        ctx.globalAlpha = prevAlpha !== undefined ? prevAlpha : 1;
+        ctx.strokeRect(sx, sy, sw, sh);
+        ctx.restore();
+      }
+
       ctx.restore();
 
       if (typeof onViewBoxChange === 'function') {
@@ -489,6 +569,10 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
 
   // Handle click (with pan/zoom)
   const handleClick = e => {
+    if (suppressClickRef.current) {
+      suppressClickRef.current = false;
+      return;
+    }
     const rect = canvasRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left - view.current.offsetX) / view.current.scale;
     const y = (e.clientY - rect.top - view.current.offsetY) / view.current.scale;

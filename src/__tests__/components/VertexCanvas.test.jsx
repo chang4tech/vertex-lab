@@ -191,4 +191,73 @@ describe('VertexCanvas', () => {
       expect(ref.current.canvasRef.current.toDataURL).toHaveBeenCalledWith('image/png');
     });
   });
+
+  it('supports ctrl/cmd click to toggle individual selection', () => {
+    const onSelectionChange = vi.fn();
+    const { container, rerender } = renderWithTheme(
+      <VertexCanvas
+        nodes={mockNodes}
+        onNodeClick={vi.fn()}
+        selectedNodeIds={[]}
+        onSelectionChange={onSelectionChange}
+      />
+    );
+    const canvas = container.querySelector('canvas');
+
+    // First ctrl/cmd click selects node 2
+    fireEvent.click(canvas, { clientX: 250, clientY: 200, metaKey: true });
+    expect(onSelectionChange).toHaveBeenLastCalledWith([2]);
+
+    // Rerender with selected [2], ctrl/cmd click node 3 to add
+    rerender(
+      <ThemeProvider>
+        <VertexCanvas
+          nodes={mockNodes}
+          onNodeClick={vi.fn()}
+          selectedNodeIds={[2]}
+          onSelectionChange={onSelectionChange}
+        />
+      </ThemeProvider>
+    );
+    fireEvent.click(canvas, { clientX: 550, clientY: 200, metaKey: true });
+    expect(onSelectionChange).toHaveBeenLastCalledWith([2, 3]);
+
+    // Rerender with selected [2,3], ctrl/cmd click node 2 to remove
+    rerender(
+      <ThemeProvider>
+        <VertexCanvas
+          nodes={mockNodes}
+          onNodeClick={vi.fn()}
+          selectedNodeIds={[2, 3]}
+          onSelectionChange={onSelectionChange}
+        />
+      </ThemeProvider>
+    );
+    fireEvent.click(canvas, { clientX: 250, clientY: 200, metaKey: true });
+    expect(onSelectionChange).toHaveBeenLastCalledWith([3]);
+  });
+
+  it('supports shift + drag marquee selection', () => {
+    const onSelectionChange = vi.fn();
+    const { container } = renderWithTheme(
+      <VertexCanvas
+        nodes={mockNodes}
+        onNodeClick={vi.fn()}
+        selectedNodeIds={[]}
+        onSelectionChange={onSelectionChange}
+      />
+    );
+    const canvas = container.querySelector('canvas');
+
+    // Drag a rectangle from (200,150) to (450,350) to include nodes 1 and 2
+    fireEvent.mouseDown(canvas, { clientX: 200, clientY: 150, shiftKey: true, button: 0 });
+    fireEvent.mouseMove(document, { clientX: 450, clientY: 350 });
+    fireEvent.mouseUp(document);
+
+    expect(onSelectionChange).toHaveBeenCalled();
+    const lastCall = onSelectionChange.mock.calls[onSelectionChange.mock.calls.length - 1][0];
+    // Should include node IDs 1 and 2, but not 3
+    expect(lastCall).toEqual(expect.arrayContaining([1, 2]));
+    expect(lastCall).not.toEqual(expect.arrayContaining([3]));
+  });
 });
