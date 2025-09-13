@@ -85,6 +85,7 @@ export default {
   'nodeEditor.priority': '优先级',
   'nodeEditor.notes': '备注',
   'nodeEditor.notesPlaceholder': '附加备注...',
+  'nodeEditor.confirmDelete': '确定要删除该节点及其所有子节点吗？',
 
   // Node Shapes
   'nodeShape.circle': '圆形',

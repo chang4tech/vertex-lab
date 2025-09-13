@@ -34,7 +34,7 @@ const NodeEditor = ({ node, visible, onSave, onClose, onDelete }) => {
   if (!visible) return null;
 
   const handleSave = () => {
-    onSave(updateNode(node, editedNode));
+    onSave(node.id, editedNode);
     onClose();
   };
 

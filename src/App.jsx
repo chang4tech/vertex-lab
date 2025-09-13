@@ -9,7 +9,8 @@ import NodeEditor from './components/NodeEditor';
 import NodeInfoPanel from './components/NodeInfoPanel';
 import { LocaleSelector } from './i18n/LocaleProvider';
 import { useTheme } from './contexts/ThemeContext';
-import { organizeLayout } from './utils/layoutUtils';
+import { organizeLayout, detectCollisions } from './utils/layoutUtils';
+import { updateNode } from './utils/nodeUtils';
 import { createEnhancedNode } from './utils/nodeUtils';
 
 // --- Menu Bar Component ---
@@ -798,6 +799,33 @@ function App() {
     });
   }, [nodes, intl]);
 
+  // Compute a non-overlapping position for a new child around its parent
+  const findNonOverlappingChildPosition = useCallback((parent, allNodes) => {
+    const tempId = -1;
+    const radii = [140, 180, 220, 260];
+    const tries = 16;
+    let best = { pos: { x: parent.x + 140, y: parent.y }, score: Infinity };
+
+    for (const r of radii) {
+      for (let i = 0; i < tries; i++) {
+        const angle = (2 * Math.PI / tries) * i;
+        const pos = { x: parent.x + Math.cos(angle) * r, y: parent.y + Math.sin(angle) * r };
+        const candidate = { id: tempId, label: intl.formatMessage({ id: 'node.newNode' }), x: pos.x, y: pos.y, parentId: parent.id };
+        const collisions = detectCollisions([...allNodes, candidate]);
+        // Count overlap involving candidate
+        const involving = collisions.filter(c => c.nodeA === tempId || c.nodeB === tempId);
+        if (involving.length === 0) {
+          return pos; // perfect spot
+        }
+        const overlapSum = involving.reduce((s, c) => s + (c.overlap || 0), 0);
+        if (overlapSum < best.score) {
+          best = { pos, score: overlapSum };
+        }
+      }
+    }
+    return best.pos;
+  }, [intl]);
+
   // Save nodes to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('vertex_nodes', JSON.stringify(nodes));
@@ -908,10 +936,7 @@ function App() {
             const parent = nodes.find(n => n.id === selectedNodeId);
             if (!parent) return nodes;
 
-            const angle = Math.random() * 2 * Math.PI;
-            const dist = 120;
-            const x = parent.x + Math.cos(angle) * dist;
-            const y = parent.y + Math.sin(angle) * dist;
+            const { x, y } = findNonOverlappingChildPosition(parent, nodes);
             return [
               ...nodes,
               createNewNode(parent.id, { x, y })
@@ -992,8 +1017,22 @@ function App() {
   const handleSaveNode = useCallback((nodeId, nodeData) => {
     console.log('Saving node:', nodeId, nodeData);
     pushUndo(nodes.map(node => 
-      node.id === nodeId ? { ...node, ...nodeData } : node
+      node.id === nodeId ? updateNode(node, nodeData) : node
     ));
+    setShowNodeEditor(false);
+    setEditingNodeId(null);
+  }, [nodes, pushUndo]);
+
+  const handleDeleteNode = useCallback((nodeId) => {
+    const collectIds = (id, acc) => {
+      acc.push(id);
+      nodes.filter(n => n.parentId === id).forEach(n => collectIds(n.id, acc));
+      return acc;
+    };
+    const idsToDelete = collectIds(nodeId, []);
+    pushUndo(nodes.filter(n => !idsToDelete.includes(n.id)));
+    setSelectedNodeIds([]);
+    setSelectedNodeId(null);
     setShowNodeEditor(false);
     setEditingNodeId(null);
   }, [nodes, pushUndo]);
@@ -1161,6 +1200,7 @@ function App() {
           visible={showNodeEditor}
           onSave={handleSaveNode}
           onClose={handleCloseNodeEditor}
+          onDelete={handleDeleteNode}
         />
       )}
 

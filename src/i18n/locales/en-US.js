@@ -85,6 +85,7 @@ export default {
   'nodeEditor.priority': 'Priority',
   'nodeEditor.notes': 'Notes',
   'nodeEditor.notesPlaceholder': 'Additional notes...',
+  'nodeEditor.confirmDelete': 'Are you sure you want to delete this node and all its children?',
 
   // Node Shapes
   'nodeShape.circle': 'Circle',
