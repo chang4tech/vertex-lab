@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 
-export function Minimap({ nodes, viewBox, scale = 0.15, visible }) {
+export function Minimap({ nodes, viewBox, scale = 0.15, visible, onViewportChange }) {
   const canvasRef = useRef(null);
+  const lastDraw = useRef({ bounds: null, finalScale: 1, padding: 20 });
 
   // Calculate diagram bounds
   const getBounds = useCallback(() => {
@@ -28,6 +29,7 @@ export function Minimap({ nodes, viewBox, scale = 0.15, visible }) {
     const mapHeight = bounds.maxY - bounds.minY + padding * 2;
     const baseScale = Math.min(200 / mapWidth, 150 / mapHeight);  // Target minimap size
     const finalScale = Math.min(scale, baseScale);
+    lastDraw.current = { bounds, finalScale, padding };
 
     // Update canvas size
     canvas.width = mapWidth * finalScale;
@@ -76,10 +78,35 @@ export function Minimap({ nodes, viewBox, scale = 0.15, visible }) {
 
   if (!visible) return null;
 
+  const handleClick = (e) => {
+    if (!onViewportChange) return;
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const { bounds, finalScale, padding } = lastDraw.current;
+    if (!bounds) return;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const cx = (e.clientX - rect.left) * scaleX;
+    const cy = (e.clientY - rect.top) * scaleY;
+    // Inverse of translate(padding)+translate(-bounds.min)
+    const worldX = (cx - padding * finalScale) / finalScale + bounds.minX;
+    const worldY = (cy - padding * finalScale) / finalScale + bounds.minY;
+    // Keep current viewport size if available
+    const width = viewBox?.width || 800;
+    const height = viewBox?.height || 600;
+    onViewportChange({
+      x: worldX - width / 2,
+      y: worldY - height / 2,
+      width,
+      height,
+    });
+  };
+
   return (
     <div className="minimap">
       <canvas
         ref={canvasRef}
+        onClick={handleClick}
         style={{
           border: '1px solid #ccc',
           borderRadius: '4px',
@@ -106,6 +133,7 @@ Minimap.propTypes = {
     width: PropTypes.number.isRequired,
     height: PropTypes.number.isRequired
   }),
+  onViewportChange: PropTypes.func,
   scale: PropTypes.number,
   visible: PropTypes.bool
 };

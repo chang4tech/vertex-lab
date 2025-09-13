@@ -87,7 +87,7 @@ mark {
   position: fixed;
   top: 80px;
   right: 20px;
-  z-index: 100;
+  z-index: 200; /* above side panels */
   pointer-events: none;
   visibility: hidden;
   transition: visibility 0.3s ease;
@@ -96,6 +96,10 @@ mark {
 .help.show {
   pointer-events: auto;
   visibility: visible;
+}
+
+.help.with-panel {
+  right: 360px; /* account for 320px panel + margin */
 }
 
 .rules {

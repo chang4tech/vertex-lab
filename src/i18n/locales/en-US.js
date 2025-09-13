@@ -71,6 +71,7 @@ export default {
   'nodeEditor.tags': 'Tags',
   'nodeEditor.advanced': 'Advanced',
   'nodeEditor.label': 'Label',
+  'nodeEditor.labelPlaceholder': 'Enter node text...',
   'nodeEditor.description': 'Description',
   'nodeEditor.color': 'Color',
   'nodeEditor.shape': 'Shape',

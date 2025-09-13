@@ -536,10 +536,10 @@ const Dialog = ({ visible, onClose, title, children, width = "300px", maxWidth =
  * Component: HelpPanel
  * Displays the keyboard shortcuts.
  */
-const HelpPanel = ({ isVisible }) => {
+const HelpPanel = ({ isVisible, withPanel = false }) => {
     const rulesClass = `rules ${isVisible ? 'show' : ''}`;
     return (
-        <div className="help">
+        <div className={`help ${isVisible ? 'show' : ''} ${withPanel ? 'with-panel' : ''}`}>
             <div className={rulesClass}>
                 <div className="rule"><span className="key">Tab</span><span className="desc">插入子节点</span></div>
                 <div className="rule"><span className="key">Enter</span><span className="desc">插入后置节点</span></div>
@@ -1149,7 +1149,7 @@ function App() {
         </div>
       </div>
 
-      <HelpPanel isVisible={isHelpVisible} />
+      <HelpPanel isVisible={isHelpVisible} withPanel={showNodeInfoPanel} />
 
       {/* Diagram canvas */}
       <VertexCanvas

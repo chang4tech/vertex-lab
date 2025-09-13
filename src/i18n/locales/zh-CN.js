@@ -71,6 +71,7 @@ export default {
   'nodeEditor.tags': '标签',
   'nodeEditor.advanced': '高级',
   'nodeEditor.label': '标签',
+  'nodeEditor.labelPlaceholder': '输入节点文本...',
   'nodeEditor.description': '描述',
   'nodeEditor.color': '颜色',
   'nodeEditor.shape': '形状',

@@ -31,6 +31,14 @@ const NodeEditor = ({ node, visible, onSave, onClose, onDelete }) => {
     setEditedNode(node);
   }, [node]);
 
+  // Lock body scroll while editor is open
+  useEffect(() => {
+    if (!visible) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prevOverflow; };
+  }, [visible]);
+
   if (!visible) return null;
 
   const handleSave = () => {
@@ -75,14 +83,19 @@ const NodeEditor = ({ node, visible, onSave, onClose, onDelete }) => {
   ];
 
   return (
-    <div onClick={handleOverlayClick} style={{
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="node-editor-title"
+      onClick={handleOverlayClick}
+      style={{
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
       bottom: 0,
       backgroundColor: currentTheme.colors.overlayBackground,
-      zIndex: 1000,
+      zIndex: 10000,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center'
@@ -91,9 +104,10 @@ const NodeEditor = ({ node, visible, onSave, onClose, onDelete }) => {
         backgroundColor: currentTheme.colors.panelBackground,
         borderRadius: '12px',
         boxShadow: `0 8px 32px ${currentTheme.colors.panelShadow}`,
-        width: '600px',
-        maxWidth: '90vw',
-        maxHeight: '80vh',
+        width: 'min(720px, 95vw)',
+        height: 'min(80vh, 820px)',
+        display: 'flex',
+        flexDirection: 'column',
         overflow: 'hidden'
       }}>
         {/* Header */}
@@ -104,7 +118,7 @@ const NodeEditor = ({ node, visible, onSave, onClose, onDelete }) => {
           alignItems: 'center',
           justifyContent: 'space-between'
         }}>
-          <h3 style={{
+          <h3 id="node-editor-title" style={{
             margin: 0,
             color: currentTheme.colors.primaryText,
             fontSize: '18px',
@@ -122,6 +136,7 @@ const NodeEditor = ({ node, visible, onSave, onClose, onDelete }) => {
               color: currentTheme.colors.secondaryText,
               padding: '4px'
             }}
+            aria-label={intl.formatMessage({ id: 'common.close', defaultMessage: 'Close' })}
           >
             ✕
           </button>
@@ -130,6 +145,8 @@ const NodeEditor = ({ node, visible, onSave, onClose, onDelete }) => {
         {/* Tabs */}
         <div style={{
           display: 'flex',
+          gap: '8px',
+          padding: '0 12px',
           borderBottom: `1px solid ${currentTheme.colors.panelBorder}`
         }}>
           {tabs.map(tab => (
@@ -156,8 +173,8 @@ const NodeEditor = ({ node, visible, onSave, onClose, onDelete }) => {
         {/* Content */}
         <div style={{
           padding: '20px',
-          maxHeight: '500px',
-          overflowY: 'auto'
+          overflowY: 'auto',
+          flex: 1
         }}>
           {activeTab === 'basic' && (
             <BasicTab 
@@ -252,6 +269,7 @@ const NodeEditor = ({ node, visible, onSave, onClose, onDelete }) => {
 
 // Basic tab component
 const BasicTab = ({ editedNode, setEditedNode, currentTheme, textareaRef }) => {
+  const intl = useIntl();
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
@@ -280,7 +298,7 @@ const BasicTab = ({ editedNode, setEditedNode, currentTheme, textareaRef }) => {
             fontFamily: 'inherit',
             resize: 'vertical'
           }}
-          placeholder="Enter node text..."
+          placeholder={intl.formatMessage({ id: 'nodeEditor.labelPlaceholder', defaultMessage: 'Enter node text...' })}
         />
       </div>
 
@@ -296,7 +314,7 @@ const BasicTab = ({ editedNode, setEditedNode, currentTheme, textareaRef }) => {
         </label>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(8, 1fr)',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))',
           gap: '8px'
         }}>
           {Object.entries(NODE_ICONS).map(([key, icon]) => (
@@ -373,7 +391,7 @@ const StyleTab = ({ editedNode, setEditedNode, currentTheme }) => {
         </label>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(6, 1fr)',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))',
           gap: '8px'
         }}>
           {Object.entries(NODE_COLORS).map(([key, color]) => (

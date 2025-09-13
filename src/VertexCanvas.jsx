@@ -54,7 +54,7 @@ function drawNode(ctx, node, theme, isSelected = false, isHighlighted = false) {
   const fontSize = enhancedNode.fontSize || 16;
   const fontWeight = enhancedNode.fontWeight || 'normal';
   const fontStyle = enhancedNode.fontStyle || 'normal';
-  ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px sans-serif`;
+  ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px system-ui, -apple-system, Segoe UI, Noto Color Emoji, Apple Color Emoji, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   
@@ -207,7 +207,7 @@ function drawEdge(ctx, from, to, theme) {
 
 import { forwardRef, useImperativeHandle } from 'react';
 
-const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, selectedNodeIds = [], onNodePositionChange, highlightedNodeIds = [], onSelectionChange }, ref) => {
+const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, selectedNodeIds = [], onNodePositionChange, highlightedNodeIds = [], onSelectionChange, onViewBoxChange }, ref) => {
   const canvasRef = useRef(null);
   const { currentTheme } = useTheme();
   
@@ -263,10 +263,16 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
       canvas.dispatchEvent(new Event('redraw'));
     },
     setViewport: (viewport) => {
-      view.current.offsetX = viewport.x;
-      view.current.offsetY = viewport.y;
-      view.current.scale = viewport.scale || view.current.scale;
       const canvas = canvasRef.current;
+      // If width/height provided, compute scale to fit
+      if (viewport.scale) {
+        view.current.scale = viewport.scale;
+      } else if (viewport.width) {
+        view.current.scale = canvas.width / viewport.width;
+      }
+      // Convert world to screen offsets
+      view.current.offsetX = -viewport.x * view.current.scale;
+      view.current.offsetY = -viewport.y * view.current.scale;
       canvas.dispatchEvent(new Event('redraw'));
     }
   }), [nodes]);
@@ -317,6 +323,16 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
       }
     });
     ctx.restore();
+
+    if (typeof onViewBoxChange === 'function') {
+      const vb = {
+        x: -view.current.offsetX / view.current.scale,
+        y: -view.current.offsetY / view.current.scale,
+        width: canvas.width / view.current.scale,
+        height: canvas.height / view.current.scale,
+      };
+      onViewBoxChange(vb);
+    }
   }, [nodes, selectedNodeIds, highlightedNodeIds, currentTheme]);
 
   // Mouse events for drag and pan
@@ -444,6 +460,16 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
         }
       });
       ctx.restore();
+
+      if (typeof onViewBoxChange === 'function') {
+        const vb = {
+          x: -view.current.offsetX / view.current.scale,
+          y: -view.current.offsetY / view.current.scale,
+          width: canvas.width / view.current.scale,
+          height: canvas.height / view.current.scale,
+        };
+        onViewBoxChange(vb);
+      }
     };
     canvas.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mousemove', handleMouseMove);
