@@ -103,7 +103,7 @@ export function Minimap({ nodes, viewBox, scale = 0.15, visible, onViewportChang
   };
 
   return (
-    <div className="minimap">
+    <div className={`minimap ${visible ? 'show' : ''}`}>
       <canvas
         ref={canvasRef}
         onClick={handleClick}
