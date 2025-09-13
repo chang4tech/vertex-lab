@@ -63,6 +63,7 @@ npm run dev
 3. **Icon Display**: Icons should appear next to node labels
 4. **Tag Indicators**: Small colored dots for nodes with tags
 5. **Collapsed Indicators**: Plus signs for collapsed nodes
+6. **Dark Theme Text**: Node text should be visible in both light and dark themes with proper contrast
 
 ### 5. Test Persistence
 1. **Edit some nodes** with different properties
@@ -82,6 +83,7 @@ npm run dev
 - **Icons**: Displayed before the node label text
 - **Shapes**: Nodes rendered in selected geometric shapes
 - **Colors**: Custom background colors for nodes
+- **Text Contrast**: Automatic text color adjustment for optimal readability on any background
 
 ### Node Editor
 - **Responsive Interface**: Tabs switch smoothly
@@ -102,6 +104,7 @@ If you encounter issues:
 2. **Clear LocalStorage**: Reset saved data if needed
 3. **Verify Node Structure**: Enhanced nodes should have all required properties
 4. **Test with Simple Cases**: Start with basic node edits before complex features
+5. **Dark Theme Text Issues**: Text color automatically adjusts based on background - light text on dark backgrounds, dark text on light backgrounds
 
 ## Technical Details
 

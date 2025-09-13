@@ -24,6 +24,22 @@ export const NODE_COLORS = {
   GRAY: '#f5f5f5'
 };
 
+// Dark theme variants of node colors
+export const NODE_COLORS_DARK = {
+  DEFAULT: '#2d2d2d',
+  BLUE: '#1e3a8a',
+  GREEN: '#166534',
+  YELLOW: '#a16207',
+  ORANGE: '#c2410c',
+  RED: '#dc2626',
+  PURPLE: '#7c2d12',
+  PINK: '#be185d',
+  TEAL: '#0f766e',
+  INDIGO: '#3730a3',
+  BROWN: '#78350f',
+  GRAY: '#374151'
+};
+
 // Node color metadata
 export const NODE_COLOR_INFO = {
   [NODE_COLORS.DEFAULT]: { name: 'Default', border: '#1976d2' },
@@ -142,6 +158,54 @@ export function getNodeBorderColor(node, theme) {
     return NODE_COLOR_INFO[node.color].border;
   }
   return theme.colors.nodeBorder;
+}
+
+// Calculate luminance of a color (for text contrast)
+function getLuminance(color) {
+  // Convert hex to RGB
+  const hex = color.replace('#', '');
+  const r = parseInt(hex.substr(0, 2), 16) / 255;
+  const g = parseInt(hex.substr(2, 2), 16) / 255;
+  const b = parseInt(hex.substr(4, 2), 16) / 255;
+  
+  // Apply gamma correction
+  const gamma = (c) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  
+  // Calculate luminance
+  return 0.2126 * gamma(r) + 0.7152 * gamma(g) + 0.0722 * gamma(b);
+}
+
+// Get theme-appropriate node color
+export function getThemeNodeColor(node, theme) {
+  if (!node.color) {
+    return theme.colors.nodeBackground;
+  }
+  
+  // If it's a dark theme and the node uses a predefined light color, use dark variant
+  if (theme.id === 'dark') {
+    const colorKey = Object.keys(NODE_COLORS).find(key => NODE_COLORS[key] === node.color);
+    if (colorKey && NODE_COLORS_DARK[colorKey]) {
+      return NODE_COLORS_DARK[colorKey];
+    }
+  }
+  
+  return node.color;
+}
+
+// Get appropriate text color for node based on background color
+export function getNodeTextColor(node, theme) {
+  const backgroundColor = getThemeNodeColor(node, theme);
+  
+  // Calculate contrast ratio
+  const bgLuminance = getLuminance(backgroundColor);
+  
+  // Use dark text for light backgrounds, light text for dark backgrounds
+  // Threshold of 0.5 works well for most cases
+  if (bgLuminance > 0.5) {
+    return '#333333'; // Dark text for light backgrounds
+  } else {
+    return '#ffffff'; // Light text for dark backgrounds
+  }
 }
 
 // Check if node has tags

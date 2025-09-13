@@ -3,6 +3,8 @@ import { useTheme } from './contexts/ThemeContext';
 import { 
   getNodeDisplayText, 
   getNodeBorderColor, 
+  getNodeTextColor,
+  getThemeNodeColor,
   NODE_SHAPES, 
   getVisibleNodes,
   upgradeNode
@@ -20,7 +22,7 @@ function drawNode(ctx, node, theme, isSelected = false, isHighlighted = false) {
   const enhancedNode = upgradeNode(node); // Ensure node has enhanced properties
   const nodeRadius = colors.nodeRadius;
   const shape = enhancedNode.shape || NODE_SHAPES.CIRCLE;
-  const nodeColor = enhancedNode.color || colors.nodeBackground;
+  const nodeColor = getThemeNodeColor(enhancedNode, theme);
   const borderColor = getNodeBorderColor(enhancedNode, theme);
   
   // Draw outer glow for highlighted nodes
@@ -48,7 +50,7 @@ function drawNode(ctx, node, theme, isSelected = false, isHighlighted = false) {
   drawNodeShape(ctx, enhancedNode, nodeRadius, null, shape, false, strokeColor, lineWidth);
   
   // Draw node text with enhanced properties
-  ctx.fillStyle = colors.nodeText;
+  ctx.fillStyle = getNodeTextColor(enhancedNode, theme);
   const fontSize = enhancedNode.fontSize || 16;
   const fontWeight = enhancedNode.fontWeight || 'normal';
   const fontStyle = enhancedNode.fontStyle || 'normal';
