@@ -14,8 +14,14 @@ const Settings = ({ onClose }) => {
     setConflicts(findShortcutConflicts());
   }, []);
 
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="settings-overlay">
+    <div className="settings-overlay" onClick={handleOverlayClick}>
       <div className="settings-modal">
         <header className="settings-header">
           <h2><FormattedMessage id="settings.title" defaultMessage="Settings" /></h2>

@@ -95,8 +95,14 @@ const Search = ({
 
   if (!visible) return null;
 
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="search-overlay" style={{
+    <div className="search-overlay" onClick={handleOverlayClick} style={{
       position: 'fixed',
       top: 0,
       left: 0,

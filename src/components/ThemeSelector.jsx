@@ -9,8 +9,14 @@ const ThemeSelector = ({ onClose }) => {
     changeTheme(themeId);
   };
 
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div style={{
+    <div onClick={handleOverlayClick} style={{
       position: 'fixed',
       top: 0,
       left: 0,

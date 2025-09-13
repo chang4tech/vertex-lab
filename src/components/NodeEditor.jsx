@@ -61,6 +61,12 @@ const NodeEditor = ({ node, visible, onSave, onClose, onDelete }) => {
     }
   };
 
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   const tabs = [
     { id: 'basic', label: intl.formatMessage({ id: 'nodeEditor.basic', defaultMessage: 'Basic' }) },
     { id: 'style', label: intl.formatMessage({ id: 'nodeEditor.style', defaultMessage: 'Style' }) },
@@ -69,7 +75,7 @@ const NodeEditor = ({ node, visible, onSave, onClose, onDelete }) => {
   ];
 
   return (
-    <div style={{
+    <div onClick={handleOverlayClick} style={{
       position: 'fixed',
       top: 0,
       left: 0,
