@@ -1,20 +1,43 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
+import { useTheme } from '../../contexts/ThemeContext';
+import { NODE_SHAPES, upgradeNode, getThemeNodeColor, getNodeBorderColor, getVisibleNodes } from '../../utils/nodeUtils';
 
 export function Minimap({ nodes, viewBox, scale = 0.15, visible, onViewportChange }) {
   const canvasRef = useRef(null);
   const lastDraw = useRef({ bounds: null, finalScale: 1, padding: 20 });
+  const { currentTheme } = useTheme();
+
+  // Compute half extents based on shape and theme radius
+  const getHalfExtents = useCallback((node) => {
+    const enhanced = upgradeNode(node);
+    const r = currentTheme.colors.nodeRadius;
+    const shape = enhanced.shape || NODE_SHAPES.CIRCLE;
+    switch (shape) {
+      case NODE_SHAPES.RECTANGLE:
+      case NODE_SHAPES.ROUNDED_RECTANGLE:
+        return { hw: (r * 1.6) / 2, hh: (r * 1.2) / 2 };
+      case NODE_SHAPES.ELLIPSE:
+        return { hw: r * 1.4, hh: r * 0.8 };
+      default:
+        return { hw: r, hh: r };
+    }
+  }, [currentTheme]);
 
   // Calculate diagram bounds
   const getBounds = useCallback(() => {
     if (!nodes?.length) return { minX: 0, maxX: 800, minY: 0, maxY: 600 };
-    return nodes.reduce((bounds, node) => ({
-      minX: Math.min(bounds.minX, node.x - 50),  // 50 is half node width
-      maxX: Math.max(bounds.maxX, node.x + 50),
-      minY: Math.min(bounds.minY, node.y - 20),  // 20 is half node height
-      maxY: Math.max(bounds.maxY, node.y + 20)
-    }), { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
-  }, [nodes]);
+    const visible = getVisibleNodes(nodes);
+    return visible.reduce((bounds, node) => {
+      const { hw, hh } = getHalfExtents(node);
+      return {
+        minX: Math.min(bounds.minX, node.x - hw),
+        maxX: Math.max(bounds.maxX, node.x + hw),
+        minY: Math.min(bounds.minY, node.y - hh),
+        maxY: Math.max(bounds.maxY, node.y + hh)
+      };
+    }, { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
+  }, [nodes, getHalfExtents]);
 
   useEffect(() => {
     if (!visible) return;
@@ -45,22 +68,91 @@ export function Minimap({ nodes, viewBox, scale = 0.15, visible, onViewportChang
     ctx.translate(padding * finalScale, padding * finalScale);
     ctx.translate(-bounds.minX * finalScale, -bounds.minY * finalScale);
 
-    // Draw nodes with adjusted scale
-    nodes.forEach(node => {
-      const x = node.x * finalScale;
-      const y = node.y * finalScale;
-      const nodeWidth = 100 * finalScale;  // Default node width
-      const nodeHeight = 40 * finalScale;  // Default node height
+    // Draw nodes using their actual shapes/colors
+    const visibleNodes = getVisibleNodes(nodes);
+    visibleNodes.forEach(node => {
+      const enhanced = upgradeNode(node);
+      const x = enhanced.x * finalScale;
+      const y = enhanced.y * finalScale;
+      const r = currentTheme.colors.nodeRadius * finalScale;
+      const shape = enhanced.shape || NODE_SHAPES.CIRCLE;
+      const fillColor = getThemeNodeColor(enhanced, currentTheme);
+      const strokeColor = getNodeBorderColor(enhanced, currentTheme);
 
-      // Draw node rectangle
-      ctx.fillRect(x - nodeWidth/2, y - nodeHeight/2, nodeWidth, nodeHeight);
-      ctx.strokeRect(x - nodeWidth/2, y - nodeHeight/2, nodeWidth, nodeHeight);
+      ctx.fillStyle = fillColor;
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 1; // thin strokes on minimap
 
-      // Add a dot in the center for better visibility
-      ctx.beginPath();
-      ctx.arc(x, y, 2, 0, Math.PI * 2);
-      ctx.fillStyle = '#333';
-      ctx.fill();
+      switch (shape) {
+        case NODE_SHAPES.CIRCLE:
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.stroke();
+          break;
+        case NODE_SHAPES.RECTANGLE: {
+          const w = r * 1.6;
+          const h = r * 1.2;
+          ctx.fillRect(x - w/2, y - h/2, w, h);
+          ctx.strokeRect(x - w/2, y - h/2, w, h);
+          break;
+        }
+        case NODE_SHAPES.ROUNDED_RECTANGLE: {
+          const w = r * 1.6;
+          const h = r * 1.2;
+          const cr = 4 * finalScale;
+          ctx.beginPath();
+          // Polyfill for older ctx: draw rounded rect path
+          const left = x - w/2, top = y - h/2, right = x + w/2, bottom = y + h/2;
+          ctx.moveTo(left + cr, top);
+          ctx.lineTo(right - cr, top);
+          ctx.quadraticCurveTo(right, top, right, top + cr);
+          ctx.lineTo(right, bottom - cr);
+          ctx.quadraticCurveTo(right, bottom, right - cr, bottom);
+          ctx.lineTo(left + cr, bottom);
+          ctx.quadraticCurveTo(left, bottom, left, bottom - cr);
+          ctx.lineTo(left, top + cr);
+          ctx.quadraticCurveTo(left, top, left + cr, top);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          break;
+        }
+        case NODE_SHAPES.DIAMOND:
+          ctx.beginPath();
+          ctx.moveTo(x, y - r);
+          ctx.lineTo(x + r, y);
+          ctx.lineTo(x, y + r);
+          ctx.lineTo(x - r, y);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          break;
+        case NODE_SHAPES.HEXAGON: {
+          ctx.beginPath();
+          for (let i = 0; i < 6; i++) {
+            const angle = (i * Math.PI) / 3;
+            const px = x + r * Math.cos(angle);
+            const py = y + r * Math.sin(angle);
+            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          break;
+        }
+        case NODE_SHAPES.ELLIPSE:
+          ctx.beginPath();
+          ctx.ellipse(x, y, r * 1.4, r * 0.8, 0, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.stroke();
+          break;
+        default:
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.stroke();
+      }
     });
 
     // Draw viewport rectangle
@@ -74,7 +166,7 @@ export function Minimap({ nodes, viewBox, scale = 0.15, visible, onViewportChang
         viewBox.height * finalScale
       );
     }
-  }, [nodes, viewBox, scale, visible, getBounds]);
+  }, [nodes, viewBox, scale, visible, getBounds, currentTheme]);
 
   if (!visible) return null;
 
