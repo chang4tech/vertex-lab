@@ -63,6 +63,51 @@ export default {
   'node.delete': 'Delete',
   'node.enterName': 'Enter node name:',
 
+  // Node Editor
+  'nodeEditor.title': 'Edit Node',
+  'nodeEditor.basic': 'Basic',
+  'nodeEditor.style': 'Style',
+  'nodeEditor.tags': 'Tags',
+  'nodeEditor.advanced': 'Advanced',
+  'nodeEditor.label': 'Label',
+  'nodeEditor.description': 'Description',
+  'nodeEditor.color': 'Color',
+  'nodeEditor.shape': 'Shape',
+  'nodeEditor.fontSize': 'Font Size',
+  'nodeEditor.fontWeight': 'Font Weight',
+  'nodeEditor.fontStyle': 'Font Style',
+  'nodeEditor.addTag': 'Add Tag',
+  'nodeEditor.tagPlaceholder': 'Enter tag name',
+  'nodeEditor.isCollapsed': 'Collapsed',
+  'nodeEditor.icon': 'Icon',
+  'nodeEditor.iconPlaceholder': 'Enter icon (emoji or text)',
+  'nodeEditor.priority': 'Priority',
+  'nodeEditor.notes': 'Notes',
+  'nodeEditor.notesPlaceholder': 'Additional notes...',
+
+  // Node Shapes
+  'nodeShape.circle': 'Circle',
+  'nodeShape.rectangle': 'Rectangle',
+  'nodeShape.roundedRectangle': 'Rounded Rectangle',
+  'nodeShape.diamond': 'Diamond',
+  'nodeShape.hexagon': 'Hexagon',
+  'nodeShape.ellipse': 'Ellipse',
+
+  // Font Weights
+  'fontWeight.normal': 'Normal',
+  'fontWeight.bold': 'Bold',
+  'fontWeight.light': 'Light',
+
+  // Font Styles
+  'fontStyle.normal': 'Normal',
+  'fontStyle.italic': 'Italic',
+
+  // Priority Levels
+  'priority.low': 'Low',
+  'priority.medium': 'Medium',
+  'priority.high': 'High',
+  'priority.critical': 'Critical',
+
   // Common
   'common.close': 'Close',
   'common.cancel': 'Cancel',

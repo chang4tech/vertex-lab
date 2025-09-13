@@ -5,9 +5,11 @@ import { Minimap } from './components/panels/Minimap';
 import Settings from './components/Settings';
 import Search from './components/Search';
 import ThemeSelector from './components/ThemeSelector';
+import NodeEditor from './components/NodeEditor';
 import { LocaleSelector } from './i18n/LocaleProvider';
 import { useTheme } from './contexts/ThemeContext';
 import { organizeLayout } from './utils/layoutUtils';
+import { createEnhancedNode } from './utils/nodeUtils';
 
 // --- Menu Bar Component ---
 function MenuBar({
@@ -558,7 +560,6 @@ const MainHeader = () => {
  */
 function App() {
   const intl = useIntl();
-  const { currentTheme } = useTheme();
 
   // Undo/redo stacks
   const [undoStack, setUndoStack] = useState([]);
@@ -587,18 +588,20 @@ function App() {
     const savedNodes = localStorage.getItem('mindmap_nodes');
     if (savedNodes) {
       try {
-        return JSON.parse(savedNodes);
+        const parsedNodes = JSON.parse(savedNodes);
+        // Upgrade existing nodes to support enhanced properties
+        return parsedNodes.map(node => createEnhancedNode(node));
       } catch (e) {
         console.error('Failed to parse saved nodes:', e);
       }
     }
     // Default initial state if no saved state exists
     return [
-      { id: 1, label: 'Central Topic', x: 400, y: 300, parentId: null },
-      { id: 2, label: 'Branch 1', x: 250, y: 200, parentId: 1 },
-      { id: 3, label: 'Branch 2', x: 550, y: 200, parentId: 1 },
-      { id: 4, label: 'Branch 3', x: 250, y: 400, parentId: 1 },
-      { id: 5, label: 'Branch 4', x: 550, y: 400, parentId: 1 },
+      createEnhancedNode({ id: 1, label: 'Central Topic', x: 400, y: 300, parentId: null }),
+      createEnhancedNode({ id: 2, label: 'Branch 1', x: 250, y: 200, parentId: 1 }),
+      createEnhancedNode({ id: 3, label: 'Branch 2', x: 550, y: 200, parentId: 1 }),
+      createEnhancedNode({ id: 4, label: 'Branch 3', x: 250, y: 400, parentId: 1 }),
+      createEnhancedNode({ id: 5, label: 'Branch 4', x: 550, y: 400, parentId: 1 }),
     ];
   });
   const [selectedNodeId, setSelectedNodeId] = useState(null);
@@ -628,6 +631,10 @@ function App() {
 
   // Theme state
   const [showThemes, setShowThemes] = useState(false);
+
+  // Node editor state
+  const [showNodeEditor, setShowNodeEditor] = useState(false);
+  const [editingNodeId, setEditingNodeId] = useState(null);
 
   // Handler functions wrapped in useCallback
   const handleUndo = useCallback(() => {
@@ -684,8 +691,8 @@ function App() {
     if (Array.isArray(data) &&
         data.every(n => n.id && typeof n.x === 'number' && typeof n.y === 'number' && typeof n.label === 'string')) {
       console.log('Importing valid mind map data:', data.length, 'nodes');
-      // Clone the data to ensure we don't modify the original
-      const importedNodes = data.map(node => ({ ...node }));
+      // Clone and upgrade the data to ensure compatibility with enhanced nodes
+      const importedNodes = data.map(node => createEnhancedNode({ ...node }));
       setNodes(importedNodes);
       setUndoStack([]);
       setRedoStack([]);
@@ -754,6 +761,18 @@ function App() {
     setShowThemes(false);
   }, []);
 
+  // Enhanced node creation helper
+  const createNewNode = useCallback((parentId, position) => {
+    const maxId = Math.max(...nodes.map(n => n.id), 0);
+    return createEnhancedNode({
+      id: maxId + 1,
+      label: intl.formatMessage({ id: 'node.newNode' }),
+      x: position.x,
+      y: position.y,
+      parentId
+    });
+  }, [nodes, intl]);
+
   // Save nodes to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('mindmap_nodes', JSON.stringify(nodes));
@@ -778,7 +797,7 @@ function App() {
           case 'n': {
             e.preventDefault();
             console.log('New mind map');
-            const initialNodes = [{ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, parentId: null }];
+            const initialNodes = [createEnhancedNode({ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, parentId: null })];
             setNodes([...initialNodes]);
             setUndoStack([]);
             setRedoStack([]);
@@ -842,14 +861,14 @@ function App() {
           pushUndo((nodes => {
             const parent = nodes.find(n => n.id === selectedNodeId);
             if (!parent) return nodes;
-            const maxId = Math.max(...nodes.map(n => n.id));
+
             const angle = Math.random() * 2 * Math.PI;
             const dist = 120;
             const x = parent.x + Math.cos(angle) * dist;
             const y = parent.y + Math.sin(angle) * dist;
             return [
               ...nodes,
-              { id: maxId + 1, label: intl.formatMessage({ id: 'node.newNode' }), x, y, parentId: parent.id }
+              createNewNode(parent.id, { x, y })
             ];
           })(nodes));
         } else if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
@@ -858,6 +877,9 @@ function App() {
           if (newLabel) {
             pushUndo(nodes.map(n => n.id === selectedNodeId ? { ...n, label: newLabel } : n));
           }
+        } else if (e.key === 'F2') {
+          e.preventDefault();
+          handleNodeDoubleClick(selectedNodeId);
         } else if (e.key === 'Delete' || e.key === 'Backspace') {
           e.preventDefault();
           pushUndo((nodes => {
@@ -876,7 +898,7 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canvasRef, fileInputRef, handleUndo, handleRedo, handleExport, handleAutoLayout, handleShowSearch, selectedNodeId, nodes, pushUndo, intl]);
+  }, [canvasRef, fileInputRef, handleUndo, handleRedo, handleExport, handleAutoLayout, handleShowSearch, selectedNodeId, nodes, pushUndo, intl, createNewNode]);
 
   // Load help panel state from localStorage on initial render
   useEffect(() => {
@@ -899,6 +921,28 @@ function App() {
     setSelectedNodeId(nodeId);
   };
 
+  // Node double-click handler for editing
+  const handleNodeDoubleClick = (nodeId) => {
+    console.log('Node double-clicked for editing:', nodeId);
+    setEditingNodeId(nodeId);
+    setShowNodeEditor(true);
+  };
+
+  // Node editor handlers
+  const handleCloseNodeEditor = useCallback(() => {
+    setShowNodeEditor(false);
+    setEditingNodeId(null);
+  }, []);
+
+  const handleSaveNode = useCallback((nodeId, nodeData) => {
+    console.log('Saving node:', nodeId, nodeData);
+    pushUndo(nodes.map(node => 
+      node.id === nodeId ? { ...node, ...nodeData } : node
+    ));
+    setShowNodeEditor(false);
+    setEditingNodeId(null);
+  }, [nodes, pushUndo]);
+
   return (
     <React.Fragment>
       <MenuBar
@@ -912,7 +956,7 @@ function App() {
         canvasRef={canvasRef}
         onNew={() => {
           console.log('New mind map');
-          const initialNodes = [{ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, parentId: null }];
+          const initialNodes = [createEnhancedNode({ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, parentId: null })];
           setNodes([...initialNodes]);
           setUndoStack(() => []);
           setRedoStack(() => []);
@@ -986,6 +1030,7 @@ function App() {
         ref={canvasRef}
         nodes={nodes}
         onNodeClick={handleNodeClick}
+        onNodeDoubleClick={handleNodeDoubleClick}
         selectedNodeId={selectedNodeId}
         highlightedNodeIds={highlightedNodeIds}
         onNodePositionChange={(id, x, y) => {
@@ -1019,6 +1064,16 @@ function App() {
       {/* Theme Selector */}
       {showThemes && (
         <ThemeSelector onClose={handleCloseThemes} />
+      )}
+
+      {/* Node Editor */}
+      {showNodeEditor && editingNodeId && (
+        <NodeEditor
+          node={nodes.find(n => n.id === editingNodeId)}
+          visible={showNodeEditor}
+          onSave={handleSaveNode}
+          onClose={handleCloseNodeEditor}
+        />
       )}
     </React.Fragment>
   );

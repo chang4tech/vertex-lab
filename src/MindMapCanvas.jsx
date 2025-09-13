@@ -1,5 +1,12 @@
 import React, { useRef, useEffect } from 'react';
 import { useTheme } from './contexts/ThemeContext';
+import { 
+  getNodeDisplayText, 
+  getNodeBorderColor, 
+  NODE_SHAPES, 
+  getVisibleNodes,
+  upgradeNode
+} from './utils/nodeUtils';
 
 /**
  * MindMapCanvas - a simple mind map canvas using HTML5 Canvas.
@@ -10,46 +17,179 @@ import { useTheme } from './contexts/ThemeContext';
 
 function drawNode(ctx, node, theme, isSelected = false, isHighlighted = false) {
   const { colors } = theme;
+  const enhancedNode = upgradeNode(node); // Ensure node has enhanced properties
   const nodeRadius = colors.nodeRadius;
+  const shape = enhancedNode.shape || NODE_SHAPES.CIRCLE;
+  const nodeColor = enhancedNode.color || colors.nodeBackground;
+  const borderColor = getNodeBorderColor(enhancedNode, theme);
   
   // Draw outer glow for highlighted nodes
   if (isHighlighted) {
-    ctx.beginPath();
-    ctx.arc(node.x, node.y, nodeRadius + 8, 0, 2 * Math.PI);
-    ctx.fillStyle = colors.highlightNodeGlow;
+    drawNodeShape(ctx, enhancedNode, nodeRadius + 8, colors.highlightNodeGlow, shape, true);
+  }
+  
+  // Draw main node shape
+  const fillColor = isHighlighted ? colors.highlightNodeBackground : nodeColor;
+  drawNodeShape(ctx, enhancedNode, nodeRadius, fillColor, shape, false);
+  
+  // Draw node border
+  let strokeColor, lineWidth;
+  if (isSelected) {
+    strokeColor = colors.selectedNodeBorder;
+    lineWidth = 4;
+  } else if (isHighlighted) {
+    strokeColor = colors.highlightNodeBorder;
+    lineWidth = 3;
+  } else {
+    strokeColor = borderColor;
+    lineWidth = colors.edgeWidth;
+  }
+  
+  drawNodeShape(ctx, enhancedNode, nodeRadius, null, shape, false, strokeColor, lineWidth);
+  
+  // Draw node text with enhanced properties
+  ctx.fillStyle = colors.nodeText;
+  const fontSize = enhancedNode.fontSize || 16;
+  const fontWeight = enhancedNode.fontWeight || 'normal';
+  const fontStyle = enhancedNode.fontStyle || 'normal';
+  ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  const displayText = getNodeDisplayText(enhancedNode);
+  
+  // Handle multi-line text
+  const lines = displayText.split('\n');
+  const lineHeight = fontSize * 1.2;
+  const startY = node.y - ((lines.length - 1) * lineHeight) / 2;
+  
+  lines.forEach((line, index) => {
+    ctx.fillText(line, node.x, startY + (index * lineHeight));
+  });
+  
+  // Draw tags indicator if node has tags
+  if (enhancedNode.tags && enhancedNode.tags.length > 0) {
+    drawTagsIndicator(ctx, enhancedNode, nodeRadius, theme);
+  }
+  
+  // Draw collapsed indicator if node is collapsed
+  if (enhancedNode.isCollapsed) {
+    drawCollapsedIndicator(ctx, enhancedNode, nodeRadius, theme);
+  }
+}
+
+function drawNodeShape(ctx, node, radius, fillColor, shape, isGlow = false, strokeColor = null, lineWidth = 2) {
+  ctx.save();
+  
+  switch (shape) {
+    case NODE_SHAPES.CIRCLE:
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI);
+      break;
+      
+    case NODE_SHAPES.RECTANGLE: {
+      const rectWidth = radius * 1.6;
+      const rectHeight = radius * 1.2;
+      ctx.beginPath();
+      ctx.rect(node.x - rectWidth/2, node.y - rectHeight/2, rectWidth, rectHeight);
+      break;
+    }
+      
+    case NODE_SHAPES.ROUNDED_RECTANGLE: {
+      const roundRectWidth = radius * 1.6;
+      const roundRectHeight = radius * 1.2;
+      const cornerRadius = 8;
+      ctx.beginPath();
+      ctx.roundRect(
+        node.x - roundRectWidth/2, 
+        node.y - roundRectHeight/2, 
+        roundRectWidth, 
+        roundRectHeight, 
+        cornerRadius
+      );
+      break;
+    }
+      
+    case NODE_SHAPES.DIAMOND:
+      ctx.beginPath();
+      ctx.moveTo(node.x, node.y - radius);
+      ctx.lineTo(node.x + radius, node.y);
+      ctx.lineTo(node.x, node.y + radius);
+      ctx.lineTo(node.x - radius, node.y);
+      ctx.closePath();
+      break;
+      
+    case NODE_SHAPES.HEXAGON: {
+      const hexRadius = radius;
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (i * Math.PI) / 3;
+        const x = node.x + hexRadius * Math.cos(angle);
+        const y = node.y + hexRadius * Math.sin(angle);
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      }
+      ctx.closePath();
+      break;
+    }
+      
+    case NODE_SHAPES.ELLIPSE:
+      ctx.beginPath();
+      ctx.ellipse(node.x, node.y, radius * 1.4, radius * 0.8, 0, 0, 2 * Math.PI);
+      break;
+      
+    default:
+      // Default to circle
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI);
+  }
+  
+  if (fillColor) {
+    ctx.fillStyle = fillColor;
     ctx.fill();
   }
   
+  if (strokeColor && !isGlow) {
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
+  }
+  
+  ctx.restore();
+}
+
+function drawTagsIndicator(ctx, node, nodeRadius, theme) {
+  ctx.save();
+  ctx.fillStyle = theme.colors.warning;
   ctx.beginPath();
-  ctx.arc(node.x, node.y, nodeRadius, 0, 2 * Math.PI);
-  
-  // Node fill color
-  if (isHighlighted) {
-    ctx.fillStyle = colors.highlightNodeBackground;
-  } else {
-    ctx.fillStyle = colors.nodeBackground;
-  }
+  ctx.arc(node.x + nodeRadius - 6, node.y - nodeRadius + 6, 4, 0, 2 * Math.PI);
   ctx.fill();
-  
-  // Node border
-  if (isSelected) {
-    ctx.strokeStyle = colors.selectedNodeBorder;
-    ctx.lineWidth = 4;
-  } else if (isHighlighted) {
-    ctx.strokeStyle = colors.highlightNodeBorder;
-    ctx.lineWidth = 3;
-  } else {
-    ctx.strokeStyle = colors.nodeBorder;
-    ctx.lineWidth = colors.edgeWidth;
-  }
+  ctx.restore();
+}
+
+function drawCollapsedIndicator(ctx, node, nodeRadius, theme) {
+  ctx.save();
+  ctx.fillStyle = theme.colors.primaryButton;
+  ctx.strokeStyle = theme.colors.nodeBackground;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(node.x + nodeRadius - 8, node.y + nodeRadius - 8, 6, 0, 2 * Math.PI);
+  ctx.fill();
   ctx.stroke();
   
-  // Node text
-  ctx.fillStyle = colors.nodeText;
-  ctx.font = '16px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(node.label, node.x, node.y);
+  // Draw + symbol
+  ctx.strokeStyle = theme.colors.primaryButtonText;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(node.x + nodeRadius - 11, node.y + nodeRadius - 8);
+  ctx.lineTo(node.x + nodeRadius - 5, node.y + nodeRadius - 8);
+  ctx.moveTo(node.x + nodeRadius - 8, node.y + nodeRadius - 11);
+  ctx.lineTo(node.x + nodeRadius - 8, node.y + nodeRadius - 5);
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawEdge(ctx, from, to, theme) {
@@ -65,7 +205,7 @@ function drawEdge(ctx, from, to, theme) {
 
 import { forwardRef, useImperativeHandle } from 'react';
 
-const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePositionChange, highlightedNodeIds = [], onViewBoxChange }, ref) => {
+const MindMapCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, selectedNodeId, onNodePositionChange, highlightedNodeIds = [] }, ref) => {
   const canvasRef = useRef(null);
   const { currentTheme } = useTheme();
   
@@ -140,16 +280,21 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePo
     ctx.translate(view.current.offsetX, view.current.offsetY);
     ctx.scale(view.current.scale, view.current.scale);
     
-    // Draw edges
-    nodes.forEach(node => {
+    // Get visible nodes (considering collapsed state)
+    const visibleNodes = getVisibleNodes(nodes);
+    
+    // Draw edges for visible nodes
+    visibleNodes.forEach(node => {
       if (node.parentId) {
         const parent = nodes.find(n => n.id === node.parentId);
-        if (parent) drawEdge(ctx, parent, node, currentTheme);
+        if (parent && visibleNodes.includes(parent)) {
+          drawEdge(ctx, parent, node, currentTheme);
+        }
       }
     });
     
-    // Draw nodes with selection and highlighting
-    nodes.forEach(node => {
+    // Draw visible nodes with selection and highlighting
+    visibleNodes.forEach(node => {
       const isSelected = selectedNodeId && node.id === selectedNodeId;
       const isHighlighted = highlightedNodeIds.includes(node.id);
       
@@ -261,13 +406,22 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePo
       ctx.save();
       ctx.translate(view.current.offsetX, view.current.offsetY);
       ctx.scale(view.current.scale, view.current.scale);
-      nodes.forEach(node => {
+      
+      // Get visible nodes
+      const visibleNodes = getVisibleNodes(nodes);
+      
+      // Draw edges for visible nodes
+      visibleNodes.forEach(node => {
         if (node.parentId) {
           const parent = nodes.find(n => n.id === node.parentId);
-          if (parent) drawEdge(ctx, parent, node, currentTheme);
+          if (parent && visibleNodes.includes(parent)) {
+            drawEdge(ctx, parent, node, currentTheme);
+          }
         }
       });
-      nodes.forEach(node => {
+      
+      // Draw visible nodes
+      visibleNodes.forEach(node => {
         const isSelected = selectedNodeId && node.id === selectedNodeId;
         const isHighlighted = highlightedNodeIds.includes(node.id);
         
@@ -304,12 +458,34 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePo
     const rect = canvasRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left - view.current.offsetX) / view.current.scale;
     const y = (e.clientY - rect.top - view.current.offsetY) / view.current.scale;
-    for (const node of nodes) {
+    
+    // Check visible nodes only
+    const visibleNodes = getVisibleNodes(nodes);
+    for (const node of visibleNodes) {
       const dx = node.x - x;
       const dy = node.y - y;
       const nodeRadius = currentTheme.colors.nodeRadius;
       if (dx * dx + dy * dy < nodeRadius * nodeRadius) {
         onNodeClick && onNodeClick(node.id);
+        break;
+      }
+    }
+  };
+
+  // Handle double-click (with pan/zoom)
+  const handleDoubleClick = e => {
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left - view.current.offsetX) / view.current.scale;
+    const y = (e.clientY - rect.top - view.current.offsetY) / view.current.scale;
+    
+    // Check visible nodes only
+    const visibleNodes = getVisibleNodes(nodes);
+    for (const node of visibleNodes) {
+      const dx = node.x - x;
+      const dy = node.y - y;
+      const nodeRadius = currentTheme.colors.nodeRadius;
+      if (dx * dx + dy * dy < nodeRadius * nodeRadius) {
+        onNodeDoubleClick && onNodeDoubleClick(node.id);
         break;
       }
     }
@@ -329,6 +505,7 @@ const MindMapCanvas = forwardRef(({ nodes, onNodeClick, selectedNodeId, onNodePo
         cursor: 'grab' 
       }}
       onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
       tabIndex={0}
       onContextMenu={e => e.preventDefault()}
     />

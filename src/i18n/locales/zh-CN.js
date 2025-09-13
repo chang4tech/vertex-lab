@@ -63,6 +63,51 @@ export default {
   'node.delete': '删除',
   'node.enterName': '输入节点名称：',
 
+  // Node Editor
+  'nodeEditor.title': '编辑节点',
+  'nodeEditor.basic': '基本',
+  'nodeEditor.style': '样式',
+  'nodeEditor.tags': '标签',
+  'nodeEditor.advanced': '高级',
+  'nodeEditor.label': '标签',
+  'nodeEditor.description': '描述',
+  'nodeEditor.color': '颜色',
+  'nodeEditor.shape': '形状',
+  'nodeEditor.fontSize': '字体大小',
+  'nodeEditor.fontWeight': '字体粗细',
+  'nodeEditor.fontStyle': '字体样式',
+  'nodeEditor.addTag': '添加标签',
+  'nodeEditor.tagPlaceholder': '输入标签名称',
+  'nodeEditor.isCollapsed': '已折叠',
+  'nodeEditor.icon': '图标',
+  'nodeEditor.iconPlaceholder': '输入图标（表情符号或文本）',
+  'nodeEditor.priority': '优先级',
+  'nodeEditor.notes': '备注',
+  'nodeEditor.notesPlaceholder': '附加备注...',
+
+  // Node Shapes
+  'nodeShape.circle': '圆形',
+  'nodeShape.rectangle': '矩形',
+  'nodeShape.roundedRectangle': '圆角矩形',
+  'nodeShape.diamond': '菱形',
+  'nodeShape.hexagon': '六边形',
+  'nodeShape.ellipse': '椭圆',
+
+  // Font Weights
+  'fontWeight.normal': '正常',
+  'fontWeight.bold': '粗体',
+  'fontWeight.light': '细体',
+
+  // Font Styles
+  'fontStyle.normal': '正常',
+  'fontStyle.italic': '斜体',
+
+  // Priority Levels
+  'priority.low': '低',
+  'priority.medium': '中',
+  'priority.high': '高',
+  'priority.critical': '紧急',
+
   // Common
   'common.close': '关闭',
   'common.cancel': '取消',
