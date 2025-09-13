@@ -25,7 +25,7 @@ This is a powerful and intuitive diagramming tool built with React and HTML5 Can
 - **Search History**: Access your recent searches.
 
 ### 🗺️ **Navigation**
-- **Minimap**: Get a high-level overview of your mind map (View → Minimimap).
+- **Minimap**: Get a high-level overview of your diagram (View → Minimap).
 - **Auto-Layout**: Automatically arrange your nodes in a force-directed layout (Edit → Auto Layout, Cmd+L).
 
 ### 💾 **Data Management**
@@ -72,7 +72,7 @@ For a full list of shortcuts, see **Settings → Keyboard Shortcuts**.
 ## 📝 Future Enhancements
 
 - **Node Enhancements**: Add support for tags, colors, icons, and rich text.
-- **Performance Optimization**: Implement virtualization for large maps.
+- **Performance Optimization**: Implement virtualization for large diagrams.
 - **Collaboration**: Add real-time collaboration features.
 - **Advanced Export**: Export to more formats like Markdown and FreeMind.
 

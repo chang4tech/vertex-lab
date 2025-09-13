@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import VertexCanvas from '../../VertexCanvas';
+import { ThemeProvider } from '../../contexts/ThemeContext';
 
 // Mock canvas API
 const mockContext = {
@@ -9,6 +10,14 @@ const mockContext = {
   restore: vi.fn(),
   translate: vi.fn(),
   scale: vi.fn(),
+  fillRect: vi.fn(),
+  arc: vi.fn(),
+  rect: vi.fn(),
+  roundRect: vi.fn(),
+  ellipse: vi.fn(),
+  closePath: vi.fn(),
+  fill: vi.fn(),
+  strokeRect: vi.fn(),
   beginPath: vi.fn(),
   moveTo: vi.fn(),
   lineTo: vi.fn(),
@@ -51,8 +60,10 @@ describe('VertexCanvas', () => {
     };
   });
 
+  const renderWithTheme = (ui) => render(<ThemeProvider>{ui}</ThemeProvider>);
+
   it('renders canvas element', () => {
-    const { container } = render(<VertexCanvas {...mockProps} />);
+    const { container } = renderWithTheme(<VertexCanvas {...mockProps} />);
     const canvas = container.querySelector('canvas');
     expect(canvas).toBeInTheDocument();
     expect(canvas).toHaveAttribute('width', '800');
@@ -60,7 +71,7 @@ describe('VertexCanvas', () => {
   });
 
   it('handles node click', () => {
-    const { container } = render(<VertexCanvas {...mockProps} />);
+    const { container } = renderWithTheme(<VertexCanvas {...mockProps} />);
     const canvas = container.querySelector('canvas');
     
     // Simulate click on node position
@@ -73,7 +84,7 @@ describe('VertexCanvas', () => {
   });
 
   it('handles node drag', () => {
-    const { container } = render(<VertexCanvas {...mockProps} />);
+    const { container } = renderWithTheme(<VertexCanvas {...mockProps} />);
     const canvas = container.querySelector('canvas');
     
     // Simulate drag start on node
@@ -95,7 +106,7 @@ describe('VertexCanvas', () => {
   });
 
   it('handles canvas pan', () => {
-    const { container } = render(<VertexCanvas {...mockProps} />);
+    const { container } = renderWithTheme(<VertexCanvas {...mockProps} />);
     const canvas = container.querySelector('canvas');
     
     // Simulate space key down
@@ -126,7 +137,7 @@ describe('VertexCanvas', () => {
   });
 
   it('handles zoom with mouse wheel', () => {
-    const { container } = render(<VertexCanvas {...mockProps} />);
+    const { container } = renderWithTheme(<VertexCanvas {...mockProps} />);
     const canvas = container.querySelector('canvas');
     
     // Simulate wheel zoom in
@@ -142,7 +153,7 @@ describe('VertexCanvas', () => {
   describe('Ref methods', () => {
     it('exposes center method', () => {
       const ref = { current: null };
-      render(<VertexCanvas {...mockProps} ref={ref} />);
+      renderWithTheme(<VertexCanvas {...mockProps} ref={ref} />);
       
       expect(typeof ref.current.center).toBe('function');
       ref.current.center();
@@ -153,7 +164,7 @@ describe('VertexCanvas', () => {
 
     it('exposes zoom methods', () => {
       const ref = { current: null };
-      render(<VertexCanvas {...mockProps} ref={ref} />);
+      renderWithTheme(<VertexCanvas {...mockProps} ref={ref} />);
       
       expect(typeof ref.current.zoom).toBe('function');
       expect(typeof ref.current.resetZoom).toBe('function');
@@ -167,7 +178,7 @@ describe('VertexCanvas', () => {
 
     it('exposes exportAsPNG method', () => {
       const ref = { current: null };
-      render(<VertexCanvas {...mockProps} ref={ref} />);
+      renderWithTheme(<VertexCanvas {...mockProps} ref={ref} />);
       
       expect(typeof ref.current.exportAsPNG).toBe('function');
       

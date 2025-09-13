@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 export function Minimap({ nodes, viewBox, scale = 0.15, visible }) {
   const canvasRef = useRef(null);
 
-  // Calculate mind map bounds
+  // Calculate diagram bounds
   const getBounds = useCallback(() => {
     if (!nodes?.length) return { minX: 0, maxX: 800, minY: 0, maxY: 600 };
     return nodes.reduce((bounds, node) => ({
@@ -23,7 +23,7 @@ export function Minimap({ nodes, viewBox, scale = 0.15, visible }) {
 
     // Calculate map bounds
     const bounds = getBounds();
-    const padding = 20;  // Add padding around the mind map
+    const padding = 20;  // Add padding around the diagram
     const mapWidth = bounds.maxX - bounds.minX + padding * 2;
     const mapHeight = bounds.maxY - bounds.minY + padding * 2;
     const baseScale = Math.min(200 / mapWidth, 150 / mapHeight);  // Target minimap size
@@ -39,7 +39,7 @@ export function Minimap({ nodes, viewBox, scale = 0.15, visible }) {
     ctx.strokeStyle = '#666';
     ctx.lineWidth = 1;
 
-    // Apply transform to center the mind map
+    // Apply transform to center the diagram
     ctx.translate(padding * finalScale, padding * finalScale);
     ctx.translate(-bounds.minX * finalScale, -bounds.minY * finalScale);
 

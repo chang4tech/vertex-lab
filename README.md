@@ -114,10 +114,10 @@ A powerful and intuitive diagramming tool built with React and HTML5 Canvas. Cre
 ### Project Structure
 
 ```
-vertex-lab-app/
+react-mindmap-app/
 ├── src/
 │   ├── App.jsx          # Main application component
-│   ├── MindMapCanvas.jsx # Canvas rendering and interactions
+│   ├── VertexCanvas.jsx  # Canvas rendering and interactions
 │   ├── main.jsx         # Application entry point
 │   └── index.css        # Global styles
 ├── public/              # Static assets
@@ -127,7 +127,7 @@ vertex-lab-app/
 ### Key Components
 
 - **App.jsx**: Main application logic, state management, and keyboard handlers
-- **MindMapCanvas.jsx**: Canvas rendering, pan/zoom, and node interactions
+- **VertexCanvas.jsx**: Canvas rendering, pan/zoom, and node interactions
 - **MenuBar**: Application menu and toolbar functionality
 - **HelpPanel**: Keyboard shortcuts and help documentation
 

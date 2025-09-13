@@ -596,7 +596,7 @@ function App() {
     localStorage.setItem('vertex_show_minimap', showMinimap);
   }, [showMinimap]);
 
-  // Mind map state with localStorage persistence
+  // Diagram state with localStorage persistence
   const [nodes, setNodes] = useState(() => {
     const savedNodes = localStorage.getItem('vertex_nodes');
     if (savedNodes) {
@@ -1112,7 +1112,7 @@ function App() {
 
       <HelpPanel isVisible={isHelpVisible} />
 
-      {/* Mind map canvas */}
+      {/* Diagram canvas */}
       <VertexCanvas
         ref={canvasRef}
         nodes={nodes}
@@ -1178,4 +1178,3 @@ function App() {
 }
 
 export default App;
-

@@ -215,6 +215,7 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
   const view = useRef({ offsetX: 0, offsetY: 0, scale: 1 });
   // Expose imperative methods for centering and zooming
   useImperativeHandle(ref, () => ({
+    canvasRef,
     center: () => {
       // Center the root node (id:1) if exists, else center canvas
       const root = nodes.find(n => n.id === 1) || nodes[0];
@@ -240,12 +241,17 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
       const link = document.createElement('a');
       const now = new Date();
       const pad = n => n.toString().padStart(2, '0');
-      const filename = `vertex-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.png`;
+      const filename = `vertex-lab-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.png`;
       link.download = filename;
       link.href = canvas.toDataURL('image/png');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      try {
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch {
+        // In non-DOM test environments, just invoke click
+        if (typeof link.click === 'function') link.click();
+      }
     },
     focusOnNode: (nodeId) => {
       const node = nodes.find(n => n.id === nodeId);

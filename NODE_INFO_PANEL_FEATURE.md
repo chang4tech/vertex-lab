@@ -57,7 +57,7 @@ A comprehensive right-side panel that displays detailed metadata for selected no
 
 ### **Files Modified**
 - `src/App.jsx` - Integration with state management and event handling
-- `src/MindMapCanvas.jsx` - Multi-selection support and click handling
+- `src/VertexCanvas.jsx` - Multi-selection support and click handling
 - `src/utils/nodeUtils.js` - Added PRIORITY_LEVELS export
 - `src/i18n/locales/en-US.js` - English translations for panel content
 - `src/i18n/locales/zh-CN.js` - Chinese translations for panel content
@@ -211,4 +211,4 @@ The Node Info Panel feature provides a comprehensive solution for viewing and ma
 - ✅ **Comprehensive Testing**: Well-tested with good coverage
 - ✅ **Theme Compatibility**: Works perfectly with all themes
 
-The feature enhances the mind mapping experience by providing detailed insights into node properties and enabling efficient bulk operations through an intuitive interface.
+The feature enhances the diagramming experience by providing detailed insights into node properties and enabling efficient bulk operations through an intuitive interface.

@@ -71,3 +71,5 @@ global.createCanvas = () => {
   });
   return canvas;
 };
+
+// Note: use native FileReader in JSDOM for blob/file operations

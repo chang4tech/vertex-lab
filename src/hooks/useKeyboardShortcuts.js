@@ -35,12 +35,6 @@ export function useKeyboardShortcuts({
 
         case 's': {
           e.preventDefault();
-          onExport?.();
-          break;
-        }
-
-        case 'p': {
-          e.preventDefault();
           onExportPNG?.();
           break;
         }
@@ -50,12 +44,33 @@ export function useKeyboardShortcuts({
           onImport?.();
           break;
         }
+
+        case 'z': {
+          e.preventDefault();
+          onRedo?.();
+          break;
+        }
       }
       return;
     }
 
     if (isCommandKey) {
       switch (e.key.toLowerCase()) {
+        case 'n': {
+          e.preventDefault();
+          onNew?.();
+          break;
+        }
+        case 's': {
+          e.preventDefault();
+          onExport?.();
+          break;
+        }
+        case 'o': {
+          e.preventDefault();
+          onImport?.();
+          break;
+        }
         case 'z': {
           e.preventDefault();
           if (e.shiftKey) {
@@ -101,7 +116,7 @@ export function useKeyboardShortcuts({
     }
 
     // Handle non-modifier key shortcuts
-    if (e.target === document.body && !isCommandKey && !e.altKey && !e.shiftKey) {
+    if (!isCommandKey && !e.altKey && !e.shiftKey) {
       switch (e.key) {
         case 'Delete':
         case 'Backspace': {

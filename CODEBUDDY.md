@@ -28,7 +28,7 @@ The application follows a modular React architecture with clear separation of co
 - Menu system integration and file operations
 - Internationalization (i18n) support with react-intl
 
-**Canvas Rendering Layer (`src/MindMapCanvas.jsx`)**
+**Canvas Rendering Layer (`src/VertexCanvas.jsx`)**
 - HTML5 Canvas-based rendering with imperative ref API
 - Pan/zoom functionality with smooth interactions
 - Node positioning, selection, and drag operations
@@ -99,7 +99,7 @@ The application uses React's built-in state management with:
 
 **Event Handling**
 - Centralized keyboard shortcuts in App.jsx
-- Canvas events handled in MindMapCanvas with callbacks
+- Canvas events handled in VertexCanvas with callbacks
 - Menu interactions with dropdown state management
 - File operations with hidden input elements
 

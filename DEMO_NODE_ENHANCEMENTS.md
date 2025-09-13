@@ -135,7 +135,7 @@ If you encounter issues:
 
 ### Integration Points
 - **App.jsx**: Main integration with state management
-- **MindMapCanvas.jsx**: Enhanced rendering with shapes and colors
+- **VertexCanvas.jsx**: Enhanced rendering with shapes and colors
 - **NodeEditor.jsx**: Complete editing interface
 - **nodeUtils.js**: Utility functions for node management
 - **Themes**: Full theme support for enhanced properties

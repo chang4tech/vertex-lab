@@ -17,6 +17,13 @@ export function Node({
     onSelect(node.id);
     onStartDrag(node.id);
     document.body.style.userSelect = 'none';
+    const clearSelection = () => {
+      document.body.style.userSelect = '';
+      document.removeEventListener('mouseup', clearSelection);
+      document.removeEventListener('touchend', clearSelection);
+    };
+    document.addEventListener('mouseup', clearSelection);
+    document.addEventListener('touchend', clearSelection);
   }, [onSelect, onStartDrag, node.id]);
 
   const handleMouseMove = React.useCallback((e) => {
@@ -44,7 +51,7 @@ export function Node({
   const handleMouseUp = React.useCallback(() => {
     if (isSelected) {
       onEndDrag(node.id);
-      document.body.style.userSelect = 'auto';
+      document.body.style.userSelect = '';
     }
   }, [isSelected, onEndDrag, node.id]);
 
@@ -77,7 +84,6 @@ export function Node({
       document.addEventListener('mouseup', handleMouseUp);
       document.addEventListener('touchmove', handleMouseMove);
       document.addEventListener('touchend', handleMouseUp);
-      document.body.style.userSelect = 'none';
     }
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);

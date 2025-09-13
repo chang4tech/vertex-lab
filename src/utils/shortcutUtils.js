@@ -26,14 +26,14 @@ const BROWSER_SHORTCUTS = [
 
 // List of our app's shortcuts
 export const APP_SHORTCUTS = [
-  { key: 'n', modifiers: ['cmd', 'shift'], description: 'New mindmap' },
-  { key: 'n', modifiers: ['ctrl', 'shift'], description: 'New mindmap' },
-  { key: 's', modifiers: ['cmd', 'shift'], description: 'Export mindmap' },
-  { key: 's', modifiers: ['ctrl', 'shift'], description: 'Export mindmap' },
+  { key: 'n', modifiers: ['cmd', 'shift'], description: 'New diagram' },
+  { key: 'n', modifiers: ['ctrl', 'shift'], description: 'New diagram' },
+  { key: 's', modifiers: ['cmd', 'shift'], description: 'Export diagram' },
+  { key: 's', modifiers: ['ctrl', 'shift'], description: 'Export diagram' },
   { key: 'p', modifiers: ['cmd', 'shift'], description: 'Export as PNG' },
   { key: 'p', modifiers: ['ctrl', 'shift'], description: 'Export as PNG' },
-  { key: 'o', modifiers: ['cmd', 'shift'], description: 'Import mindmap' },
-  { key: 'o', modifiers: ['ctrl', 'shift'], description: 'Import mindmap' },
+  { key: 'o', modifiers: ['cmd', 'shift'], description: 'Import diagram' },
+  { key: 'o', modifiers: ['ctrl', 'shift'], description: 'Import diagram' },
   { key: 'z', modifiers: ['cmd'], description: 'Undo' },
   { key: 'z', modifiers: ['ctrl'], description: 'Undo' },
   { key: 'z', modifiers: ['cmd', 'shift'], description: 'Redo' },
@@ -42,7 +42,7 @@ export const APP_SHORTCUTS = [
   { key: '=', modifiers: ['alt'], description: 'Zoom in' },
   { key: '-', modifiers: ['alt'], description: 'Zoom out' },
   { key: '0', modifiers: ['alt'], description: 'Reset zoom' },
-  { key: 'c', modifiers: ['alt'], description: 'Center mindmap' },
+  { key: 'c', modifiers: ['alt'], description: 'Center diagram' },
   { key: 'Delete', modifiers: [], description: 'Delete selected node' },
   { key: 'Backspace', modifiers: [], description: 'Delete selected node' },
   { key: 'm', modifiers: [], description: 'Toggle minimap' }

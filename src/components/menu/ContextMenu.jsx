@@ -73,6 +73,7 @@ export function ContextMenu({ x, y, isOpen, onClose, children }) {
   return (
     <div 
       data-testid="context-menu"
+      ref={menuRef}
       style={menuStyle}
       onMouseDown={handleMouseDown}
     >

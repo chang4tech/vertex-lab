@@ -30,7 +30,7 @@ describe('fileOperations', () => {
     ];
 
     it('creates a JSON blob with correct data', async () => {
-      vi.useFakeTimers();
+      vi.useRealTimers();
       const appendChildSpy = vi.spyOn(document.body, 'appendChild');
       const removeChildSpy = vi.spyOn(document.body, 'removeChild');
       
@@ -41,19 +41,23 @@ describe('fileOperations', () => {
       const blobCall = URL.createObjectURL.mock.calls[0][0];
       expect(blobCall).toBeInstanceOf(Blob);
       
-      const blobData = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.readAsText(blobCall);
-      });
+      let blobData;
+      if (typeof blobCall.text === 'function') {
+        blobData = await blobCall.text();
+      } else {
+        blobData = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.readAsText(blobCall);
+        });
+      }
       expect(JSON.parse(blobData)).toEqual(mockNodes);
 
       // Check if link was created and clicked
       expect(appendChildSpy).toHaveBeenCalled();
       expect(removeChildSpy).toHaveBeenCalled();
       
-      // Check if URL was revoked after timeout
-      vi.runAllTimers();
+      // URL should be revoked
       expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:test');
     });
 
@@ -65,7 +69,7 @@ describe('fileOperations', () => {
       
       expect(document.createElement).toHaveBeenCalledWith('a');
       const link = document.createElement.mock.results[0].value;
-      expect(link.download).toMatch(/mindmap-20250911-120000\.json/);
+      expect(link.download).toMatch(/vertex-lab-20250911-120000\.json/);
     });
   });
 
@@ -106,6 +110,7 @@ describe('fileOperations', () => {
 
   describe('importFromJSON', () => {
     it('successfully imports valid JSON file', async () => {
+      vi.useRealTimers();
       const validData = [
         { id: 1, label: 'Test', x: 100, y: 100 }
       ];
@@ -121,6 +126,7 @@ describe('fileOperations', () => {
     });
 
     it('rejects invalid JSON file', async () => {
+      vi.useRealTimers();
       const file = new File(
         ['invalid json'],
         'test.json',

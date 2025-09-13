@@ -129,7 +129,7 @@ export function useAutosave(data, key, delay = 1000) {
 ### 10. Integration & Export 🔄
 - [x] JSON format import/export ✅ *Completed - Standard format for data interchange*
 - [x] PNG image export ✅ *Completed - For sharing and presentations*
-- [ ] Import from other mind map formats (FreeMind, XMind, etc.)
+- [ ] Import from other diagram formats (FreeMind, XMind, etc.)
 - [ ] Export to presentation formats (PowerPoint, PDF)
 - [ ] API for external integrations
 - [ ] Browser extension support
