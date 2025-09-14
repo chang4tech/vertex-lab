@@ -26,26 +26,39 @@ const BROWSER_SHORTCUTS = [
 
 // List of our app's shortcuts
 export const APP_SHORTCUTS = [
-  { key: 'n', modifiers: ['cmd', 'shift'], description: 'New diagram' },
-  { key: 'n', modifiers: ['ctrl', 'shift'], description: 'New diagram' },
-  { key: 's', modifiers: ['cmd', 'shift'], description: 'Export diagram' },
-  { key: 's', modifiers: ['ctrl', 'shift'], description: 'Export diagram' },
-  { key: 'p', modifiers: ['cmd', 'shift'], description: 'Export as PNG' },
-  { key: 'p', modifiers: ['ctrl', 'shift'], description: 'Export as PNG' },
-  { key: 'o', modifiers: ['cmd', 'shift'], description: 'Import diagram' },
-  { key: 'o', modifiers: ['ctrl', 'shift'], description: 'Import diagram' },
+  // File
+  { key: 'n', modifiers: ['cmd', 'shift'], description: 'New Diagram' },
+  { key: 'n', modifiers: ['ctrl', 'shift'], description: 'New Diagram' },
+  { key: 's', modifiers: ['cmd'], description: 'Export JSON' },
+  { key: 's', modifiers: ['ctrl'], description: 'Export JSON' },
+  { key: 's', modifiers: ['cmd', 'shift'], description: 'Export PNG' },
+  { key: 's', modifiers: ['ctrl', 'shift'], description: 'Export PNG' },
+  { key: 'o', modifiers: ['cmd', 'shift'], description: 'Import JSON' },
+  { key: 'o', modifiers: ['ctrl', 'shift'], description: 'Import JSON' },
+
+  // Edit
   { key: 'z', modifiers: ['cmd'], description: 'Undo' },
   { key: 'z', modifiers: ['ctrl'], description: 'Undo' },
   { key: 'z', modifiers: ['cmd', 'shift'], description: 'Redo' },
   { key: 'z', modifiers: ['ctrl', 'shift'], description: 'Redo' },
-  { key: '+', modifiers: ['alt'], description: 'Zoom in' },
-  { key: '=', modifiers: ['alt'], description: 'Zoom in' },
-  { key: '-', modifiers: ['alt'], description: 'Zoom out' },
-  { key: '0', modifiers: ['alt'], description: 'Reset zoom' },
-  { key: 'c', modifiers: ['alt'], description: 'Center diagram' },
-  { key: 'Delete', modifiers: [], description: 'Delete selected node' },
-  { key: 'Backspace', modifiers: [], description: 'Delete selected node' },
-  { key: 'm', modifiers: [], description: 'Toggle minimap' }
+  { key: 'l', modifiers: ['cmd'], description: 'Auto Layout' },
+  { key: 'l', modifiers: ['ctrl'], description: 'Auto Layout' },
+  { key: 'f', modifiers: ['cmd'], description: 'Search' },
+  { key: 'f', modifiers: ['ctrl'], description: 'Search' },
+
+  // View
+  { key: '+', modifiers: ['alt'], description: 'Zoom In' },
+  { key: '=', modifiers: ['alt'], description: 'Zoom In' },
+  { key: '-', modifiers: ['alt'], description: 'Zoom Out' },
+  { key: '0', modifiers: ['alt'], description: 'Reset Zoom' },
+  { key: 'c', modifiers: ['alt'], description: 'Center Diagram' },
+  { key: 'i', modifiers: ['cmd'], description: 'Toggle Node Info Panel' },
+  { key: 'i', modifiers: ['ctrl'], description: 'Toggle Node Info Panel' },
+  { key: 'm', modifiers: [], description: 'Toggle Minimap' },
+
+  // Selection / editing
+  { key: 'Delete', modifiers: [], description: 'Delete Selected' },
+  { key: 'Backspace', modifiers: [], description: 'Delete Selected' },
 ];
 
 /**

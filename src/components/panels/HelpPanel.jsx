@@ -2,17 +2,22 @@ import React from 'react';
 
 export function HelpPanel({ isVisible, onClose }) {
   const shortcuts = [
-    { key: 'Tab', desc: '插入后置节点' },
-    { key: 'Enter', desc: '插入子节点' },
-    { key: 'Shift+Enter', desc: '插入前置节点' },
-    { key: 'Alt+Up', desc: '向上移动节点' },
-    { key: 'Alt+Down', desc: '向下移动节点' },
-    { key: 'Alt+Left', desc: '向左移动节点' },
-    { key: 'Alt+Right', desc: '向右移动节点' },
-    { key: 'Delete', desc: '删除节点' },
-    { key: 'F2', desc: '编辑节点' },
-    { key: 'Space', desc: '编辑节点' },
-    { key: 'Escape', desc: '取消编辑' }
+    { key: '⌘⇧N / Ctrl⇧N', desc: 'New Diagram' },
+    { key: '⌘S / CtrlS', desc: 'Export JSON' },
+    { key: '⌘⇧S / Ctrl⇧S', desc: 'Export PNG' },
+    { key: '⌘⇧O / Ctrl⇧O', desc: 'Import JSON' },
+    { key: '⌘Z / CtrlZ', desc: 'Undo' },
+    { key: '⌘⇧Z / Ctrl⇧Z', desc: 'Redo' },
+    { key: '⌘L / CtrlL', desc: 'Auto Layout' },
+    { key: '⌘F / CtrlF', desc: 'Search' },
+    { key: '⌥+ / ⌥=', desc: 'Zoom In' },
+    { key: '⌥-', desc: 'Zoom Out' },
+    { key: '⌥0', desc: 'Reset Zoom' },
+    { key: '⌥C', desc: 'Center Diagram' },
+    { key: '⌘I / CtrlI', desc: 'Toggle Node Info Panel' },
+    { key: 'M', desc: 'Toggle Minimap' },
+    { key: 'Delete / Backspace', desc: 'Delete Selection' },
+    { key: 'F2', desc: 'Edit Node' },
   ];
 
   return (

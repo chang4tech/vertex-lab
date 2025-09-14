@@ -6,21 +6,19 @@ describe('HelpPanel', () => {
   it('renders when visible', () => {
     const { container } = render(<HelpPanel isVisible={true} />);
 
-    // Check key names
     const keySpans = container.querySelectorAll('.key');
-    expect(keySpans[0].textContent).toBe('Tab');
-    expect(keySpans[1].textContent).toBe('Enter');
-    expect(keySpans[2].textContent).toBe('Shift+Enter');
-    expect(keySpans[3].textContent).toBe('Alt+Up');
-    expect(keySpans[4].textContent).toBe('Alt+Down');
+    expect(keySpans.length).toBeGreaterThan(10);
+    // Basic sanity on first few entries
+    expect(keySpans[0].textContent).toBe('⌘⇧N / Ctrl⇧N');
+    expect(keySpans[1].textContent).toBe('⌘S / CtrlS');
+    expect(keySpans[2].textContent).toBe('⌘⇧S / Ctrl⇧S');
 
-    // Check descriptions
+    // Check some descriptions
     const descSpans = container.querySelectorAll('.desc');
-    expect(descSpans[0].textContent).toBe('插入后置节点');
-    expect(descSpans[1].textContent).toBe('插入子节点');
-    expect(descSpans[2].textContent).toBe('插入前置节点');
-    expect(descSpans[3].textContent).toBe('向上移动节点');
-    expect(descSpans[4].textContent).toBe('向下移动节点');
+    const descTexts = Array.from(descSpans).map(d => d.textContent);
+    expect(descTexts).toContain('New Diagram');
+    expect(descTexts).toContain('Export JSON');
+    expect(descTexts).toContain('Export PNG');
   });
 
   it('applies show class when visible', () => {
@@ -42,22 +40,16 @@ describe('HelpPanel', () => {
   it('renders all keyboard shortcuts', () => {
     const { container } = render(<HelpPanel isVisible={true} />);
 
-    const shortcuts = [
-      { key: 'Tab', desc: '插入后置节点' },
-      { key: 'Enter', desc: '插入子节点' },
-      { key: 'Shift+Enter', desc: '插入前置节点' },
-      { key: 'Alt+Up', desc: '向上移动节点' },
-      { key: 'Alt+Down', desc: '向下移动节点' },
-      { key: 'Alt+Left', desc: '向左移动节点' },
-      { key: 'Alt+Right', desc: '向右移动节点' },
-      { key: 'Delete', desc: '删除节点' },
-      { key: 'Space', desc: '编辑节点' },
-      { key: 'Escape', desc: '取消编辑' }
+    const expected = [
+      'New Diagram', 'Export JSON', 'Export PNG', 'Import JSON',
+      'Undo', 'Redo', 'Auto Layout', 'Search',
+      'Zoom In', 'Zoom Out', 'Reset Zoom', 'Center Diagram',
+      'Toggle Node Info Panel', 'Toggle Minimap', 'Delete Selection', 'Edit Node'
     ];
 
-    shortcuts.forEach(({ desc }) => {
-      const descElement = Array.from(container.querySelectorAll('.desc')).find(el => el.textContent === desc);
-      expect(descElement).toBeTruthy();
+    const descTexts = Array.from(container.querySelectorAll('.desc')).map(el => el.textContent);
+    expected.forEach(text => {
+      expect(descTexts).toContain(text);
     });
   });
 
@@ -71,7 +63,7 @@ describe('HelpPanel', () => {
 
     expect(helpElement).toBeTruthy();
     expect(rulesElement).toBeTruthy();
-    expect(ruleElements.length).toBe(11);
+    expect(ruleElements.length).toBe(16);
     
     // Check each rule has key and description
     ruleElements.forEach(rule => {

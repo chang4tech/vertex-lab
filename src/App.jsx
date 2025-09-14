@@ -97,7 +97,7 @@ function MenuBar({
               }}
             >
               <FormattedMessage id="file.new" defaultMessage="New" />
-              <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘N</span>
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>⇧⌘N</span>
             </div>
             <div
               style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
@@ -138,7 +138,7 @@ function MenuBar({
               }}
             >
               <FormattedMessage id="file.import" defaultMessage="Import JSON" />
-              <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘O</span>
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>⇧⌘O</span>
             </div>
             <input
               ref={fileInputRef}
@@ -960,17 +960,19 @@ function App() {
       } else if (isCommandKey) {
         switch (e.key.toLowerCase()) {
           case 'n': {
-            e.preventDefault();
-            console.log('New diagram');
-            const initialNodes = [createEnhancedNode({ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, parentId: null })];
-            setNodes([...initialNodes]);
-            setUndoStack([]);
-            setRedoStack([]);
-            setSelectedNodeId(null);
-            localStorage.removeItem('vertex_nodes');
-            setTimeout(() => {
-              if (canvasRef.current?.center) canvasRef.current.center();
-            }, 0);
+            if (e.shiftKey) {
+              e.preventDefault();
+              console.log('New diagram');
+              const initialNodes = [createEnhancedNode({ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, parentId: null })];
+              setNodes([...initialNodes]);
+              setUndoStack([]);
+              setRedoStack([]);
+              setSelectedNodeId(null);
+              localStorage.removeItem('vertex_nodes');
+              setTimeout(() => {
+                canvasRef.current?.center?.();
+              }, 0);
+            }
             break;
           }
 
@@ -989,9 +991,11 @@ function App() {
           }
 
           case 'o': {
-            e.preventDefault();
-            console.log('Import JSON');
-            fileInputRef.current?.click();
+            if (e.shiftKey) {
+              e.preventDefault();
+              console.log('Import JSON');
+              fileInputRef.current?.click?.();
+            }
             break;
           }
 
@@ -1035,6 +1039,9 @@ function App() {
             break;
           }
         }
+      } else if (!isCommandKey && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'm') {
+        e.preventDefault();
+        setShowMinimap(v => !v);
       } else if (selectedNodeId) {
         // Node-specific shortcuts that require a selected node
         if (e.key === 'Tab') {
