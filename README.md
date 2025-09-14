@@ -42,6 +42,10 @@ A powerful and intuitive diagramming tool built with React and HTML5 Canvas. Cre
   - `Enter`: Rename node
   - `E`: Connect/Disconnect selected (with 2+ nodes selected; uses first selected as anchor)
 
+## Changelog
+
+For a detailed list of changes and fixes, see `CHANGELOG.md` at the project root.
+
 ## Getting Started
 
 ### Prerequisites
