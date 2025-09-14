@@ -742,8 +742,9 @@ function App() {
     } catch {}
     return [];
   });
-  // Shift+E progressive mode: 'connect' or 'disconnect'
-  const [shiftPairMode, setShiftPairMode] = useState('connect');
+  // Shift+E progressive toggle pointer (one pair per press)
+  const [shiftPairIndex, setShiftPairIndex] = useState(0);
+  const [shiftPairSelKey, setShiftPairSelKey] = useState('');
 
   // Do not localize existing node titles on language switch to avoid modifying user content
 
@@ -1320,33 +1321,46 @@ function App() {
         const hasPair = (a, b) => newEdges.some(e => pairKey(e.source, e.target) === pairKey(a, b) && !e.directed);
 
         if (isShift) {
-          // Progressive mode with memory: connect-first until complete, then disconnect-first until empty
-          const connectedPairs = pairs.filter(([a, b]) => hasPair(a, b));
-          const missingPairs = pairs.filter(([a, b]) => !hasPair(a, b));
-          if (shiftPairMode === 'connect') {
-            if (missingPairs.length > 0) {
-              const [a, b] = missingPairs[0];
-              newEdges.push({ source: a, target: b, directed: false });
-              // stay in connect mode
-            } else if (connectedPairs.length > 0) {
-              // switch to disconnect mode and remove first
-              const [a, b] = connectedPairs[0];
-              const rmKey = pairKey(a, b);
-              newEdges = newEdges.filter(e => pairKey(e.source, e.target) !== rmKey || !!e.directed);
-              setShiftPairMode('disconnect');
+          // Gray-code traversal: flip exactly one pair per press, enumerate all 2^m combinations
+          const sortedIds = [...ids].sort((a, b) => a - b);
+          const selectionKey = sortedIds.join('-');
+          const m = pairs.length;
+          if (m > 0) {
+            let idx = shiftPairIndex;
+            // Reset index when selection changes or index overflows
+            const total = 1 << m;
+            if (selectionKey !== shiftPairSelKey || idx >= total) {
+              idx = 0;
+              setShiftPairSelKey(selectionKey);
             }
-          } else { // disconnect mode
-            if (connectedPairs.length > 0) {
-              const [a, b] = connectedPairs[0];
-              const rmKey = pairKey(a, b);
-              newEdges = newEdges.filter(e => pairKey(e.source, e.target) !== rmKey || !!e.directed);
-              // stay in disconnect mode
-            } else if (missingPairs.length > 0) {
-              // switch to connect mode and add first
-              const [a, b] = missingPairs[0];
-              newEdges.push({ source: a, target: b, directed: false });
-              setShiftPairMode('connect');
+            const next = (idx + 1) % total;
+            const gray = next ^ (next >> 1);
+            // Build desired set from gray code bits
+            const desired = new Set();
+            for (let bit = 0; bit < m; bit++) {
+              if ((gray >> bit) & 1) {
+                const [a, b] = pairs[bit];
+                desired.add(pairKey(a, b));
+              }
             }
+            // Remove internal undirected edges not in desired; keep directed
+            newEdges = newEdges.filter(e => {
+              const key = pairKey(e.source, e.target);
+              const internal = pairs.some(([a, b]) => key === pairKey(a, b));
+              if (!internal) return true; // external edge stays
+              if (e.directed) return true; // keep directed for future
+              return desired.has(key);
+            });
+            // Add missing desired internal edges
+            desired.forEach(key => {
+              const exists = newEdges.some(e => pairKey(e.source, e.target) === key && !e.directed);
+              if (!exists) {
+                const [aStr, bStr] = key.split('-');
+                const a = parseInt(aStr, 10); const b = parseInt(bStr, 10);
+                newEdges.push({ source: a, target: b, directed: false });
+              }
+            });
+            setShiftPairIndex(next);
           }
         } else {
           // Toggle all pairs: if any missing, connect all missing; else disconnect all
