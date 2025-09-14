@@ -104,7 +104,7 @@ const NodeEditor = ({ node, visible, onSave, onClose, onDelete }) => {
         backgroundColor: currentTheme.colors.panelBackground,
         borderRadius: '12px',
         boxShadow: `0 8px 32px ${currentTheme.colors.panelShadow}`,
-        width: 'min(720px, 95vw)',
+        width: 'min(860px, 95vw)',
         height: 'min(80vh, 820px)',
         display: 'flex',
         flexDirection: 'column',
@@ -174,7 +174,7 @@ const NodeEditor = ({ node, visible, onSave, onClose, onDelete }) => {
         <div style={{
           padding: '20px',
           overflowY: 'auto',
-          flex: 1
+          flex: 1,
         }}>
           {activeTab === 'basic' && (
             <BasicTab 
@@ -270,103 +270,97 @@ const NodeEditor = ({ node, visible, onSave, onClose, onDelete }) => {
 // Basic tab component
 const BasicTab = ({ editedNode, setEditedNode, currentTheme, textareaRef }) => {
   const intl = useIntl();
+  const gridStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+    gap: '16px'
+  };
+  const cardStyle = {
+    padding: '12px',
+    border: `1px solid ${currentTheme.colors.panelBorder}`,
+    borderRadius: '8px',
+    backgroundColor: currentTheme.colors.panelBackground,
+  };
+  const labelStyle = {
+    display: 'block',
+    marginBottom: '8px',
+    color: currentTheme.colors.primaryText,
+    fontSize: '14px',
+    fontWeight: '600'
+  };
+  const inputBase = {
+    width: '100%',
+    padding: '12px',
+    border: `1px solid ${currentTheme.colors.inputBorder}`,
+    borderRadius: '4px',
+    backgroundColor: currentTheme.colors.inputBackground,
+    color: currentTheme.colors.primaryText,
+    fontSize: '14px',
+    fontFamily: 'inherit'
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div>
-        <label style={{
-          display: 'block',
-          marginBottom: '8px',
-          color: currentTheme.colors.primaryText,
-          fontSize: '14px',
-          fontWeight: '600'
-        }}>
-          <FormattedMessage id="nodeEditor.label" defaultMessage="Label" />
-        </label>
-        <textarea
-          ref={textareaRef}
-          value={editedNode.label}
-          onChange={(e) => setEditedNode({ ...editedNode, label: e.target.value })}
-          style={{
-            width: '100%',
-            minHeight: '80px',
-            padding: '12px',
-            border: `1px solid ${currentTheme.colors.inputBorder}`,
-            borderRadius: '4px',
-            backgroundColor: currentTheme.colors.inputBackground,
-            color: currentTheme.colors.primaryText,
-            fontSize: '14px',
-            fontFamily: 'inherit',
-            resize: 'vertical'
-          }}
-          placeholder={intl.formatMessage({ id: 'nodeEditor.labelPlaceholder', defaultMessage: 'Enter node text...' })}
-        />
-      </div>
+      <div style={gridStyle}>
+        {/* Label */}
+        <div style={cardStyle}>
+          <label style={labelStyle}>
+            <FormattedMessage id="nodeEditor.label" defaultMessage="Label" />
+          </label>
+          <textarea
+            ref={textareaRef}
+            value={editedNode.label}
+            onChange={(e) => setEditedNode({ ...editedNode, label: e.target.value })}
+            style={{ ...inputBase, minHeight: '96px', resize: 'vertical' }}
+            placeholder={intl.formatMessage({ id: 'nodeEditor.labelPlaceholder', defaultMessage: 'Enter node text...' })}
+          />
+        </div>
 
-      <div>
-        <label style={{
-          display: 'block',
-          marginBottom: '8px',
-          color: currentTheme.colors.primaryText,
-          fontSize: '14px',
-          fontWeight: '600'
-        }}>
-          <FormattedMessage id="nodeEditor.icon" defaultMessage="Icon" />
-        </label>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))',
-          gap: '8px'
-        }}>
-          {Object.entries(NODE_ICONS).map(([key, icon]) => (
-            <button
-              key={key}
-              onClick={() => setEditedNode({ ...editedNode, icon })}
-              style={{
-                padding: '8px',
-                border: `2px solid ${editedNode.icon === icon ? currentTheme.colors.primaryButton : currentTheme.colors.panelBorder}`,
-                backgroundColor: editedNode.icon === icon ? currentTheme.colors.menuHover : 'transparent',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '16px',
-                minHeight: '40px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-              title={key.toLowerCase()}
-            >
-              {icon || '∅'}
-            </button>
-          ))}
+        {/* Icon */}
+        <div style={cardStyle}>
+          <label style={labelStyle}>
+            <FormattedMessage id="nodeEditor.icon" defaultMessage="Icon" />
+          </label>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))',
+            gap: '8px'
+          }}>
+            {Object.entries(NODE_ICONS).map(([key, icon]) => (
+              <button
+                key={key}
+                onClick={() => setEditedNode({ ...editedNode, icon })}
+                style={{
+                  padding: '8px',
+                  border: `2px solid ${editedNode.icon === icon ? currentTheme.colors.primaryButton : currentTheme.colors.panelBorder}`,
+                  backgroundColor: editedNode.icon === icon ? currentTheme.colors.menuHover : 'transparent',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  minHeight: '40px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                title={key.toLowerCase()}
+              >
+                {icon || '∅'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
+      {/* Notes - full width */}
       {editedNode.notes !== undefined && (
-        <div>
-          <label style={{
-            display: 'block',
-            marginBottom: '8px',
-            color: currentTheme.colors.primaryText,
-            fontSize: '14px',
-            fontWeight: '600'
-          }}>
+        <div style={cardStyle}>
+          <label style={labelStyle}>
             <FormattedMessage id="nodeEditor.notes" defaultMessage="Notes" />
           </label>
           <textarea
             value={editedNode.notes}
             onChange={(e) => setEditedNode({ ...editedNode, notes: e.target.value })}
-            style={{
-              width: '100%',
-              minHeight: '60px',
-              padding: '12px',
-              border: `1px solid ${currentTheme.colors.inputBorder}`,
-              borderRadius: '4px',
-              backgroundColor: currentTheme.colors.inputBackground,
-              color: currentTheme.colors.primaryText,
-              fontSize: '14px',
-              fontFamily: 'inherit',
-              resize: 'vertical'
-            }}
+            style={{ ...inputBase, minHeight: '72px', resize: 'vertical' }}
             placeholder="Additional notes..."
           />
         </div>
@@ -377,93 +371,111 @@ const BasicTab = ({ editedNode, setEditedNode, currentTheme, textareaRef }) => {
 
 // Style tab component
 const StyleTab = ({ editedNode, setEditedNode, currentTheme }) => {
+  // Responsive two-column cards using CSS grid via inline styles
+  const gridStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+    gap: '16px'
+  };
+  const cardStyle = {
+    padding: '12px',
+    border: `1px solid ${currentTheme.colors.panelBorder}`,
+    borderRadius: '8px',
+    backgroundColor: currentTheme.colors.panelBackground,
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <div>
-        <label style={{
-          display: 'block',
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={gridStyle}>
+        {/* Colors */}
+        <div style={cardStyle}>
+          <label style={{
+            display: 'block',
           marginBottom: '12px',
-          color: currentTheme.colors.primaryText,
-          fontSize: '14px',
-          fontWeight: '600'
-        }}>
-          <FormattedMessage id="nodeEditor.color" defaultMessage="Color" />
-        </label>
-        <div style={{
-          display: 'grid',
+            color: currentTheme.colors.primaryText,
+            fontSize: '14px',
+            fontWeight: '600'
+          }}>
+            <FormattedMessage id="nodeEditor.color" defaultMessage="Color" />
+          </label>
+          <div style={{
+            display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))',
           gap: '8px'
-        }}>
-          {Object.entries(NODE_COLORS).map(([key, color]) => (
-            <button
-              key={key}
-              onClick={() => setEditedNode({ ...editedNode, color })}
-              style={{
-                width: '40px',
-                height: '40px',
-                border: `3px solid ${editedNode.color === color ? currentTheme.colors.primaryButton : currentTheme.colors.panelBorder}`,
-                backgroundColor: color,
-                borderRadius: '8px',
-                cursor: 'pointer',
-                position: 'relative'
-              }}
-              title={NODE_COLOR_INFO[color]?.name || key}
-            >
-              {editedNode.color === color && (
-                <div style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  color: NODE_COLOR_INFO[color]?.border || currentTheme.colors.primaryText,
-                  fontSize: '16px',
-                  fontWeight: 'bold'
-                }}>
-                  ✓
-                </div>
-              )}
-            </button>
-          ))}
+          }}>
+            {Object.entries(NODE_COLORS).map(([key, color]) => (
+              <button
+                key={key}
+                onClick={() => setEditedNode({ ...editedNode, color })}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  border: `3px solid ${editedNode.color === color ? currentTheme.colors.primaryButton : currentTheme.colors.panelBorder}`,
+                  backgroundColor: color,
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  position: 'relative'
+                }}
+                title={NODE_COLOR_INFO[color]?.name || key}
+              >
+                {editedNode.color === color && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    color: NODE_COLOR_INFO[color]?.border || currentTheme.colors.primaryText,
+                    fontSize: '16px',
+                    fontWeight: 'bold'
+                  }}>
+                    ✓
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Shape */}
+        <div style={cardStyle}>
+          <label style={{
+            display: 'block',
+            marginBottom: '12px',
+            color: currentTheme.colors.primaryText,
+            fontSize: '14px',
+            fontWeight: '600'
+          }}>
+            <FormattedMessage id="nodeEditor.shape" defaultMessage="Shape" />
+          </label>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '8px'
+          }}>
+            {Object.entries(NODE_SHAPES).map(([key, shape]) => (
+              <button
+                key={key}
+                onClick={() => setEditedNode({ ...editedNode, shape })}
+                style={{
+                  padding: '12px',
+                  border: `2px solid ${editedNode.shape === shape ? currentTheme.colors.primaryButton : currentTheme.colors.panelBorder}`,
+                  backgroundColor: editedNode.shape === shape ? currentTheme.colors.menuHover : 'transparent',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  color: currentTheme.colors.primaryText,
+                  textAlign: 'center'
+                }}
+              >
+                {key.replace('_', ' ')}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div>
-        <label style={{
-          display: 'block',
-          marginBottom: '12px',
-          color: currentTheme.colors.primaryText,
-          fontSize: '14px',
-          fontWeight: '600'
-        }}>
-          <FormattedMessage id="nodeEditor.shape" defaultMessage="Shape" />
-        </label>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '8px'
-        }}>
-          {Object.entries(NODE_SHAPES).map(([key, shape]) => (
-            <button
-              key={key}
-              onClick={() => setEditedNode({ ...editedNode, shape })}
-              style={{
-                padding: '12px',
-                border: `2px solid ${editedNode.shape === shape ? currentTheme.colors.primaryButton : currentTheme.colors.panelBorder}`,
-                backgroundColor: editedNode.shape === shape ? currentTheme.colors.menuHover : 'transparent',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '12px',
-                color: currentTheme.colors.primaryText,
-                textAlign: 'center'
-              }}
-            >
-              {key.replace('_', ' ')}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
+      {/* Typography (full width) */}
+      <div style={cardStyle}>
         <label style={{
           display: 'block',
           marginBottom: '12px',
@@ -499,57 +511,66 @@ const StyleTab = ({ editedNode, setEditedNode, currentTheme }) => {
 
 // Tags tab component
 const TagsTab = ({ editedNode, onTagToggle, currentTheme }) => {
+  const gridStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+    gap: '16px'
+  };
+  const cardStyle = {
+    padding: '12px',
+    border: `1px solid ${currentTheme.colors.panelBorder}`,
+    borderRadius: '8px',
+    backgroundColor: currentTheme.colors.panelBackground,
+  };
+  const labelStyle = {
+    display: 'block',
+    marginBottom: '8px',
+    color: currentTheme.colors.primaryText,
+    fontSize: '14px',
+    fontWeight: '600'
+  };
+
   return (
-    <div>
-      <div style={{
-        marginBottom: '16px',
-        color: currentTheme.colors.primaryText,
-        fontSize: '14px'
-      }}>
-        <FormattedMessage id="nodeEditor.tagsHelp" defaultMessage="Tags help organize and categorize your nodes" />
-      </div>
-      
-      <div style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '8px'
-      }}>
-        {COMMON_TAGS.map(tag => (
-          <button
-            key={tag.id}
-            onClick={() => onTagToggle(tag.id)}
-            style={{
-              padding: '6px 12px',
-              border: `2px solid ${tag.color}`,
-              backgroundColor: hasTag(editedNode, tag.id) ? tag.color : 'transparent',
-              color: hasTag(editedNode, tag.id) ? 'white' : tag.color,
-              borderRadius: '16px',
-              cursor: 'pointer',
-              fontSize: '12px',
-              fontWeight: '600'
-            }}
-          >
-            {tag.name}
-          </button>
-        ))}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={cardStyle}>
+        <div style={{ color: currentTheme.colors.primaryText, fontSize: '14px' }}>
+          <FormattedMessage id="nodeEditor.tagsHelp" defaultMessage="Tags help organize and categorize your nodes" />
+        </div>
       </div>
 
-      {editedNode.tags && editedNode.tags.length > 0 && (
-        <div style={{ marginTop: '16px' }}>
-          <div style={{
-            marginBottom: '8px',
-            color: currentTheme.colors.primaryText,
-            fontSize: '14px',
-            fontWeight: '600'
-          }}>
-            <FormattedMessage id="nodeEditor.selectedTags" defaultMessage="Selected Tags" />
+      <div style={gridStyle}>
+        <div style={cardStyle}>
+          <label style={labelStyle}>
+            <FormattedMessage id="nodeEditor.availableTags" defaultMessage="Available Tags" />
+          </label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {COMMON_TAGS.map(tag => (
+              <button
+                key={tag.id}
+                onClick={() => onTagToggle(tag.id)}
+                style={{
+                  padding: '6px 12px',
+                  border: `2px solid ${tag.color}`,
+                  backgroundColor: hasTag(editedNode, tag.id) ? tag.color : 'transparent',
+                  color: hasTag(editedNode, tag.id) ? 'white' : tag.color,
+                  borderRadius: '16px',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  fontWeight: '600'
+                }}
+              >
+                {tag.name}
+              </button>
+            ))}
           </div>
-          <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '4px'
-          }}>
-            {editedNode.tags.map(tagId => {
+        </div>
+
+        <div style={cardStyle}>
+          <label style={labelStyle}>
+            <FormattedMessage id="nodeEditor.selectedTags" defaultMessage="Selected Tags" />
+          </label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            {(editedNode.tags || []).map(tagId => {
               const tag = COMMON_TAGS.find(t => t.id === tagId);
               return tag ? (
                 <span
@@ -567,9 +588,14 @@ const TagsTab = ({ editedNode, onTagToggle, currentTheme }) => {
                 </span>
               ) : null;
             })}
+            {(editedNode.tags || []).length === 0 && (
+              <span style={{ color: currentTheme.colors.secondaryText, fontSize: '13px' }}>
+                <FormattedMessage id="nodeEditor.noTags" defaultMessage="No tags selected" />
+              </span>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
@@ -580,106 +606,72 @@ const AdvancedTab = ({ editedNode, setEditedNode, currentTheme }) => {
     return new Date(dateString).toLocaleString();
   };
 
+  const gridStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+    gap: '16px'
+  };
+  const cardStyle = {
+    padding: '12px',
+    border: `1px solid ${currentTheme.colors.panelBorder}`,
+    borderRadius: '8px',
+    backgroundColor: currentTheme.colors.panelBackground,
+  };
+  const labelStyle = {
+    display: 'block',
+    marginBottom: '8px',
+    color: currentTheme.colors.primaryText,
+    fontSize: '14px',
+    fontWeight: '600'
+  };
+  const roInput = {
+    width: '100%',
+    padding: '8px 12px',
+    border: `1px solid ${currentTheme.colors.inputBorder}`,
+    borderRadius: '4px',
+    backgroundColor: currentTheme.colors.menuHover,
+    color: currentTheme.colors.secondaryText,
+    fontSize: '14px'
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div>
-        <label style={{
-          display: 'block',
-          marginBottom: '8px',
-          color: currentTheme.colors.primaryText,
-          fontSize: '14px',
-          fontWeight: '600'
-        }}>
-          <FormattedMessage id="nodeEditor.nodeId" defaultMessage="Node ID" />
-        </label>
-        <input
-          type="text"
-          value={editedNode.id}
-          readOnly
-          style={{
-            width: '100%',
-            padding: '8px 12px',
-            border: `1px solid ${currentTheme.colors.inputBorder}`,
-            borderRadius: '4px',
-            backgroundColor: currentTheme.colors.menuHover,
-            color: currentTheme.colors.secondaryText,
-            fontSize: '14px'
-          }}
-        />
-      </div>
-
-      {editedNode.createdAt && (
-        <div>
-          <label style={{
-            display: 'block',
-            marginBottom: '8px',
-            color: currentTheme.colors.primaryText,
-            fontSize: '14px',
-            fontWeight: '600'
-          }}>
-            <FormattedMessage id="nodeEditor.created" defaultMessage="Created" />
+      <div style={gridStyle}>
+        <div style={cardStyle}>
+          <label style={labelStyle}>
+            <FormattedMessage id="nodeEditor.nodeId" defaultMessage="Node ID" />
           </label>
-          <input
-            type="text"
-            value={formatDate(editedNode.createdAt)}
-            readOnly
-            style={{
-              width: '100%',
-              padding: '8px 12px',
-              border: `1px solid ${currentTheme.colors.inputBorder}`,
-              borderRadius: '4px',
-              backgroundColor: currentTheme.colors.menuHover,
-              color: currentTheme.colors.secondaryText,
-              fontSize: '14px'
-            }}
-          />
+          <input type="text" value={editedNode.id} readOnly style={roInput} />
         </div>
-      )}
 
-      {editedNode.updatedAt && (
-        <div>
-          <label style={{
-            display: 'block',
-            marginBottom: '8px',
-            color: currentTheme.colors.primaryText,
-            fontSize: '14px',
-            fontWeight: '600'
-          }}>
-            <FormattedMessage id="nodeEditor.updated" defaultMessage="Last Updated" />
+        {editedNode.createdAt && (
+          <div style={cardStyle}>
+            <label style={labelStyle}>
+              <FormattedMessage id="nodeEditor.created" defaultMessage="Created" />
+            </label>
+            <input type="text" value={formatDate(editedNode.createdAt)} readOnly style={roInput} />
+          </div>
+        )}
+
+        {editedNode.updatedAt && (
+          <div style={cardStyle}>
+            <label style={labelStyle}>
+              <FormattedMessage id="nodeEditor.updated" defaultMessage="Last Updated" />
+            </label>
+            <input type="text" value={formatDate(editedNode.updatedAt)} readOnly style={roInput} />
+          </div>
+        )}
+
+        <div style={cardStyle}>
+          <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: 0 }}>
+            <input
+              type="checkbox"
+              checked={editedNode.isCollapsed || false}
+              onChange={(e) => setEditedNode({ ...editedNode, isCollapsed: e.target.checked })}
+            />
+            <FormattedMessage id="nodeEditor.collapsed" defaultMessage="Collapse child nodes" />
           </label>
-          <input
-            type="text"
-            value={formatDate(editedNode.updatedAt)}
-            readOnly
-            style={{
-              width: '100%',
-              padding: '8px 12px',
-              border: `1px solid ${currentTheme.colors.inputBorder}`,
-              borderRadius: '4px',
-              backgroundColor: currentTheme.colors.menuHover,
-              color: currentTheme.colors.secondaryText,
-              fontSize: '14px'
-            }}
-          />
         </div>
-      )}
-
-      <div>
-        <label style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          color: currentTheme.colors.primaryText,
-          fontSize: '14px',
-          cursor: 'pointer'
-        }}>
-          <input
-            type="checkbox"
-            checked={editedNode.isCollapsed || false}
-            onChange={(e) => setEditedNode({ ...editedNode, isCollapsed: e.target.checked })}
-          />
-          <FormattedMessage id="nodeEditor.collapsed" defaultMessage="Collapse child nodes" />
-        </label>
       </div>
     </div>
   );
