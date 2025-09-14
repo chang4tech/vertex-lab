@@ -6,7 +6,9 @@ import Settings from './components/Settings';
 import Search from './components/Search';
 import ThemeSelector from './components/ThemeSelector';
 import NodeEditor from './components/NodeEditor';
-import NodeInfoPanel from './components/NodeInfoPanel';
+// Plugin system
+import { PluginHost } from './plugins/PluginHost';
+import { corePlugins } from './plugins';
 import { LocaleSelector } from './i18n/LocaleProvider';
 import { useTheme } from './contexts/ThemeContext';
 import { organizeLayout, detectCollisions } from './utils/layoutUtils';
@@ -1221,14 +1223,21 @@ function App() {
         />
       )}
 
-      {/* Node Info Panel */}
-      <NodeInfoPanel
-        selectedNodes={selectedNodeIds.map(id => nodes.find(n => n.id === id)).filter(Boolean)}
-        visible={showNodeInfoPanel}
-        onClose={() => setShowNodeInfoPanel(false)}
-        onEditNode={handleEditNodeFromPanel}
-        onDeleteNodes={handleDeleteNodesFromPanel}
-        onToggleCollapse={handleToggleCollapseFromPanel}
+      {/* Plugins */}
+      <PluginHost
+        plugins={corePlugins}
+        appApi={{
+          // selection and nodes
+          nodes,
+          selectedNodeIds,
+          selectedNodes: selectedNodeIds.map(id => nodes.find(n => n.id === id)).filter(Boolean),
+          // node info panel state/handlers
+          showNodeInfoPanel,
+          hideNodeInfoPanel: () => setShowNodeInfoPanel(false),
+          onEditNode: handleEditNodeFromPanel,
+          onDeleteNodes: handleDeleteNodesFromPanel,
+          onToggleCollapse: handleToggleCollapseFromPanel,
+        }}
       />
     </React.Fragment>
   );
