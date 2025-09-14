@@ -263,7 +263,7 @@ function MenuBar({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('Center clicked');
+                console.log('Center clicked (fit to view)');
                 onCenter();
                 setOpenMenu(null);
               }}
@@ -1144,8 +1144,8 @@ function App() {
         onAutoLayout={handleAutoLayout}
         onSearch={handleShowSearch}
         onCenter={() => {
-          console.log('Center canvas:', { canvasRef: !!canvasRef.current, center: !!canvasRef.current?.center });
-          if (canvasRef.current?.center) canvasRef.current.center();
+            console.log('Center canvas:', { canvasRef: !!canvasRef.current, center: !!canvasRef.current?.center, fitToView: !!canvasRef.current?.fitToView });
+          if (canvasRef.current?.fitToView) canvasRef.current.fitToView();
         }}
         onZoomIn={() => {
           console.log('Zoom in:', { canvasRef: !!canvasRef.current, zoom: !!canvasRef.current?.zoom });

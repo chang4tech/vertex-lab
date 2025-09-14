@@ -217,16 +217,47 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
   useImperativeHandle(ref, () => ({
     canvasRef,
     center: () => {
-      // Center to canvas (reset view), not to any specific node
+      // Center the graph content within the canvas at current zoom
       const canvas = canvasRef.current;
-      view.current.scale = 1;
-      view.current.offsetX = 0;
-      view.current.offsetY = 0;
+      const visibleNodes = getVisibleNodes(nodes);
+      if (!visibleNodes || visibleNodes.length === 0) return;
+      const minX = Math.min(...visibleNodes.map(n => n.x));
+      const maxX = Math.max(...visibleNodes.map(n => n.x));
+      const minY = Math.min(...visibleNodes.map(n => n.y));
+      const maxY = Math.max(...visibleNodes.map(n => n.y));
+      const cx = (minX + maxX) / 2;
+      const cy = (minY + maxY) / 2;
+      // Keep current scale; position offsets so that (cx, cy) maps to canvas center
+      const s = view.current.scale;
+      view.current.offsetX = canvas.width / 2 - cx * s;
+      view.current.offsetY = canvas.height / 2 - cy * s;
       canvas.dispatchEvent(new Event('redraw'));
     },
     zoom: (factor) => {
       view.current.scale *= factor;
       const canvas = canvasRef.current;
+      canvas.dispatchEvent(new Event('redraw'));
+    },
+    fitToView: () => {
+      const canvas = canvasRef.current;
+      const visibleNodes = getVisibleNodes(nodes);
+      if (!visibleNodes || visibleNodes.length === 0) return;
+      const minX = Math.min(...visibleNodes.map(n => n.x));
+      const maxX = Math.max(...visibleNodes.map(n => n.x));
+      const minY = Math.min(...visibleNodes.map(n => n.y));
+      const maxY = Math.max(...visibleNodes.map(n => n.y));
+      const padding = 80; // pixels of screen padding
+      const width = maxX - minX || 1;
+      const height = maxY - minY || 1;
+      const scaleX = (canvas.width - 2 * padding) / width;
+      const scaleY = (canvas.height - 2 * padding) / height;
+      const s = Math.max(0.05, Math.min(scaleX, scaleY));
+      view.current.scale = s;
+      // center after scaling
+      const cx = (minX + maxX) / 2;
+      const cy = (minY + maxY) / 2;
+      view.current.offsetX = canvas.width / 2 - cx * s;
+      view.current.offsetY = canvas.height / 2 - cy * s;
       canvas.dispatchEvent(new Event('redraw'));
     },
     resetZoom: () => {

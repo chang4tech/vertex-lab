@@ -20,6 +20,7 @@ const MindMapCanvas = forwardRef(({
     handleClick,
     exportAsPNG,
     center,
+    fitToView,
     zoom,
     resetZoom
   } = useCanvasOperations({
@@ -35,6 +36,7 @@ const MindMapCanvas = forwardRef(({
   React.useImperativeHandle(ref, () => ({
     exportAsPNG,
     center,
+    fitToView,
     zoom,
     resetZoom
   }));
