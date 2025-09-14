@@ -60,6 +60,7 @@ export default {
 
   // Node operations
   'node.addChild': '添加子节点',
+  'node.addConnected': '添加连接节点',
   'node.addSibling': '添加同级节点',
   'node.edit': '编辑',
   'node.delete': '删除',

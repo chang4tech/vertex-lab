@@ -60,6 +60,7 @@ export default {
 
   // Node operations
   'node.addChild': 'Add Child',
+  'node.addConnected': 'Add Connected Node',
   'node.addSibling': 'Add Sibling',
   'node.edit': 'Edit',
   'node.delete': 'Delete',

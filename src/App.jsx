@@ -1638,15 +1638,15 @@ function App() {
             <button onClick={() => {
               closeContextMenu();
               handleNodeDoubleClick(contextMenu.target.nodeId);
-            }}>Edit Node</button>
+            }}><FormattedMessage id="nodeInfo.edit" defaultMessage="Edit Node" /></button>
             <button onClick={() => {
               closeContextMenu();
               handleToggleCollapseFromPanel(contextMenu.target.nodeId);
-            }}>Toggle Collapse</button>
+            }}><FormattedMessage id="nodeInfo.collapse" defaultMessage="Collapse Node" /></button>
             <button onClick={() => {
               closeContextMenu();
               handleDeleteNode(contextMenu.target.nodeId);
-            }}>Delete Node</button>
+            }}><FormattedMessage id="nodeInfo.delete" defaultMessage="Delete Node" /></button>
             <button onClick={() => {
               closeContextMenu();
               const parent = nodes.find(n => n.id === contextMenu.target.nodeId);
@@ -1662,11 +1662,11 @@ function App() {
                 if (exists) return prev;
                 return [...prev, { source: parent.id, target: newNode.id, directed: false }];
               });
-            }}>Add Connected Node</button>
+            }}><FormattedMessage id="node.addConnected" defaultMessage="Add Connected Node" /></button>
             <button onClick={() => {
               closeContextMenu();
               canvasRef.current?.focusOnNode?.(contextMenu.target.nodeId);
-            }}>Center on Node</button>
+            }}><FormattedMessage id="view.center" defaultMessage="Center" /></button>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
