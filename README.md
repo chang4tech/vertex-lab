@@ -40,6 +40,7 @@ A powerful and intuitive diagramming tool built with React and HTML5 Canvas. Cre
   - `M`: Toggle minimap
   - `Delete` / `Backspace`: Delete selected
   - `Enter`: Rename node
+  - `Tab`: Add connected node (adds a neighbor and connects it)
   - `E`: Connect/Disconnect selected (with 2+ nodes selected; uses first selected as anchor)
 
 ## Changelog
@@ -82,10 +83,8 @@ For a detailed list of changes and fixes, see `CHANGELOG.md` at the project root
 ### Basic Operations
 
 1. **Creating Nodes**
-   - Click a node and press `Tab` to create a child node
-   - Press `Enter` to create a sibling node after
-   - Press `Shift + Enter` to create a sibling before
-   - Press `Ctrl/Cmd + Enter` to create a parent node
+   - Click a node and press `Tab` to add a connected node (neighbor) and link it
+   - Press `Enter` to rename the selected node
 
 2. **Editing Nodes**
   - Click a node to select it

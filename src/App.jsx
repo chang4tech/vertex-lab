@@ -1175,10 +1175,9 @@ function App() {
           const { x, y } = findNonOverlappingChildPosition(parent, nodes);
           const childId = Math.max(...nodes.map(n => n.id), 0) + 1;
           // Update nodes via undo stack
-          pushUndo([
-            ...nodes,
-            createNewNode(parent.id, { x, y })
-          ]);
+          const useEdges = Array.isArray(edges) && edges.length > 0;
+          const newNode = createNewNode(useEdges ? null : parent.id, { x, y });
+          pushUndo([...nodes, newNode]);
           // If using explicit edges, add one for the new child
           setEdges(prev => {
             if (!Array.isArray(prev) || prev.length === 0) return prev;
@@ -1653,7 +1652,8 @@ function App() {
               const parent = nodes.find(n => n.id === contextMenu.target.nodeId);
               if (!parent) return;
               const pos = findNonOverlappingChildPosition(parent, nodes);
-              const newNode = createNewNode(parent.id, pos);
+              const useEdges = Array.isArray(edges) && edges.length > 0;
+              const newNode = createNewNode(useEdges ? null : parent.id, pos);
               pushUndo([...nodes, newNode]);
               setEdges(prev => {
                 if (!Array.isArray(prev) || prev.length === 0) return prev;
@@ -1662,7 +1662,7 @@ function App() {
                 if (exists) return prev;
                 return [...prev, { source: parent.id, target: newNode.id, directed: false }];
               });
-            }}>Add Child</button>
+            }}>Add Connected Node</button>
             <button onClick={() => {
               closeContextMenu();
               canvasRef.current?.focusOnNode?.(contextMenu.target.nodeId);
