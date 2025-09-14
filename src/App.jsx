@@ -8,6 +8,7 @@ import Search from './components/Search';
 import ThemeSelector from './components/ThemeSelector';
 import NodeEditor from './components/NodeEditor';
 import HelpModal from './components/HelpModal';
+import { HelpPanel } from './components/panels/HelpPanel';
 // Plugin system
 import { PluginHost } from './plugins/PluginHost';
 import { corePlugins } from './plugins';
@@ -23,9 +24,9 @@ function MenuBar({
   onExport, onImport, onNew, onUndo, onRedo, onDelete, onAutoLayout, onSearch, onCenter, onZoomIn, onZoomOut, onResetZoom, onShowThemes,
   nodes, setNodes, setUndoStack, setRedoStack, setSelectedNodeId, canvasRef,
   showMinimap, setShowMinimap, showNodeInfoPanel, onToggleNodeInfoPanel,
-  onToggleHelp, isHelpVisible
+  onToggleHelp, isHelpVisible,
+  fileInputRef
 }) {
-  const fileInputRef = useRef();
   const [openMenu, setOpenMenu] = useState(null); // 'file' | 'edit' | 'view' | 'settings' | null
   const [showSettings, setShowSettings] = useState(false);
   const intl = useIntl();
@@ -611,30 +612,6 @@ const Dialog = ({ visible, onClose, title, children, width = "300px", maxWidth =
 
 
 
-/**
- * Component: HelpPanel
- * Displays the keyboard shortcuts.
- */
-const HelpPanel = ({ isVisible, withPanel = false }) => {
-    const rulesClass = `rules ${isVisible ? 'show' : ''}`;
-    return (
-        <div className={`help ${isVisible ? 'show' : ''} ${withPanel ? 'with-panel' : ''}`}>
-            <div className={rulesClass}>
-                <div className="rule"><span className="key">Tab</span><span className="desc">插入子节点</span></div>
-                <div className="rule"><span className="key">Enter</span><span className="desc">插入后置节点</span></div>
-                <div className="rule"><span className="key">Shift</span>+<span className="key">Enter</span><span className="desc">插入前置节点</span></div>
-                <div className="rule"><span className="key">Ctrl</span>+<span className="key">Enter</span><span className="desc">插入父节点</span></div>
-                <div className="rule"><span className="key">Ctrl</span>+<span className="key">←↑↓→</span><span className="desc">多节点选择</span></div>
-                <div className="rule"><span className="key">Shift</span>+<span className="key">←↑↓→</span><span className="desc">移动节点</span></div>
-                <div className="rule"><span className="key">Ctrl</span>+<span className="key">e</span><span className="desc">展开/收起节点</span></div>
-                <div className="rule"><span className="key">Space</span>+<span className="key">左键</span><span className="desc">拖动画布</span></div>
-                <div className="rule"><span className="key">Ctrl</span>+<span className="key">o</span><span className="desc">导入文件</span></div>
-                <div className="rule"><span className="key">Ctrl</span>+<span className="key">s</span><span className="desc">导出为文件</span></div>
-                <div className="rule"><span className="key">Ctrl</span>+<span className="key">Shift</span>+<span className="key">s</span><span className="desc">导出为图片</span></div>
-            </div>
-        </div>
-    );
-};
 
 /**
  * Component: MainHeader (Placeholder)
@@ -1039,6 +1016,24 @@ function App() {
             break;
           }
         }
+      } else if (e.altKey) {
+        // Use e.code for layout-independent detection; fall back to e.key
+        const code = e.code;
+        const key = (e.key || '').toLowerCase();
+        if (code === 'Equal' || key === '+' || key === '=') {
+          e.preventDefault();
+          canvasRef.current?.zoom?.(1.1);
+        } else if (code === 'Minus' || key === '-') {
+          e.preventDefault();
+          canvasRef.current?.zoom?.(0.9);
+        } else if (code === 'Digit0' || key === '0') {
+          e.preventDefault();
+          canvasRef.current?.resetZoom?.();
+        } else if (code === 'KeyC' || key === 'c') {
+          e.preventDefault();
+          // Fit to view (recenter and zoom to proper level)
+          canvasRef.current?.fitToView?.();
+        }
       } else if (!isCommandKey && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'm') {
         e.preventDefault();
         setShowMinimap(v => !v);
@@ -1229,8 +1224,8 @@ function App() {
         onAutoLayout={handleAutoLayout}
         onSearch={handleShowSearch}
         onCenter={() => {
-            console.log('Center canvas:', { canvasRef: !!canvasRef.current, center: !!canvasRef.current?.center, fitToView: !!canvasRef.current?.fitToView });
-          if (canvasRef.current?.fitToView) canvasRef.current.fitToView();
+          console.log('Center canvas (fit to view):', { canvasRef: !!canvasRef.current, fitToView: !!canvasRef.current?.fitToView });
+          canvasRef.current?.fitToView?.();
         }}
         onZoomIn={() => {
           console.log('Zoom in:', { canvasRef: !!canvasRef.current, zoom: !!canvasRef.current?.zoom });
@@ -1251,6 +1246,7 @@ function App() {
         onToggleNodeInfoPanel={handleToggleNodeInfoPanel}
         onToggleHelp={toggleHelp}
         isHelpVisible={isHelpVisible}
+        fileInputRef={fileInputRef}
       />
       <div style={{ height: 48 }} />
       <MainHeader />
