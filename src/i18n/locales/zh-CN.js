@@ -5,6 +5,7 @@ export default {
   'menu.view': '视图',
   'menu.library': '库',
   'menu.settings': '设置',
+  'menu.help': '帮助',
 
   // File menu
   'file.new': '新建',
@@ -176,4 +177,16 @@ export default {
 
   // App name
   'app.name': '🧠 思维导图',
+
+  // Help menu items
+  'help.documentation': '文档',
+  'help.community': '帮助社区',
+  'help.feedback': '发送反馈',
+  'help.report': '报告问题',
+  // Help modal messages
+  'help.documentation.desc': '项目文档位于仓库的 doc/ 目录。请查看 doc/README.md 和 AUDIENCE.md 以获取概览。',
+  'help.community.desc': '社区支持即将上线。当前请使用 Issue 或内部渠道沟通。',
+  'help.feedback.desc': '欢迎反馈！专用反馈入口即将上线。目前请提交 Issue 并附详细信息。',
+  'help.report.desc': '要报告问题，请附复现步骤和环境信息。报告表单即将提供。',
+  'help.comingSoon': '更多改进即将到来。',
 };

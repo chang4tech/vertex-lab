@@ -5,6 +5,7 @@ export default {
   'menu.view': 'View',
   'menu.library': 'Library',
   'menu.settings': 'Settings',
+  'menu.help': 'Help',
 
   // File menu
   'file.new': 'New',
@@ -176,4 +177,16 @@ export default {
 
   // App name
   'app.name': '🧠 Vertex Lab',
+
+  // Help menu items
+  'help.documentation': 'Documentation',
+  'help.community': 'Help Community',
+  'help.feedback': 'Send Feedback',
+  'help.report': 'Report a Problem',
+  // Help modal messages
+  'help.documentation.desc': 'Project documentation is available in the doc/ folder of the repository. See doc/README.md and AUDIENCE.md for an overview.',
+  'help.community.desc': 'Community support is coming soon. For now, please use issues or internal channels as appropriate.',
+  'help.feedback.desc': 'Feedback is welcome! A dedicated feedback flow will be added soon. Please file an issue with details.',
+  'help.report.desc': 'To report a problem, please include steps to reproduce and environment details. The report form will be available soon.',
+  'help.comingSoon': 'More improvements coming soon.',
 };

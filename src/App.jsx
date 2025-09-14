@@ -7,6 +7,7 @@ import Settings from './components/Settings';
 import Search from './components/Search';
 import ThemeSelector from './components/ThemeSelector';
 import NodeEditor from './components/NodeEditor';
+import HelpModal from './components/HelpModal';
 // Plugin system
 import { PluginHost } from './plugins/PluginHost';
 import { corePlugins } from './plugins';
@@ -21,13 +22,15 @@ import { createEnhancedNode } from './utils/nodeUtils';
 function MenuBar({
   onExport, onImport, onNew, onUndo, onRedo, onDelete, onAutoLayout, onSearch, onCenter, onZoomIn, onZoomOut, onResetZoom, onShowThemes,
   nodes, setNodes, setUndoStack, setRedoStack, setSelectedNodeId, canvasRef,
-  showMinimap, setShowMinimap, showNodeInfoPanel, onToggleNodeInfoPanel
+  showMinimap, setShowMinimap, showNodeInfoPanel, onToggleNodeInfoPanel,
+  onToggleHelp, isHelpVisible
 }) {
   const fileInputRef = useRef();
   const [openMenu, setOpenMenu] = useState(null); // 'file' | 'edit' | 'view' | 'settings' | null
   const [showSettings, setShowSettings] = useState(false);
   const intl = useIntl();
   const { currentTheme, toggleTheme } = useTheme();
+  const [helpModal, setHelpModal] = useState({ open: false, titleId: null, messageId: null });
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -62,6 +65,12 @@ function MenuBar({
   return (
     <>
       {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+      <HelpModal
+        open={helpModal.open}
+        titleId={helpModal.titleId}
+        messageId={helpModal.messageId}
+        onClose={() => setHelpModal({ open: false, titleId: null, messageId: null })}
+      />
       <nav style={{
         width: '100%', 
         background: currentTheme.colors.menuBackground, 
@@ -174,6 +183,7 @@ function MenuBar({
             />
           </>)}
         </div>
+        
         <div style={{ cursor: 'pointer', position: 'relative' }}>
           <span className="menu-trigger" onClick={(e) => {
             e.preventDefault();
@@ -464,6 +474,55 @@ function MenuBar({
                 setOpenMenu(null);
               }}
             ><FormattedMessage id="view.chooseTheme" defaultMessage="Choose Theme" /></div>
+          </>)}
+        </div>
+        <div style={{ cursor: 'pointer', position: 'relative' }}>
+          <span className="menu-trigger" onClick={(e) => {
+            e.preventDefault();
+            console.log('Help menu clicked');
+            setOpenMenu(openMenu === 'help' ? null : 'help');
+          }}><FormattedMessage id="menu.help" defaultMessage="Help" /></span>
+          {menuDropdown('help', <>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault(); e.stopPropagation();
+                setHelpModal({ open: true, titleId: 'help.documentation', messageId: 'help.documentation.desc' });
+                setOpenMenu(null);
+              }}
+            >
+              <FormattedMessage id="help.documentation" defaultMessage="Documentation" />
+            </div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault(); e.stopPropagation();
+                setHelpModal({ open: true, titleId: 'help.community', messageId: 'help.community.desc' });
+                setOpenMenu(null);
+              }}
+            >
+              <FormattedMessage id="help.community" defaultMessage="Help Community" />
+            </div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault(); e.stopPropagation();
+                setHelpModal({ open: true, titleId: 'help.feedback', messageId: 'help.feedback.desc' });
+                setOpenMenu(null);
+              }}
+            >
+              <FormattedMessage id="help.feedback" defaultMessage="Send Feedback" />
+            </div>
+            <div
+              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault(); e.stopPropagation();
+                setHelpModal({ open: true, titleId: 'help.report', messageId: 'help.report.desc' });
+                setOpenMenu(null);
+              }}
+            >
+              <FormattedMessage id="help.report" defaultMessage="Report a Problem" />
+            </div>
           </>)}
         </div>
       </div>
@@ -1164,6 +1223,8 @@ function App() {
         setShowMinimap={setShowMinimap}
         showNodeInfoPanel={showNodeInfoPanel}
         onToggleNodeInfoPanel={handleToggleNodeInfoPanel}
+        onToggleHelp={toggleHelp}
+        isHelpVisible={isHelpVisible}
       />
       <div style={{ height: 48 }} />
       <MainHeader />
