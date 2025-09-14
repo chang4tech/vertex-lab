@@ -712,6 +712,36 @@ function App() {
   });
   const [selectedNodeIds, setSelectedNodeIds] = useState([]);
   const [selectedNodeId, setSelectedNodeId] = useState(null); // Keep for backward compatibility
+  const [edges, setEdges] = useState(() => {
+    try {
+      const saved = localStorage.getItem('vertex_edges');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {}
+    // Derive from parentId for legacy diagrams
+    try {
+      const savedNodes = localStorage.getItem('vertex_nodes');
+      if (savedNodes) {
+        const parsedNodes = JSON.parse(savedNodes);
+        if (Array.isArray(parsedNodes)) {
+          // lightweight derivation to avoid import; simple inline
+          const seen = new Set();
+          const result = [];
+          parsedNodes.forEach(n => {
+            if (n.parentId != null) {
+              const a = n.parentId; const b = n.id;
+              const key = a <= b ? `${a}-${b}` : `${b}-${a}`;
+              if (!seen.has(key)) { seen.add(key); result.push({ source: a, target: b, directed: false }); }
+            }
+          });
+          return result;
+        }
+      }
+    } catch {}
+    return [];
+  });
 
   // Do not localize existing node titles on language switch to avoid modifying user content
 
@@ -814,16 +844,31 @@ function App() {
 
   const handleImport = useCallback((data) => {
     console.log('handleImport called with:', data);
-    if (Array.isArray(data) &&
-        data.every(n => n.id && typeof n.x === 'number' && typeof n.y === 'number' && typeof n.label === 'string')) {
-      console.log('Importing valid diagram data:', data.length, 'nodes');
-      // Clone and upgrade the data to ensure compatibility with enhanced nodes
-      const importedNodes = data.map(node => createEnhancedNode({ ...node }));
-      setNodes(importedNodes);
+    const importedNodes = Array.isArray(data) ? data : data?.nodes;
+    const importedEdges = Array.isArray(data) ? null : data?.edges;
+    if (Array.isArray(importedNodes) &&
+        importedNodes.every(n => n.id && typeof n.x === 'number' && typeof n.y === 'number' && typeof n.label === 'string')) {
+      console.log('Importing valid diagram data:', importedNodes.length, 'nodes');
+      const upgraded = importedNodes.map(node => createEnhancedNode({ ...node }));
+      setNodes(upgraded);
+      if (Array.isArray(importedEdges)) {
+        setEdges(importedEdges);
+      } else {
+        // Derive edges from parentId for legacy import
+        const seen = new Set();
+        const result = [];
+        importedNodes.forEach(n => {
+          if (n.parentId != null) {
+            const a = n.parentId; const b = n.id;
+            const key = a <= b ? `${a}-${b}` : `${b}-${a}`;
+            if (!seen.has(key)) { seen.add(key); result.push({ source: a, target: b, directed: false }); }
+          }
+        });
+        setEdges(result);
+      }
       setUndoStack([]);
       setRedoStack([]);
       setSelectedNodeId(null);
-      // Center the view on the imported diagram
       setTimeout(() => {
         if (canvasRef.current?.center) {
           console.log('Centering view on imported diagram');
@@ -986,14 +1031,21 @@ function App() {
     localStorage.setItem('vertex_nodes', JSON.stringify(nodes));
   }, [nodes]);
 
+  // Save edges to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('vertex_edges', JSON.stringify(edges));
+  }, [edges]);
+
   // Create a new diagram initializer used by menu and keyboard
   const handleNewDiagram = useCallback(() => {
     const initialNodes = [createEnhancedNode({ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, parentId: null })];
     setNodes([...initialNodes]);
+    setEdges([]);
     setUndoStack([]);
     setRedoStack([]);
     setSelectedNodeId(null);
     localStorage.removeItem('vertex_nodes');
+    localStorage.removeItem('vertex_edges');
     setTimeout(() => { canvasRef.current?.fitToView?.(); }, 0);
   }, [intl]);
 
@@ -1222,18 +1274,16 @@ function App() {
     onZoomOut: () => canvasRef.current?.zoom?.(0.9),
     onResetZoom: () => canvasRef.current?.resetZoom?.(),
     onToggleMinimap: () => setShowMinimap(v => !v),
-    onToggleConnections: (ids) => {
+    onToggleConnections: (ids, options = {}) => {
       if (!Array.isArray(ids) || ids.length < 2) return;
-      // Toggle connect/disconnect: use first selected as anchor
-      const anchorId = ids[0];
-      const others = ids.slice(1);
+      const isShift = options.shift === true;
 
-      // Helper: check if targetId is an ancestor of sourceId (to avoid cycles)
+      // Helper: check ancestor to avoid cycles
       const isAncestor = (maybeAncestorId, nodeId) => {
         let current = nodes.find(n => n.id === nodeId);
         const visited = new Set();
         while (current && current.parentId != null) {
-          if (visited.has(current.id)) break; // safeguard
+          if (visited.has(current.id)) break;
           visited.add(current.id);
           if (current.parentId === maybeAncestorId) return true;
           current = nodes.find(n => n.id === current.parentId);
@@ -1241,30 +1291,102 @@ function App() {
         return false;
       };
 
-      // Determine if all others are already connected to anchor
-      const allConnected = others.length > 0 && others.every(id => {
-        const node = nodes.find(n => n.id === id);
-        return node && node.parentId === anchorId;
-      });
+      // If edges state is present, operate on all pairs within selection
+      if (Array.isArray(edges)) {
+        // Seed from existing edges; if empty, derive from legacy parentId once
+        let newEdges = edges.length > 0 ? [...edges] : (() => {
+          const seen = new Set();
+          const result = [];
+          nodes.forEach(n => {
+            if (n.parentId != null) {
+              const a = n.parentId; const b = n.id;
+              const key = a <= b ? `${a}-${b}` : `${b}-${a}`;
+              if (!seen.has(key)) { seen.add(key); result.push({ source: a, target: b, directed: false }); }
+            }
+          });
+          return result;
+        })();
 
-      const updated = nodes.map(n => {
-        if (!others.includes(n.id)) return n;
-        if (allConnected) {
-          // Disconnect: only if currently child of anchor
-          if (n.parentId === anchorId) {
-            return { ...n, parentId: null };
+        // Build all unordered pairs among selection
+        const pairKey = (a, b) => a <= b ? `${a}-${b}` : `${b}-${a}`;
+        const pairs = [];
+        for (let i = 0; i < ids.length; i++) {
+          for (let j = i + 1; j < ids.length; j++) {
+            pairs.push([ids[i], ids[j]]);
           }
-          return n;
-        } else {
-          // Connect: avoid creating cycles and self-parenting
-          if (n.id === anchorId) return n;
-          // If connecting n under anchor would make a cycle (n is ancestor of anchor), skip
-          if (isAncestor(n.id, anchorId)) return n;
-          return { ...n, parentId: anchorId };
         }
-      });
+        const hasPair = (a, b) => newEdges.some(e => pairKey(e.source, e.target) === pairKey(a, b) && !e.directed);
 
-      pushUndo(updated);
+        if (isShift) {
+          // Progressive connect: add the first missing pair (deterministic order)
+          let added = false;
+          for (let i = 0; i < pairs.length; i++) {
+            const [a, b] = pairs[i];
+            if (!hasPair(a, b)) {
+              newEdges.push({ source: a, target: b, directed: false });
+              added = true;
+              break;
+            }
+          }
+          // If none missing, do nothing
+        } else {
+          // Toggle all pairs: if any missing, connect all missing; else disconnect all
+          const allPresent = pairs.length > 0 && pairs.every(([a, b]) => hasPair(a, b));
+          if (allPresent) {
+            const removeSet = new Set(pairs.map(([a, b]) => pairKey(a, b)));
+            newEdges = newEdges.filter(e => {
+              const key = pairKey(e.source, e.target);
+              return !removeSet.has(key) || !!e.directed;
+            });
+          } else {
+            pairs.forEach(([a, b]) => {
+              if (!hasPair(a, b)) newEdges.push({ source: a, target: b, directed: false });
+            });
+          }
+        }
+        setEdges(newEdges);
+        return;
+      }
+
+      // Legacy fallback: parentId tree rewire only inside selection
+      // Legacy fallback: use parentId approximation
+      const idSet = new Set(ids);
+      if (isShift) {
+        // Progressive connect: attach one missing child to first as parent
+        const anchorId = ids[0];
+        const others = ids.slice(1);
+        const target = others.find(oid => {
+          const node = nodes.find(n => n.id === oid);
+          if (!node) return false;
+          if (node.parentId && !idSet.has(node.parentId)) return false; // don't break external
+          return node.parentId !== anchorId; // missing edge
+        });
+        if (target != null) {
+          const updated = nodes.map(n => n.id === target ? { ...n, parentId: anchorId } : n);
+          pushUndo(updated);
+        }
+      } else {
+        // Toggle: if any other has parent==anchor => disconnect all internal, else connect all missing to anchor
+        const anchorId = ids[0];
+        const others = ids.slice(1);
+        const anyConnected = others.some(oid => {
+          const node = nodes.find(n => n.id === oid);
+          return node && node.parentId === anchorId;
+        });
+        if (anyConnected) {
+          const updated = nodes.map(n => (idSet.has(n.id) && n.parentId === anchorId) ? { ...n, parentId: null } : n);
+          pushUndo(updated);
+        } else {
+          const updated = nodes.map(n => {
+            if (!others.includes(n.id)) return n;
+            if (n.id === anchorId) return n;
+            if (isAncestor(n.id, anchorId)) return n;
+            if (n.parentId != null && !idSet.has(n.parentId)) return n;
+            return { ...n, parentId: anchorId };
+          });
+          pushUndo(updated);
+        }
+      }
     }
   });
 
@@ -1375,6 +1497,7 @@ function App() {
       <VertexCanvas
         ref={canvasRef}
         nodes={nodes}
+        edges={edges}
         onNodeClick={handleNodeClick}
         onNodeDoubleClick={handleNodeDoubleClick}
         selectedNodeIds={selectedNodeIds}

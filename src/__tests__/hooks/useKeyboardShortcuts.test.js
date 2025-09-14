@@ -212,7 +212,7 @@ describe('useKeyboardShortcuts', () => {
       document.dispatchEvent(event);
     });
 
-    expect(handlers.onToggleConnections).toHaveBeenCalledWith([1, 2, 3]);
+    expect(handlers.onToggleConnections).toHaveBeenCalledWith([1, 2, 3], { shift: false });
   });
 
   it('does not trigger E toggle when fewer than two selected', () => {
@@ -232,5 +232,25 @@ describe('useKeyboardShortcuts', () => {
     });
 
     expect(handlers.onToggleConnections).not.toHaveBeenCalled();
+  });
+  
+  it('passes shift modifier with E', () => {
+    const handlers = {
+      ...mockHandlers,
+      selectedNodeIds: [1, 2],
+      onToggleConnections: vi.fn(),
+    };
+    renderHook(() => useKeyboardShortcuts(handlers));
+
+    act(() => {
+      const event = new KeyboardEvent('keydown', {
+        key: 'e',
+        shiftKey: true,
+        bubbles: true,
+      });
+      document.dispatchEvent(event);
+    });
+
+    expect(handlers.onToggleConnections).toHaveBeenCalledWith([1, 2], { shift: true });
   });
 });

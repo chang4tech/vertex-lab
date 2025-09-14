@@ -166,6 +166,15 @@ export function useKeyboardShortcuts({
       return;
     }
 
+    // Handle Shift+E specifically for connections
+    if (!isCommandKey && !e.altKey && e.shiftKey && isLetter(e, 'e')) {
+      if (Array.isArray(selectedNodeIds) && selectedNodeIds.length >= 2) {
+        e.preventDefault();
+        onToggleConnections?.(selectedNodeIds, { shift: true });
+      }
+      return;
+    }
+
     // Handle non-modifier key shortcuts
     if (!isCommandKey && !e.altKey && !e.shiftKey) {
       const keyName = (e.key || '');
@@ -186,7 +195,7 @@ export function useKeyboardShortcuts({
       if (isLetter(e, 'e')) {
         if (Array.isArray(selectedNodeIds) && selectedNodeIds.length >= 2) {
           e.preventDefault();
-          onToggleConnections?.(selectedNodeIds);
+          onToggleConnections?.(selectedNodeIds, { shift: e.shiftKey === true });
         }
         return;
       }

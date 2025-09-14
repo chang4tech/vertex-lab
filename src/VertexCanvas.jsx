@@ -14,6 +14,7 @@ import {
  * VertexCanvas - a simple diagramming canvas using HTML5 Canvas.
  * Props:
  *   nodes: array of node objects { id, label, x, y, parentId }
+ *   edges: optional array of edges [{ id?, source, target, directed? }]
  *   onNodeClick: function(nodeId)
  */
 
@@ -207,7 +208,7 @@ function drawEdge(ctx, from, to, theme) {
 
 import { forwardRef, useImperativeHandle } from 'react';
 
-const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, selectedNodeIds = [], onNodePositionChange, highlightedNodeIds = [], onSelectionChange, onViewBoxChange, onContextMenuRequest, width = 800, height = 600 }, ref) => {
+const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, onNodeDoubleClick, selectedNodeIds = [], onNodePositionChange, highlightedNodeIds = [], onSelectionChange, onViewBoxChange, onContextMenuRequest, width = 800, height = 600 }, ref) => {
   const canvasRef = useRef(null);
   const { currentTheme } = useTheme();
   
@@ -358,7 +359,19 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
     // Get visible nodes (considering collapsed state)
     const visibleNodes = getVisibleNodes(nodes);
     
-    // Draw edges for visible nodes
+  // Draw edges
+  if (Array.isArray(propsEdges) && propsEdges.length > 0) {
+    // Use provided edges (undirected by default)
+    propsEdges.forEach(edge => {
+      const a = nodes.find(n => n.id === edge.source);
+      const b = nodes.find(n => n.id === edge.target);
+      if (!a || !b) return;
+      if (!visibleNodes.includes(a) || !visibleNodes.includes(b)) return;
+      drawEdge(ctx, a, b, currentTheme);
+      // Future: if (edge.directed) draw arrowhead
+    });
+  } else {
+    // Fallback to parentId (legacy tree)
     visibleNodes.forEach(node => {
       if (node.parentId) {
         const parent = nodes.find(n => n.id === node.parentId);
@@ -367,6 +380,7 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
         }
       }
     });
+  }
     
     // Draw visible nodes with selection and highlighting
     visibleNodes.forEach(node => {
@@ -416,7 +430,7 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
       };
       onViewBoxChange(vb);
     }
-  }, [nodes, selectedNodeIds, highlightedNodeIds, currentTheme, width, height]);
+  }, [nodes, propsEdges, selectedNodeIds, highlightedNodeIds, currentTheme, width, height]);
 
   // Mouse events for drag and pan
   useEffect(() => {
@@ -551,7 +565,16 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
       // Get visible nodes
       const visibleNodes = getVisibleNodes(nodes);
       
-      // Draw edges for visible nodes
+    // Draw edges
+    if (Array.isArray(propsEdges) && propsEdges.length > 0) {
+      propsEdges.forEach(edge => {
+        const a = nodes.find(n => n.id === edge.source);
+        const b = nodes.find(n => n.id === edge.target);
+        if (!a || !b) return;
+        if (!visibleNodes.includes(a) || !visibleNodes.includes(b)) return;
+        drawEdge(ctx, a, b, currentTheme);
+      });
+    } else {
       visibleNodes.forEach(node => {
         if (node.parentId) {
           const parent = nodes.find(n => n.id === node.parentId);
@@ -560,6 +583,7 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
           }
         }
       });
+    }
       
       // Draw visible nodes
       visibleNodes.forEach(node => {
@@ -657,7 +681,7 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [nodes, onNodePositionChange, selectedNodeIds, highlightedNodeIds, currentTheme]);
+  }, [nodes, propsEdges, onNodePositionChange, selectedNodeIds, highlightedNodeIds, currentTheme]);
 
   // Handle click (with pan/zoom)
   const handleClick = e => {
