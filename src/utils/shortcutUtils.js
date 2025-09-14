@@ -59,7 +59,7 @@ export const APP_SHORTCUTS = [
   // Selection / editing
   { key: 'Delete', modifiers: [], description: 'Delete Selected' },
   { key: 'Backspace', modifiers: [], description: 'Delete Selected' },
-  { key: 'F2', modifiers: [], description: 'Edit Node' },
+  { key: 'Enter', modifiers: [], description: 'Rename Node' },
 ];
 
 /**

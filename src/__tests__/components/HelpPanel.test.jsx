@@ -44,7 +44,7 @@ describe('HelpPanel', () => {
       'New Diagram', 'Export JSON', 'Export PNG', 'Import JSON',
       'Undo', 'Redo', 'Auto Layout', 'Search',
       'Zoom In', 'Zoom Out', 'Reset Zoom', 'Center Diagram',
-      'Toggle Node Info Panel', 'Toggle Minimap', 'Delete Selected', 'Edit Node'
+      'Toggle Node Info Panel', 'Toggle Minimap', 'Delete Selected', 'Rename Node'
     ];
 
     const descTexts = Array.from(container.querySelectorAll('.desc')).map(el => el.textContent);

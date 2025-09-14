@@ -15,7 +15,7 @@ import { corePlugins } from './plugins';
 import { LocaleSelector } from './i18n/LocaleProvider';
 import { useTheme } from './contexts/ThemeContext';
 import { organizeLayout, detectCollisions } from './utils/layoutUtils';
-import { formatShortcut } from './utils/shortcutUtils';
+import { APP_SHORTCUTS, formatShortcut } from './utils/shortcutUtils';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { updateNode } from './utils/nodeUtils';
 import { createEnhancedNode } from './utils/nodeUtils';
@@ -64,6 +64,41 @@ function MenuBar({
       padding: '4px 0'
     }}>{items}</div>
   );
+
+  // Build a merged shortcut display from APP_SHORTCUTS by description
+  const getShortcut = (description, options = {}) => {
+    const entries = APP_SHORTCUTS.filter(s => s.description === description);
+    if (entries.length === 0) return '';
+    const preferKey = options.preferKey; // e.g., '+' vs '=' for Zoom In
+    // Detect cmd/ctrl variants with same non-cmd/ctrl modifiers
+    const normMods = (mods) => (mods || []).filter(m => m !== 'cmd' && m !== 'ctrl').sort().join('+');
+    const groups = new Map();
+    entries.forEach(sc => {
+      const other = normMods(sc.modifiers || []);
+      const key = `${other}`; // group by other modifiers only
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(sc);
+    });
+    // Pick first group
+    const group = Array.from(groups.values())[0];
+    const hasCmd = group.some(sc => (sc.modifiers || []).includes('cmd'));
+    const hasCtrl = group.some(sc => (sc.modifiers || []).includes('ctrl'));
+    const otherMods = (group[0].modifiers || []).filter(m => m !== 'cmd' && m !== 'ctrl');
+    if (hasCmd && hasCtrl) {
+      // Use a representative key (use preferred if provided)
+      const keyChar = preferKey || group[0].key;
+      const cmdStr = formatShortcut({ key: keyChar, modifiers: ['cmd', ...otherMods] });
+      const ctrlStr = formatShortcut({ key: keyChar, modifiers: ['ctrl', ...otherMods] });
+      return `${cmdStr} / ${ctrlStr}`;
+    }
+    // Otherwise, pick preferred key or first
+    let chosen = group[0];
+    if (preferKey) {
+      const found = group.find(g => g.key === preferKey);
+      if (found) chosen = found;
+    }
+    return formatShortcut({ key: chosen.key, modifiers: chosen.modifiers || [] });
+  };
   return (
     <>
       {showSettings && <Settings onClose={() => setShowSettings(false)} />}
@@ -99,7 +134,7 @@ function MenuBar({
               }}
             >
               <FormattedMessage id="file.new" defaultMessage="New" />
-              <span style={{ opacity: 0.5, marginLeft: 20 }}>⇧⌘N</span>
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('New Diagram')}</span>
             </div>
             <div
               style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
@@ -112,7 +147,7 @@ function MenuBar({
               }}
             >
               <FormattedMessage id="file.export" defaultMessage="Export JSON" />
-              <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘S</span>
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('Export JSON')}</span>
             </div>
             <div
               style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
@@ -127,7 +162,7 @@ function MenuBar({
               }}
             >
               <FormattedMessage id="file.exportPng" defaultMessage="Export PNG" />
-              <span style={{ opacity: 0.5, marginLeft: 20 }}>⇧⌘S</span>
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('Export PNG')}</span>
             </div>
             <div
               style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
@@ -140,7 +175,7 @@ function MenuBar({
               }}
             >
               <FormattedMessage id="file.import" defaultMessage="Import JSON" />
-              <span style={{ opacity: 0.5, marginLeft: 20 }}>⇧⌘O</span>
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('Import JSON')}</span>
             </div>
             <input
               ref={fileInputRef}
@@ -204,7 +239,7 @@ function MenuBar({
               }}
             >
               <FormattedMessage id="edit.undo" defaultMessage="Undo" />
-              <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘Z</span>
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('Undo')}</span>
             </div>
             <div
               style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
@@ -217,7 +252,7 @@ function MenuBar({
               }}
             >
               <FormattedMessage id="edit.redo" defaultMessage="Redo" />
-              <span style={{ opacity: 0.5, marginLeft: 20 }}>⇧⌘Z</span>
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('Redo')}</span>
             </div>
             <div
               style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
@@ -230,7 +265,7 @@ function MenuBar({
               }}
             >
               <FormattedMessage id="edit.delete" defaultMessage="Delete" />
-              <span style={{ opacity: 0.5, marginLeft: 20 }}>⌫</span>
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('Delete Selected')}</span>
             </div>
             <div className="menu-separator" style={{ margin: '4px 0', borderTop: '1px solid #eee' }} />
             <div
@@ -281,7 +316,7 @@ function MenuBar({
               }}
             >
               <FormattedMessage id="view.center" defaultMessage="Center" />
-              <span style={{ opacity: 0.5, marginLeft: 20 }}>{formatShortcut({ key: 'c', modifiers: ['alt'] })}</span>
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('Center Diagram', { preferKey: 'c' })}</span>
             </div>
             <div
               style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
@@ -294,7 +329,7 @@ function MenuBar({
               }}
             >
               <FormattedMessage id="view.zoomIn" defaultMessage="Zoom In" />
-              <span style={{ opacity: 0.5, marginLeft: 20 }}>{formatShortcut({ key: '+', modifiers: ['alt'] })}</span>
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('Zoom In', { preferKey: '+' })}</span>
             </div>
             <div
               style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
@@ -307,7 +342,7 @@ function MenuBar({
               }}
             >
               <FormattedMessage id="view.zoomOut" defaultMessage="Zoom Out" />
-              <span style={{ opacity: 0.5, marginLeft: 20 }}>{formatShortcut({ key: '-', modifiers: ['alt'] })}</span>
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('Zoom Out', { preferKey: '-' })}</span>
             </div>
             <div
               style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
@@ -320,7 +355,7 @@ function MenuBar({
               }}
             >
               <FormattedMessage id="view.resetZoom" defaultMessage="Reset Zoom" />
-              <span style={{ opacity: 0.5, marginLeft: 20 }}>{formatShortcut({ key: '0', modifiers: ['alt'] })}</span>
+              <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('Reset Zoom', { preferKey: '0' })}</span>
             </div>
             <div className="menu-separator" style={{ margin: '4px 0', borderTop: '1px solid #eee' }} />
             <div
@@ -1036,9 +1071,6 @@ function App() {
           if (newLabel) {
             pushUndo(nodes.map(n => n.id === selectedNodeId ? { ...n, label: newLabel } : n));
           }
-        } else if (e.key === 'F2') {
-          e.preventDefault();
-          handleNodeDoubleClick(selectedNodeId);
         } else if (e.key === 'Delete' || e.key === 'Backspace') {
           e.preventDefault();
           pushUndo((nodes => {
