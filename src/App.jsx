@@ -736,6 +736,25 @@ function App() {
     return saved !== null ? saved === 'true' : true;
   });
 
+  // Responsive canvas size
+  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
+  useEffect(() => {
+    const compute = () => {
+      const W = window.innerWidth;
+      const H = window.innerHeight;
+      const sidePadding = 48; // 24px nav padding on each side
+      const rightPanel = showNodeInfoPanel ? 320 : 0;
+      const topNav = 48; // fixed nav height
+      const verticalMargin = 24; // top/bottom margin around canvas
+      const width = Math.max(600, W - sidePadding - rightPanel);
+      const height = Math.max(400, H - topNav - verticalMargin);
+      setCanvasSize({ width, height });
+    };
+    compute();
+    window.addEventListener('resize', compute);
+    return () => window.removeEventListener('resize', compute);
+  }, [showNodeInfoPanel]);
+
   // Context menu state
   const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, target: null });
 
@@ -1255,6 +1274,8 @@ function App() {
         }}
         onViewBoxChange={setViewBox}
         onContextMenuRequest={openContextMenu}
+        width={canvasSize.width}
+        height={canvasSize.height}
       />
 
       {/* Minimap */}

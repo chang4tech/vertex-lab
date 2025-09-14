@@ -207,12 +207,28 @@ function drawEdge(ctx, from, to, theme) {
 
 import { forwardRef, useImperativeHandle } from 'react';
 
-const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, selectedNodeIds = [], onNodePositionChange, highlightedNodeIds = [], onSelectionChange, onViewBoxChange, onContextMenuRequest }, ref) => {
+const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, selectedNodeIds = [], onNodePositionChange, highlightedNodeIds = [], onSelectionChange, onViewBoxChange, onContextMenuRequest, width = 800, height = 600 }, ref) => {
   const canvasRef = useRef(null);
   const { currentTheme } = useTheme();
   
   // Pan/zoom state
   const view = useRef({ offsetX: 0, offsetY: 0, scale: 1 });
+
+  // Compute half extents for a node based on its shape and theme radius
+  const getHalfExtents = (node) => {
+    const enhanced = upgradeNode(node);
+    const r = currentTheme.colors.nodeRadius;
+    const shape = enhanced.shape || NODE_SHAPES.CIRCLE;
+    switch (shape) {
+      case NODE_SHAPES.RECTANGLE:
+      case NODE_SHAPES.ROUNDED_RECTANGLE:
+        return { hw: (r * 1.6) / 2, hh: (r * 1.2) / 2 };
+      case NODE_SHAPES.ELLIPSE:
+        return { hw: r * 1.4, hh: r * 0.8 };
+      default:
+        return { hw: r, hh: r };
+    }
+  };
   // Expose imperative methods for centering and zooming
   useImperativeHandle(ref, () => ({
     canvasRef,
@@ -221,10 +237,15 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
       const canvas = canvasRef.current;
       const visibleNodes = getVisibleNodes(nodes);
       if (!visibleNodes || visibleNodes.length === 0) return;
-      const minX = Math.min(...visibleNodes.map(n => n.x));
-      const maxX = Math.max(...visibleNodes.map(n => n.x));
-      const minY = Math.min(...visibleNodes.map(n => n.y));
-      const maxY = Math.max(...visibleNodes.map(n => n.y));
+      // Include node extents for better centering
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const n of visibleNodes) {
+        const { hw, hh } = getHalfExtents(n);
+        minX = Math.min(minX, n.x - hw);
+        maxX = Math.max(maxX, n.x + hw);
+        minY = Math.min(minY, n.y - hh);
+        maxY = Math.max(maxY, n.y + hh);
+      }
       const cx = (minX + maxX) / 2;
       const cy = (minY + maxY) / 2;
       // Keep current scale; position offsets so that (cx, cy) maps to canvas center
@@ -242,15 +263,22 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
       const canvas = canvasRef.current;
       const visibleNodes = getVisibleNodes(nodes);
       if (!visibleNodes || visibleNodes.length === 0) return;
-      const minX = Math.min(...visibleNodes.map(n => n.x));
-      const maxX = Math.max(...visibleNodes.map(n => n.x));
-      const minY = Math.min(...visibleNodes.map(n => n.y));
-      const maxY = Math.max(...visibleNodes.map(n => n.y));
-      const padding = 80; // pixels of screen padding
-      const width = maxX - minX || 1;
-      const height = maxY - minY || 1;
-      const scaleX = (canvas.width - 2 * padding) / width;
-      const scaleY = (canvas.height - 2 * padding) / height;
+      // Bounds including node shape extents
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const n of visibleNodes) {
+        const { hw, hh } = getHalfExtents(n);
+        minX = Math.min(minX, n.x - hw);
+        maxX = Math.max(maxX, n.x + hw);
+        minY = Math.min(minY, n.y - hh);
+        maxY = Math.max(maxY, n.y + hh);
+      }
+      const contentW = Math.max(1, maxX - minX);
+      const contentH = Math.max(1, maxY - minY);
+      // Dynamic padding: min 16px, max 64px, or 1x node radius
+      const basePad = currentTheme.colors.nodeRadius;
+      const dynamicPad = Math.min(64, Math.max(16, basePad));
+      const scaleX = (canvas.width - 2 * dynamicPad) / contentW;
+      const scaleY = (canvas.height - 2 * dynamicPad) / contentH;
       const s = Math.max(0.05, Math.min(scaleX, scaleY));
       view.current.scale = s;
       // center after scaling
@@ -388,7 +416,7 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
       };
       onViewBoxChange(vb);
     }
-  }, [nodes, selectedNodeIds, highlightedNodeIds, currentTheme]);
+  }, [nodes, selectedNodeIds, highlightedNodeIds, currentTheme, width, height]);
 
   // Mouse events for drag and pan
   useEffect(() => {
@@ -703,14 +731,14 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
   return (
     <canvas
       ref={canvasRef}
-      width={800}
-      height={600}
+      width={width}
+      height={height}
       style={{ 
         background: currentTheme.colors.canvasBackground, 
         border: `1px solid ${currentTheme.colors.panelBorder}`, 
         borderRadius: 8, 
         display: 'block', 
-        margin: '40px auto', 
+        margin: '16px 24px',
         cursor: 'grab' 
       }}
       onClick={handleClick}
