@@ -12,6 +12,90 @@ dist
 dist-ssr
 *.local
 
+# Environment files
+.env
+.env.*
+!.env.example
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Lint/cache
+.eslintcache
+
+# Misc
+*.orig
+
+# Documentation and internal materials (exclude from public repo)
+# Folders
+doc/
+docs/
+documentation/
+design/
+designs/
+Design/
+Designs/
+ideas/
+Ideas/
+prompts/
+Prompts/
+prompt/
+Prompt/
+context/
+Context/
+notes/
+Notes/
+drafts/
+Drafts/
+specs/
+Specs/
+requirements/
+Requirements/
+
+# Agent/internal guides
+AGENTS.md
+AGENT.md
+Agents.md
+Agent.md
+
+# Common standalone files
+DESIGN.md
+DESIGN.txt
+IDEAS.md
+IDEAS.txt
+NOTES.md
+NOTES.txt
+PROMPTS.md
+PROMPTS.txt
+CONTEXT.md
+CONTEXT.txt
+TODO.md
+TODO.txt
+
+# Generic patterns for internal docs (keep README and LICENSE)
+*design-notes*.*
+*ideas*.*
+*prompts*.*
+*context*.*
+*notes*.*
+*draft*.*
+!README.md
+!LICENSE
+
+# Design assets
+*.drawio
+*.drawio.png
+*.fig
+*.sketch
+*.psd
+*.ai
+*.xcf
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
