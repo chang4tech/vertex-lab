@@ -19,6 +19,7 @@ import { APP_SHORTCUTS, formatShortcut } from './utils/shortcutUtils';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { updateNode } from './utils/nodeUtils';
 import { createEnhancedNode } from './utils/nodeUtils';
+import { useIsMobile } from './hooks/useIsMobile';
 
 // --- Menu Bar Component ---
 function MenuBar({
@@ -28,6 +29,7 @@ function MenuBar({
   onToggleHelp, isHelpVisible,
   fileInputRef
 }) {
+  const isMobile = useIsMobile();
   const [openMenu, setOpenMenu] = useState(null); // 'file' | 'edit' | 'view' | 'settings' | null
   const [showSettings, setShowSettings] = useState(false);
   const intl = useIntl();
@@ -112,10 +114,10 @@ function MenuBar({
         width: '100%', 
         background: currentTheme.colors.menuBackground, 
         borderBottom: `1px solid ${currentTheme.colors.menuBorder}`,
-        display: 'flex', alignItems: 'center', padding: '0 24px', height: 48, zIndex: 200, position: 'fixed', top: 0, left: 0, right: 0
+        display: 'flex', alignItems: 'center', padding: '0 16px', height: 48, zIndex: 200, position: 'fixed', top: 0, left: 0, right: 0
       }}>
-      <div style={{ fontWeight: 700, fontSize: 18, marginRight: 32, color: currentTheme.colors.menuText }}>🧠 Vertex Lab</div>
-      <div style={{ display: 'flex', gap: 24 }}>
+      <div style={{ fontWeight: 700, fontSize: isMobile ? 16 : 18, marginRight: 16, color: currentTheme.colors.menuText, flex: '0 0 auto' }}>🧠 Vertex Lab</div>
+      <div style={{ display: 'flex', gap: isMobile ? 12 : 24, flexWrap: 'nowrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
         <div style={{ cursor: 'pointer', position: 'relative' }}>
           <span className="menu-trigger" onClick={(e) => {
             e.preventDefault();
@@ -666,6 +668,7 @@ const MainHeader = () => {
  */
 function App() {
   const intl = useIntl();
+  const isMobile = useIsMobile();
 
   // Undo/redo stacks
   const [undoStack, setUndoStack] = useState([]);
@@ -688,6 +691,14 @@ function App() {
   useEffect(() => {
     localStorage.setItem('vertex_show_minimap', showMinimap);
   }, [showMinimap]);
+
+  // On mobile, hide minimap by default unless user explicitly enabled it
+  useEffect(() => {
+    const saved = localStorage.getItem('vertex_show_minimap');
+    if (isMobile && saved === null && showMinimap) {
+      setShowMinimap(false);
+    }
+  }, [isMobile]);
 
   // Diagram state with localStorage persistence
   const [nodes, setNodes] = useState(() => {
@@ -776,16 +787,16 @@ function App() {
       const H = window.innerHeight;
       const sidePadding = 0;
       const rightPanel = showNodeInfoPanel ? 320 : 0;
-      const topNav = 0; // we use a spacer below nav already
+      const topNav = 48;
       const verticalMargin = 0;
-      const width = Math.max(600, W - sidePadding - rightPanel);
-      const height = Math.max(400, H - topNav - verticalMargin);
+      const width = Math.max(isMobile ? 320 : 600, W - sidePadding - rightPanel);
+      const height = Math.max(isMobile ? 300 : 400, H - topNav - verticalMargin);
       setCanvasSize({ width, height });
     };
     compute();
     window.addEventListener('resize', compute);
     return () => window.removeEventListener('resize', compute);
-  }, [showNodeInfoPanel]);
+  }, [showNodeInfoPanel, isMobile]);
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, target: null });
@@ -1525,6 +1536,15 @@ function App() {
       </div>
 
       <HelpPanel isVisible={isHelpVisible} withPanel={showNodeInfoPanel} />
+
+      {/* Mobile quick controls: zoom and center */}
+      {isMobile && (
+        <div style={{ position: 'fixed', right: 32, bottom: 100, zIndex: 10011, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button aria-label="Zoom In" style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: '#2d6cdf', color: '#fff', fontSize: 20 }} onClick={() => canvasRef.current?.zoom?.(1.1)}>＋</button>
+          <button aria-label="Zoom Out" style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: '#2d6cdf', color: '#fff', fontSize: 20 }} onClick={() => canvasRef.current?.zoom?.(0.9)}>－</button>
+          <button aria-label="Center" style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: '#2d6cdf', color: '#fff', fontSize: 16 }} onClick={() => canvasRef.current?.fitToView?.()}>⤢</button>
+        </div>
+      )}
 
       {/* Diagram canvas */}
       <VertexCanvas

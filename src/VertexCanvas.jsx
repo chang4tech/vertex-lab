@@ -214,6 +214,10 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
   
   // Pan/zoom state
   const view = useRef({ offsetX: 0, offsetY: 0, scale: 1 });
+  // Touch/pointer gesture state
+  const pointers = useRef(new Map());
+  const pinchState = useRef({ active: false, startDist: 0, startScale: 1 });
+  const longPressRef = useRef({ timer: null, startX: 0, startY: 0, fired: false });
 
   // Compute half extents for a node based on its shape and theme radius
   const getHalfExtents = (node) => {
@@ -671,6 +675,89 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
     window.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('wheel', handleWheel, { passive: false });
     canvas.addEventListener('redraw', handleRedraw);
+    // Pointer/touch support
+    const onPointerDown = (e) => {
+      if (!canvas.contains(e.target)) return;
+      canvas.setPointerCapture?.(e.pointerId);
+      pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY, type: e.pointerType });
+
+      // Long-press to open context menu on touch
+      if (e.pointerType === 'touch') {
+        longPressRef.current = { timer: null, startX: e.clientX, startY: e.clientY, fired: false };
+        longPressRef.current.timer = setTimeout(() => {
+          if (longPressRef.current.fired) return;
+          longPressRef.current.fired = true;
+          const rect = canvas.getBoundingClientRect();
+          const worldX = (e.clientX - rect.left - view.current.offsetX) / view.current.scale;
+          const worldY = (e.clientY - rect.top - view.current.offsetY) / view.current.scale;
+          // Hit test visible nodes
+          const visibleNodes = getVisibleNodes(nodes);
+          const nodeRadius = currentTheme.colors.nodeRadius;
+          let clickedNodeId = null;
+          for (const node of visibleNodes) {
+            const dx = node.x - worldX;
+            const dy = node.y - worldY;
+            if (dx * dx + dy * dy < nodeRadius * nodeRadius) { clickedNodeId = node.id; break; }
+          }
+          if (typeof onContextMenuRequest === 'function') {
+            onContextMenuRequest({ screenX: e.clientX, screenY: e.clientY, worldX, worldY, nodeId: clickedNodeId });
+          }
+        }, 500);
+      }
+
+      if (pointers.current.size === 2) {
+        // Begin pinch gesture
+        const pts = Array.from(pointers.current.values());
+        const dx = pts[0].x - pts[1].x;
+        const dy = pts[0].y - pts[1].y;
+        pinchState.current = { active: true, startDist: Math.hypot(dx, dy), startScale: view.current.scale };
+      } else if (pointers.current.size === 1 && e.pointerType === 'touch') {
+        // Reuse mouse down logic for single-finger drag/pan on touch
+        handleMouseDown(e);
+      }
+    };
+    const onPointerMove = (e) => {
+      if (!pointers.current.has(e.pointerId)) return;
+      pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY, type: e.pointerType });
+      // Cancel long press on movement
+      if (longPressRef.current.timer) {
+        const dx = Math.abs(e.clientX - longPressRef.current.startX);
+        const dy = Math.abs(e.clientY - longPressRef.current.startY);
+        if (dx + dy > 12) { clearTimeout(longPressRef.current.timer); longPressRef.current.timer = null; }
+      }
+      if (pinchState.current.active && pointers.current.size >= 2) {
+        const pts = Array.from(pointers.current.values());
+        const dx = pts[0].x - pts[1].x;
+        const dy = pts[0].y - pts[1].y;
+        const dist = Math.max(1, Math.hypot(dx, dy));
+        const factor = dist / Math.max(1, pinchState.current.startDist);
+        const newScale = Math.max(0.05, pinchState.current.startScale * factor);
+        // Scale around midpoint
+        const midX = (pts[0].x + pts[1].x) / 2;
+        const midY = (pts[0].y + pts[1].y) / 2;
+        const rect = canvas.getBoundingClientRect();
+        const worldMidX = (midX - rect.left - view.current.offsetX) / view.current.scale;
+        const worldMidY = (midY - rect.top - view.current.offsetY) / view.current.scale;
+        view.current.scale = newScale;
+        view.current.offsetX = midX - rect.left - worldMidX * newScale;
+        view.current.offsetY = midY - rect.top - worldMidY * newScale;
+        canvas.dispatchEvent(new Event('redraw'));
+      } else if (e.pointerType === 'touch' && pointers.current.size === 1) {
+        handleMouseMove(e);
+      }
+    };
+    const onPointerUpOrCancel = (e) => {
+      if (longPressRef.current.timer) { clearTimeout(longPressRef.current.timer); longPressRef.current.timer = null; }
+      pointers.current.delete(e.pointerId);
+      if (pointers.current.size < 2) pinchState.current.active = false;
+      if (e.pointerType === 'touch') {
+        handleMouseUp(e);
+      }
+    };
+    canvas.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUpOrCancel);
+    window.addEventListener('pointercancel', onPointerUpOrCancel);
     return () => {
       canvas.removeEventListener('mousedown', handleMouseDown);
       canvas.removeEventListener('contextmenu', handleContextMenu);
@@ -680,6 +767,10 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       canvas.removeEventListener('redraw', handleRedraw);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      canvas.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUpOrCancel);
+      window.removeEventListener('pointercancel', onPointerUpOrCancel);
     };
   }, [nodes, propsEdges, onNodePositionChange, selectedNodeIds, highlightedNodeIds, currentTheme]);
 
@@ -763,7 +854,8 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
         borderRadius: 8, 
         display: 'block', 
         margin: 0,
-        cursor: 'grab' 
+        cursor: 'grab',
+        touchAction: 'none'
       }}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
