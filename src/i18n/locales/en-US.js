@@ -53,7 +53,7 @@ export default {
   'settings.darkMode': 'Dark Mode',
 
   // Node labels
-  'node.centralTopic': 'Central Topic',
+  'node.centralTopic': 'Start Node',
   'node.branch': 'Branch',
   'node.newNode': 'New Node',
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import VertexCanvas from './VertexCanvas.jsx';
 import { Minimap } from './components/panels/Minimap';
+import { ContextMenu } from './components/menu/ContextMenu';
 import Settings from './components/Settings';
 import Search from './components/Search';
 import ThemeSelector from './components/ThemeSelector';
@@ -630,7 +631,7 @@ function App() {
     }
     // Default initial state if no saved state exists
     return [
-      createEnhancedNode({ id: 1, label: 'Central Topic', x: 400, y: 300, parentId: null }),
+      createEnhancedNode({ id: 1, label: 'Start Node', x: 400, y: 300, parentId: null }),
       createEnhancedNode({ id: 2, label: 'Branch 1', x: 250, y: 200, parentId: 1 }),
       createEnhancedNode({ id: 3, label: 'Branch 2', x: 550, y: 200, parentId: 1 }),
       createEnhancedNode({ id: 4, label: 'Branch 3', x: 250, y: 400, parentId: 1 }),
@@ -642,7 +643,7 @@ function App() {
 
   useEffect(() => {
     setNodes(nodes => {
-      if (nodes && nodes.length > 0 && nodes[0].label === 'Central Topic') {
+      if (nodes && nodes.length > 0 && (nodes[0].label === 'Central Topic' || nodes[0].label === 'Start Node')) {
         return [
           { ...nodes[0], label: intl.formatMessage({ id: 'node.centralTopic' }) },
           { ...nodes[1], label: `${intl.formatMessage({ id: 'node.branch' })} 1` },
@@ -675,6 +676,9 @@ function App() {
     const saved = localStorage.getItem('vertex_show_node_info_panel');
     return saved !== null ? saved === 'true' : true;
   });
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, target: null });
 
   // Save node info panel visibility preference
   useEffect(() => {
@@ -804,6 +808,12 @@ function App() {
 
   const handleCloseThemes = useCallback(() => {
     setShowThemes(false);
+  }, []);
+
+  // Context menu actions
+  const closeContextMenu = useCallback(() => setContextMenu(cm => ({ ...cm, open: false })), []);
+  const openContextMenu = useCallback((payload) => {
+    setContextMenu({ open: true, x: payload.screenX, y: payload.screenY, target: payload });
   }, []);
 
   // Enhanced node creation helper
@@ -1183,6 +1193,7 @@ function App() {
           pushUndo(nodes.map(n => n.id === id ? { ...n, x, y } : n));
         }}
         onViewBoxChange={setViewBox}
+        onContextMenuRequest={openContextMenu}
       />
 
       {/* Minimap */}
@@ -1239,6 +1250,55 @@ function App() {
           onToggleCollapse: handleToggleCollapseFromPanel,
         }}
       />
+
+      {/* Context Menu */}
+      <ContextMenu
+        x={contextMenu.x}
+        y={contextMenu.y}
+        isOpen={contextMenu.open}
+        onClose={closeContextMenu}
+      >
+        {contextMenu.target?.nodeId ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <button onClick={() => {
+              closeContextMenu();
+              handleNodeDoubleClick(contextMenu.target.nodeId);
+            }}>Edit Node</button>
+            <button onClick={() => {
+              closeContextMenu();
+              handleToggleCollapseFromPanel(contextMenu.target.nodeId);
+            }}>Toggle Collapse</button>
+            <button onClick={() => {
+              closeContextMenu();
+              handleDeleteNode(contextMenu.target.nodeId);
+            }}>Delete Node</button>
+            <button onClick={() => {
+              closeContextMenu();
+              const parent = nodes.find(n => n.id === contextMenu.target.nodeId);
+              if (!parent) return;
+              const pos = findNonOverlappingChildPosition(parent, nodes);
+              const newNode = createNewNode(parent.id, pos);
+              pushUndo([...nodes, newNode]);
+            }}>Add Child</button>
+            <button onClick={() => {
+              closeContextMenu();
+              canvasRef.current?.focusOnNode?.(contextMenu.target.nodeId);
+            }}>Center on Node</button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <button onClick={() => {
+              closeContextMenu();
+              const pos = { x: contextMenu.target?.worldX ?? 0, y: contextMenu.target?.worldY ?? 0 };
+              const newNode = createNewNode(null, pos);
+              pushUndo([...nodes, newNode]);
+            }}>Add Node Here</button>
+            <button onClick={() => { closeContextMenu(); handleAutoLayout(); }}>Auto Layout</button>
+            <button onClick={() => { closeContextMenu(); canvasRef.current?.center?.(); }}>Center View</button>
+            <button onClick={() => { closeContextMenu(); canvasRef.current?.resetZoom?.(); }}>Reset Zoom</button>
+          </div>
+        )}
+      </ContextMenu>
     </React.Fragment>
   );
 }

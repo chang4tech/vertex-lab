@@ -53,7 +53,7 @@ export default {
   'settings.darkMode': '暗黑模式',
 
   // Node labels
-  'node.centralTopic': '中心主题',
+  'node.centralTopic': '起始节点',
   'node.branch': '分支',
   'node.newNode': '新节点',
 

@@ -207,7 +207,7 @@ function drawEdge(ctx, from, to, theme) {
 
 import { forwardRef, useImperativeHandle } from 'react';
 
-const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, selectedNodeIds = [], onNodePositionChange, highlightedNodeIds = [], onSelectionChange, onViewBoxChange }, ref) => {
+const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, selectedNodeIds = [], onNodePositionChange, highlightedNodeIds = [], onSelectionChange, onViewBoxChange, onContextMenuRequest }, ref) => {
   const canvasRef = useRef(null);
   const { currentTheme } = useTheme();
   
@@ -217,13 +217,11 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
   useImperativeHandle(ref, () => ({
     canvasRef,
     center: () => {
-      // Center the root node (id:1) if exists, else center canvas
-      const root = nodes.find(n => n.id === 1) || nodes[0];
-      if (!root) return;
+      // Center to canvas (reset view), not to any specific node
       const canvas = canvasRef.current;
       view.current.scale = 1;
-      view.current.offsetX = canvas.width / 2 - root.x;
-      view.current.offsetY = canvas.height / 2 - root.y;
+      view.current.offsetX = 0;
+      view.current.offsetY = 0;
       canvas.dispatchEvent(new Event('redraw'));
     },
     zoom: (factor) => {
@@ -383,8 +381,8 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
     };
 
     const handleMouseDown = (e) => {
-      // Pan with space+drag or right click
-      if (isSpaceDown || e.button === 2) {
+      // Pan with space+drag or middle mouse button
+      if (isSpaceDown || e.button === 1) {
         panState.current = {
           panning: true,
           startX: e.clientX,
@@ -552,12 +550,47 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
       }
     };
     canvas.addEventListener('mousedown', handleMouseDown);
+    // prevent default browser menu; VertexCanvas exposes onContextMenu via props
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+      const { x, y } = getTransformed(e.clientX, e.clientY);
+      // Check visible nodes only
+      const visibleNodes = getVisibleNodes(nodes);
+      let clickedNodeId = null;
+      const nodeRadius = currentTheme.colors.nodeRadius;
+      for (const node of visibleNodes) {
+        const dx = node.x - x;
+        const dy = node.y - y;
+        if (dx * dx + dy * dy < nodeRadius * nodeRadius) {
+          clickedNodeId = node.id;
+          break;
+        }
+      }
+      if (typeof onNodeClick === 'function' && false) {}
+      if (typeof onNodeDoubleClick === 'function' && false) {}
+      if (typeof onSelectionChange === 'function' && false) {}
+      if (typeof ref === 'function' && false) {}
+      if (typeof onViewBoxChange === 'function' && false) {}
+      if (typeof window !== 'undefined') {}
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+      if (typeof (onContextMenuRequest) === 'function') {
+        onContextMenuRequest({
+          screenX: e.clientX,
+          screenY: e.clientY,
+          worldX: x,
+          worldY: y,
+          nodeId: clickedNodeId
+        });
+      }
+    };
+    canvas.addEventListener('contextmenu', handleContextMenu);
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('wheel', handleWheel, { passive: false });
     canvas.addEventListener('redraw', handleRedraw);
     return () => {
       canvas.removeEventListener('mousedown', handleMouseDown);
+      canvas.removeEventListener('contextmenu', handleContextMenu);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
       canvas.removeEventListener('wheel', handleWheel);
