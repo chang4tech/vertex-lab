@@ -836,6 +836,55 @@ function App() {
     }
   }, [canvasRef]);
 
+  // Robust file-open handler for imports (keyboard-safe across browsers)
+  const handleImportRequest = useCallback(async () => {
+    try {
+      if (window.showOpenFilePicker) {
+        const [handle] = await window.showOpenFilePicker({
+          multiple: false,
+          types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
+        });
+        const file = await handle.getFile();
+        const text = await file.text();
+        const data = JSON.parse(text);
+        handleImport(data);
+        return;
+      }
+    } catch (err) {
+      console.warn('showOpenFilePicker failed or was cancelled:', err);
+      // fall through to legacy input
+    }
+
+    const ref = fileInputRef.current;
+    if (ref && typeof ref.click === 'function') {
+      try { ref.click(); return; } catch (e) { /* continue */ }
+    }
+
+    const tmp = document.createElement('input');
+    tmp.type = 'file';
+    tmp.accept = 'application/json';
+    tmp.style.display = 'none';
+    tmp.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const data = JSON.parse(String(evt.target.result || 'null'));
+          handleImport(data);
+        } catch (error) {
+          console.error('Import error:', error);
+          alert(`Import failed: ${error.message}`);
+        }
+      };
+      reader.onerror = () => alert('Failed to read file');
+      reader.readAsText(file);
+      document.body.removeChild(tmp);
+    }, { once: true });
+    document.body.appendChild(tmp);
+    tmp.click();
+  }, [fileInputRef, handleImport]);
+
   // Helper to push to undo stack
   const pushUndo = useCallback((newNodes) => {
     console.log('Push to undo stack:', {
@@ -1004,7 +1053,7 @@ function App() {
             if (e.shiftKey) {
               e.preventDefault();
               console.log('Import JSON');
-              fileInputRef.current?.click?.();
+              handleImportRequest();
             }
             break;
           }
@@ -1160,7 +1209,7 @@ function App() {
   // Hook-based common keyboard shortcuts to avoid drift with menus/help
   useKeyboardShortcuts({
     onNew: handleNewDiagram,
-    onImport: () => fileInputRef.current?.click?.(),
+    onImport: handleImportRequest,
     onExport: handleExport,
     onExportPNG: () => canvasRef.current?.exportAsPNG?.(),
     onUndo: handleUndo,

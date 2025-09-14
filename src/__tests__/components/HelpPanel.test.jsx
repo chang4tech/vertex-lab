@@ -8,10 +8,11 @@ describe('HelpPanel', () => {
 
     const keySpans = container.querySelectorAll('.key');
     expect(keySpans.length).toBeGreaterThan(10);
-    // Basic sanity on first few entries
-    expect(keySpans[0].textContent).toBe('⌘ + ⇧ + N / Ctrl + ⇧ + N');
-    expect(keySpans[1].textContent).toBe('⌘ + S / Ctrl + S');
-    expect(keySpans[2].textContent).toBe('⌘ + ⇧ + S / Ctrl + ⇧ + S');
+    // Sanity check some expected combos exist
+    const keys = Array.from(keySpans).map(k => k.textContent);
+    expect(keys).toContain('⌘ + ⌥ + N / Ctrl + ⌥ + N');
+    expect(keys).toContain('⌘ + S / Ctrl + S');
+    expect(keys).toContain('⌘ + ⌥ + P / Ctrl + ⌥ + P');
 
     // Check some descriptions
     const descSpans = container.querySelectorAll('.desc');

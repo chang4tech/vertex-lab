@@ -27,14 +27,14 @@ const BROWSER_SHORTCUTS = [
 // List of our app's shortcuts
 export const APP_SHORTCUTS = [
   // File
-  { key: 'n', modifiers: ['cmd', 'shift'], description: 'New Diagram' },
-  { key: 'n', modifiers: ['ctrl', 'shift'], description: 'New Diagram' },
+  { key: 'n', modifiers: ['cmd', 'alt'], description: 'New Diagram' },
+  { key: 'n', modifiers: ['ctrl', 'alt'], description: 'New Diagram' },
   { key: 's', modifiers: ['cmd'], description: 'Export JSON' },
   { key: 's', modifiers: ['ctrl'], description: 'Export JSON' },
-  { key: 's', modifiers: ['cmd', 'shift'], description: 'Export PNG' },
-  { key: 's', modifiers: ['ctrl', 'shift'], description: 'Export PNG' },
-  { key: 'o', modifiers: ['cmd', 'shift'], description: 'Import JSON' },
-  { key: 'o', modifiers: ['ctrl', 'shift'], description: 'Import JSON' },
+  { key: 'p', modifiers: ['cmd', 'alt'], description: 'Export PNG' },
+  { key: 'p', modifiers: ['ctrl', 'alt'], description: 'Export PNG' },
+  { key: 'o', modifiers: ['cmd', 'alt'], description: 'Import JSON' },
+  { key: 'o', modifiers: ['ctrl', 'alt'], description: 'Import JSON' },
 
   // Edit
   { key: 'z', modifiers: ['cmd'], description: 'Undo' },

@@ -1,5 +1,13 @@
 import { useCallback, useEffect } from 'react';
 
+// Helper to robustly match a letter key across layouts (uses e.key and e.code)
+const isLetter = (e, letter) => {
+  const key = (e.key || '').toLowerCase();
+  const code = e.code || '';
+  const upper = String(letter || '').toUpperCase();
+  return key === String(letter).toLowerCase() || code === `Key${upper}`;
+};
+
 export function useKeyboardShortcuts({
   onNew,
   onImport,
@@ -26,131 +34,161 @@ export function useKeyboardShortcuts({
     // Common command key for both Windows (Ctrl) and Mac (Cmd)
     const isCommandKey = e.metaKey || e.ctrlKey;
     
+    // Prefer Command/Ctrl + Alt for file ops to avoid browser conflicts
+    if (isCommandKey && e.altKey) {
+      if (isLetter(e, 'n')) {
+        e.preventDefault();
+        onNew?.();
+        return;
+      }
+      if (isLetter(e, 'o')) {
+        e.preventDefault();
+        onImport?.();
+        return;
+      }
+      if (isLetter(e, 'p')) {
+        e.preventDefault();
+        onExportPNG?.();
+        return;
+      }
+      return;
+    }
+
     if (isCommandKey && e.shiftKey) {
-      // Command + Shift shortcuts for file operations to avoid browser conflicts
-      switch (e.key.toLowerCase()) {
-        case 'n': {
-          e.preventDefault();
-          onNew?.();
-          break;
-        }
-
-        case 's': {
-          e.preventDefault();
-          onExportPNG?.();
-          break;
-        }
-
-        case 'o': {
-          e.preventDefault();
-          onImport?.();
-          break;
-        }
-
-        case 'z': {
-          e.preventDefault();
-          onRedo?.();
-          break;
-        }
+      // Fallback support for some legacy Shift-based combos
+      if (isLetter(e, 'z')) {
+        e.preventDefault();
+        onRedo?.();
+        return;
+      }
+      if (isLetter(e, 'o')) {
+        e.preventDefault();
+        onImport?.();
+        return;
+      }
+      if (isLetter(e, 's')) {
+        e.preventDefault();
+        onExportPNG?.();
+        return;
+      }
+      if (isLetter(e, 'n')) {
+        // Note: Browsers may reserve this (Private Window) and ignore handlers
+        e.preventDefault();
+        onNew?.();
+        return;
       }
       return;
     }
 
     if (isCommandKey) {
-      switch (e.key.toLowerCase()) {
-        case 's': {
-          e.preventDefault();
-          onExport?.();
-          break;
+      if (isLetter(e, 's')) {
+        e.preventDefault();
+        onExport?.();
+        return;
+      }
+      if (isLetter(e, 'z')) {
+        e.preventDefault();
+        if (e.shiftKey) {
+          onRedo?.();
+        } else {
+          onUndo?.();
         }
-        case 'z': {
-          e.preventDefault();
-          if (e.shiftKey) {
-            onRedo?.();
-          } else {
-            onUndo?.();
-          }
-          break;
-        }
-        case 'l': {
-          e.preventDefault();
-          // Optional: if provided
-          // onAutoLayout?.();
-          break;
-        }
-        case 'f': {
-          e.preventDefault();
-          // Optional: if provided
-          // onSearch?.();
-          break;
-        }
-        case 'i': {
-          e.preventDefault();
-          // Optional: if provided
-          // onToggleNodeInfo?.();
-          break;
-        }
+        return;
+      }
+      if (isLetter(e, 'l')) {
+        e.preventDefault();
+        // onAutoLayout?.();
+        return;
+      }
+      if (isLetter(e, 'f')) {
+        e.preventDefault();
+        // onSearch?.();
+        return;
+      }
+      if (isLetter(e, 'i')) {
+        e.preventDefault();
+        // onToggleNodeInfo?.();
+        return;
       }
       return;
     }
 
     // Handle alt key shortcuts for view operations
     if (e.altKey) {
-      switch (e.key.toLowerCase()) {
+      const key = (e.key || '').toLowerCase();
+      const code = e.code || '';
+      switch (key) {
         case '=':
         case '+': {
           e.preventDefault();
           onZoomIn?.();
           break;
         }
-
-        case '-': {
-          e.preventDefault();
-          onZoomOut?.();
-          break;
+        default: {
+          // Some layouts report only code for plus/equals
+          if (code === 'Equal' || code === 'NumpadAdd') {
+            e.preventDefault();
+            onZoomIn?.();
+            break;
+          }
         }
+      }
 
-        case '0': {
-          e.preventDefault();
-          onResetZoom?.();
-          break;
-        }
+      // Separate checks for other alt operations using code-safe mapping
+      if (key === '-') {
+        e.preventDefault();
+        onZoomOut?.();
+        return;
+      }
+      if (code === 'Minus' || code === 'NumpadSubtract') {
+        e.preventDefault();
+        onZoomOut?.();
+        return;
+      }
 
-        case 'c': {
-          e.preventDefault();
-          onCenter?.();
-          break;
-        }
+      if (key === '0') {
+        e.preventDefault();
+        onResetZoom?.();
+        return;
+      }
+      if (code === 'Digit0' || code === 'Numpad0') {
+        e.preventDefault();
+        onResetZoom?.();
+        return;
+      }
+
+      // Center view: use code to be robust against Alt/Option producing special chars (e.g., ç)
+      if (key === 'c' || code === 'KeyC') {
+        e.preventDefault();
+        onCenter?.();
+        return;
       }
       return;
     }
 
     // Handle non-modifier key shortcuts
     if (!isCommandKey && !e.altKey && !e.shiftKey) {
-      switch (e.key) {
-        case 'Delete':
-        case 'Backspace': {
-          if (selectedNodeId) {
-            e.preventDefault();
-            onDeleteNode?.(selectedNodeId);
-          }
-          break;
-        }
-
-        case 'm': {
+      const keyName = (e.key || '');
+      if (keyName === 'Delete' || keyName === 'Backspace') {
+        if (selectedNodeId) {
           e.preventDefault();
-          onToggleMinimap?.();
-          break;
+          onDeleteNode?.(selectedNodeId);
         }
+        return;
+      }
 
-        case 'e': {
-          // Toggle connect/disconnect between selected nodes when multi-selected
-          if (Array.isArray(selectedNodeIds) && selectedNodeIds.length >= 2) {
-            e.preventDefault();
-            onToggleConnections?.(selectedNodeIds);
-          }
-          break;
+      if (isLetter(e, 'm')) {
+        e.preventDefault();
+        onToggleMinimap?.();
+        return;
+      }
+
+      if (isLetter(e, 'e')) {
+        if (Array.isArray(selectedNodeIds) && selectedNodeIds.length >= 2) {
+          e.preventDefault();
+          onToggleConnections?.(selectedNodeIds);
         }
+        return;
       }
     }
   }, [

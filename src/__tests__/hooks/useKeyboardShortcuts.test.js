@@ -20,26 +20,26 @@ describe('useKeyboardShortcuts', () => {
     vi.clearAllMocks();
   });
 
-  it('handles New shortcut (Cmd/Ctrl + Shift + N) and ignores plain Cmd/Ctrl+N', () => {
+  it('handles New shortcut (Cmd/Ctrl + Alt + N) and ignores plain Cmd/Ctrl+N', () => {
     renderHook(() => useKeyboardShortcuts(mockHandlers));
 
-    // Plain Cmd/Ctrl+N should be ignored (to avoid browser conflict)
+    // Plain Cmd/Ctrl+N should be ignored (browser shortcut)
     act(() => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', metaKey: true, bubbles: true }));
     });
     expect(mockHandlers.onNew).not.toHaveBeenCalled();
 
-    // Cmd/Ctrl+Shift+N should trigger
+    // Cmd/Ctrl+Alt+N should trigger
     act(() => {
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', metaKey: true, shiftKey: true, bubbles: true }));
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', metaKey: true, altKey: true, bubbles: true }));
     });
     expect(mockHandlers.onNew).toHaveBeenCalledTimes(1);
   });
 
-  it('handles Import shortcut (Cmd/Ctrl + Shift + O)', () => {
+  it('handles Import shortcut (Cmd/Ctrl + Alt + O)', () => {
     renderHook(() => useKeyboardShortcuts(mockHandlers));
     act(() => {
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'o', metaKey: true, shiftKey: true, bubbles: true }));
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'o', metaKey: true, altKey: true, bubbles: true }));
     });
     expect(mockHandlers.onImport).toHaveBeenCalledTimes(1);
   });
@@ -59,14 +59,14 @@ describe('useKeyboardShortcuts', () => {
     expect(mockHandlers.onExport).toHaveBeenCalledTimes(1);
   });
 
-  it('handles Export PNG shortcut (Cmd/Ctrl + Shift + S)', () => {
+  it('handles Export PNG shortcut (Cmd/Ctrl + Alt + P)', () => {
     renderHook(() => useKeyboardShortcuts(mockHandlers));
 
     act(() => {
       const event = new KeyboardEvent('keydown', {
-        key: 's',
+        key: 'p',
         metaKey: true,
-        shiftKey: true,
+        altKey: true,
         bubbles: true
       });
       document.dispatchEvent(event);
