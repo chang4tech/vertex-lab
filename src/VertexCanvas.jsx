@@ -738,7 +738,7 @@ const VertexCanvas = forwardRef(({ nodes, onNodeClick, onNodeDoubleClick, select
         border: `1px solid ${currentTheme.colors.panelBorder}`, 
         borderRadius: 8, 
         display: 'block', 
-        margin: '16px 24px',
+        margin: 0,
         cursor: 'grab' 
       }}
       onClick={handleClick}

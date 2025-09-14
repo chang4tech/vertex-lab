@@ -742,10 +742,10 @@ function App() {
     const compute = () => {
       const W = window.innerWidth;
       const H = window.innerHeight;
-      const sidePadding = 48; // 24px nav padding on each side
+      const sidePadding = 0;
       const rightPanel = showNodeInfoPanel ? 320 : 0;
-      const topNav = 48; // fixed nav height
-      const verticalMargin = 24; // top/bottom margin around canvas
+      const topNav = 0; // we use a spacer below nav already
+      const verticalMargin = 0;
       const width = Math.max(600, W - sidePadding - rightPanel);
       const height = Math.max(400, H - topNav - verticalMargin);
       setCanvasSize({ width, height });
