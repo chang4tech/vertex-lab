@@ -678,7 +678,9 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
     // Pointer/touch support
     const onPointerDown = (e) => {
       if (!canvas.contains(e.target)) return;
-      canvas.setPointerCapture?.(e.pointerId);
+      if (e.pointerType !== 'mouse') {
+        canvas.setPointerCapture?.(e.pointerId);
+      }
       pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY, type: e.pointerType });
 
       // Long-press to open context menu on touch

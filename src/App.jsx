@@ -787,7 +787,7 @@ function App() {
       const H = window.innerHeight;
       const sidePadding = 0;
       const rightPanel = showNodeInfoPanel ? 320 : 0;
-      const topNav = 48;
+      const topNav = 0; // spacer below nav accounts for it
       const verticalMargin = 0;
       const width = Math.max(isMobile ? 320 : 600, W - sidePadding - rightPanel);
       const height = Math.max(isMobile ? 300 : 400, H - topNav - verticalMargin);
@@ -1170,16 +1170,23 @@ function App() {
         // Node-specific shortcuts that require a selected node
         if (e.key === 'Tab') {
           e.preventDefault();
-          pushUndo((nodes => {
-            const parent = nodes.find(n => n.id === selectedNodeId);
-            if (!parent) return nodes;
-
-            const { x, y } = findNonOverlappingChildPosition(parent, nodes);
-            return [
-              ...nodes,
-              createNewNode(parent.id, { x, y })
-            ];
-          })(nodes));
+          const parent = nodes.find(n => n.id === selectedNodeId);
+          if (!parent) return;
+          const { x, y } = findNonOverlappingChildPosition(parent, nodes);
+          const childId = Math.max(...nodes.map(n => n.id), 0) + 1;
+          // Update nodes via undo stack
+          pushUndo([
+            ...nodes,
+            createNewNode(parent.id, { x, y })
+          ]);
+          // If using explicit edges, add one for the new child
+          setEdges(prev => {
+            if (!Array.isArray(prev) || prev.length === 0) return prev;
+            const key = (a,b) => a <= b ? `${a}-${b}` : `${b}-${a}`;
+            const exists = prev.some(e => key(e.source, e.target) === key(parent.id, childId) && !e.directed);
+            if (exists) return prev;
+            return [...prev, { source: parent.id, target: childId, directed: false }];
+          });
         } else if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
           e.preventDefault();
           const newLabel = window.prompt(intl.formatMessage({ id: 'node.enterName' }), nodes.find(n => n.id === selectedNodeId)?.label || '');
@@ -1648,6 +1655,13 @@ function App() {
               const pos = findNonOverlappingChildPosition(parent, nodes);
               const newNode = createNewNode(parent.id, pos);
               pushUndo([...nodes, newNode]);
+              setEdges(prev => {
+                if (!Array.isArray(prev) || prev.length === 0) return prev;
+                const key = (a,b) => a <= b ? `${a}-${b}` : `${b}-${a}`;
+                const exists = prev.some(e => key(e.source, e.target) === key(parent.id, newNode.id) && !e.directed);
+                if (exists) return prev;
+                return [...prev, { source: parent.id, target: newNode.id, directed: false }];
+              });
             }}>Add Child</button>
             <button onClick={() => {
               closeContextMenu();
