@@ -97,6 +97,65 @@ describe('useKeyboardShortcuts', () => {
     expect(mockHandlers.onRedo).toHaveBeenCalledTimes(1);
   });
 
+  it('handles Alt-based zoom and center', () => {
+    const handlers = {
+      ...mockHandlers,
+      onZoomIn: vi.fn(),
+      onZoomOut: vi.fn(),
+      onResetZoom: vi.fn(),
+      onCenter: vi.fn(),
+      onToggleMinimap: vi.fn(),
+    };
+    renderHook(() => useKeyboardShortcuts(handlers));
+
+    // Alt + '='
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: '=', altKey: true, bubbles: true }));
+    });
+    expect(handlers.onZoomIn).toHaveBeenCalled();
+
+    // Alt + '-'
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: '-', altKey: true, bubbles: true }));
+    });
+    expect(handlers.onZoomOut).toHaveBeenCalled();
+
+    // Alt + '0'
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: '0', altKey: true, bubbles: true }));
+    });
+    expect(handlers.onResetZoom).toHaveBeenCalled();
+
+    // Alt + 'c'
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'c', altKey: true, bubbles: true }));
+    });
+    expect(handlers.onCenter).toHaveBeenCalled();
+  });
+
+  it('does not trigger shortcuts when typing in inputs and toggles minimap with M', () => {
+    const handlers = {
+      ...mockHandlers,
+      onToggleMinimap: vi.fn(),
+      onNew: vi.fn(),
+    };
+    renderHook(() => useKeyboardShortcuts(handlers));
+
+    // Create an input element as event target
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+
+    // Cmd/Ctrl+N on input should be ignored
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', metaKey: true, bubbles: true }));
+    expect(handlers.onNew).not.toHaveBeenCalled();
+
+    // Plain 'm' should toggle minimap
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'm', bubbles: true }));
+    expect(handlers.onToggleMinimap).toHaveBeenCalled();
+
+    document.body.removeChild(input);
+  });
+
   it('handles Delete when node is selected', () => {
     renderHook(() => useKeyboardShortcuts(mockHandlers));
 

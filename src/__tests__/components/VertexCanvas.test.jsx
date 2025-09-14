@@ -123,6 +123,30 @@ describe('VertexCanvas', () => {
     expect(mockProps.onNodePositionChange).toHaveBeenCalled();
   });
 
+  it('handles node double-click', () => {
+    const onNodeDoubleClick = vi.fn();
+    const { container } = renderWithTheme(
+      <VertexCanvas {...mockProps} onNodeDoubleClick={onNodeDoubleClick} />
+    );
+    const canvas = container.querySelector('canvas');
+    
+    // Double-click on node
+    canvas.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, clientX: 400, clientY: 300 }));
+    expect(onNodeDoubleClick).toHaveBeenCalledWith(1);
+  });
+
+  it('clears selection when clicking empty space', () => {
+    const onSelectionChange = vi.fn();
+    const { container } = renderWithTheme(
+      <VertexCanvas {...mockProps} selectedNodeIds={[1]} onSelectionChange={onSelectionChange} />
+    );
+    const canvas = container.querySelector('canvas');
+
+    // Click away from any node
+    canvas.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 10, clientY: 10 }));
+    expect(onSelectionChange).toHaveBeenCalledWith([]);
+  });
+
   it('handles canvas pan', () => {
     const { container } = renderWithTheme(<VertexCanvas {...mockProps} />);
     const canvas = container.querySelector('canvas');
@@ -166,6 +190,83 @@ describe('VertexCanvas', () => {
     // The canvas should have been redrawn with new scale
     const ctx = canvas.getContext('2d');
     expect(ctx.scale).toHaveBeenCalled();
+  });
+
+  it('prevents default on wheel event and zooms out', () => {
+    const { container } = renderWithTheme(<VertexCanvas {...mockProps} />);
+    const canvas = container.querySelector('canvas');
+    const evt = new WheelEvent('wheel', { deltaY: 200, bubbles: true, cancelable: true });
+    const preventedBefore = evt.defaultPrevented;
+    canvas.dispatchEvent(evt);
+    expect(preventedBefore).toBe(false);
+    expect(evt.defaultPrevented).toBe(true);
+    // Zoom out path also calls scale in redraw
+    const ctx = canvas.getContext('2d');
+    expect(ctx.scale).toHaveBeenCalled();
+  });
+
+  it('pans with Space + drag and updates viewBox', () => {
+    const onViewBoxChange = vi.fn();
+    const { container } = renderWithTheme(
+      <VertexCanvas
+        {...mockProps}
+        onViewBoxChange={onViewBoxChange}
+      />
+    );
+    const canvas = container.querySelector('canvas');
+    // Initial draw triggers a viewBox
+    expect(onViewBoxChange).toHaveBeenCalled();
+    const initial = onViewBoxChange.mock.calls[onViewBoxChange.mock.calls.length - 1][0];
+
+    // Hold space and drag
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }));
+    canvas.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: 100, clientY: 100 }));
+    window.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 150, clientY: 130 }));
+    window.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Space' }));
+
+    // After pan, viewBox should have shifted (x and/or y change)
+    const after = onViewBoxChange.mock.calls[onViewBoxChange.mock.calls.length - 1][0];
+    expect(after.x).not.toBe(initial.x);
+    expect(after.y).not.toBe(initial.y);
+  });
+
+  it('cleans up window listeners on unmount', () => {
+    const addSpy = vi.spyOn(window, 'addEventListener');
+    const remSpy = vi.spyOn(window, 'removeEventListener');
+    const { unmount } = renderWithTheme(<VertexCanvas {...mockProps} />);
+    expect(addSpy).toHaveBeenCalledWith('mousemove', expect.any(Function));
+    expect(addSpy).toHaveBeenCalledWith('mouseup', expect.any(Function));
+    unmount();
+    expect(remSpy).toHaveBeenCalledWith('mousemove', expect.any(Function));
+    expect(remSpy).toHaveBeenCalledWith('mouseup', expect.any(Function));
+    addSpy.mockRestore();
+    remSpy.mockRestore();
+  });
+
+  it('fires onContextMenuRequest with node id on right-click', () => {
+    const onContextMenuRequest = vi.fn();
+    const { container } = renderWithTheme(
+      <VertexCanvas
+        {...mockProps}
+        onContextMenuRequest={onContextMenuRequest}
+      />
+    );
+    const canvas = container.querySelector('canvas');
+
+    // Right-click at root node position
+    const evt = new MouseEvent('contextmenu', {
+      bubbles: true,
+      clientX: 400,
+      clientY: 300
+    });
+    canvas.dispatchEvent(evt);
+
+    expect(onContextMenuRequest).toHaveBeenCalled();
+    const payload = onContextMenuRequest.mock.calls[0][0];
+    expect(payload.nodeId).toBe(1);
+    expect(payload.screenX).toBe(400);
+    expect(payload.screenY).toBe(300);
   });
 
   describe('Ref methods', () => {
@@ -277,5 +378,73 @@ describe('VertexCanvas', () => {
     // Should include node IDs 1 and 2, but not 3
     expect(lastCall).toEqual(expect.arrayContaining([1, 2]));
     expect(lastCall).not.toEqual(expect.arrayContaining([3]));
+  });
+
+  it('suppresses click after marquee mouseup', () => {
+    const onSelectionChange = vi.fn();
+    const { container } = renderWithTheme(
+      <VertexCanvas
+        nodes={mockNodes}
+        onNodeClick={vi.fn()}
+        selectedNodeIds={[]}
+        onSelectionChange={onSelectionChange}
+      />
+    );
+    const canvas = container.querySelector('canvas');
+
+    // Drag a rectangle to select something
+    fireEvent.mouseDown(canvas, { clientX: 200, clientY: 150, shiftKey: true, button: 0 });
+    fireEvent.mouseMove(document, { clientX: 450, clientY: 350 });
+    fireEvent.mouseUp(document);
+    const lastSel = onSelectionChange.mock.calls[onSelectionChange.mock.calls.length - 1][0];
+    expect(lastSel.length).toBeGreaterThan(0);
+
+    // Immediately click empty space; suppression should avoid clearing selection
+    fireEvent.click(canvas, { clientX: 10, clientY: 10 });
+    const afterSel = onSelectionChange.mock.calls[onSelectionChange.mock.calls.length - 1][0];
+    expect(afterSel).toEqual(lastSel);
+  });
+
+  it('emits onViewBoxChange on redraw', () => {
+    const onViewBoxChange = vi.fn();
+    const { container } = renderWithTheme(
+      <VertexCanvas
+        nodes={mockNodes}
+        onNodeClick={vi.fn()}
+        onViewBoxChange={onViewBoxChange}
+      />
+    );
+    const canvas = container.querySelector('canvas');
+    canvas.dispatchEvent(new Event('redraw'));
+    expect(onViewBoxChange).toHaveBeenCalled();
+    const vb = onViewBoxChange.mock.calls[onViewBoxChange.mock.calls.length - 1][0];
+    expect(vb).toHaveProperty('x');
+    expect(vb).toHaveProperty('y');
+    expect(vb).toHaveProperty('width');
+    expect(vb).toHaveProperty('height');
+  });
+
+  it('draws additional passes when nodes are highlighted', () => {
+    const { container, rerender } = renderWithTheme(
+      <VertexCanvas
+        {...mockProps}
+        highlightedNodeIds={[]}
+      />
+    );
+    const canvas = container.querySelector('canvas');
+    const ctx = canvas.getContext('2d');
+    const beforeFillCalls = ctx.fill.mock.calls.length;
+
+    // Rerender with one highlighted node
+    rerender(
+      <ThemeProvider>
+        <VertexCanvas
+          {...mockProps}
+          highlightedNodeIds={[1]}
+        />
+      </ThemeProvider>
+    );
+    const afterFillCalls = ctx.fill.mock.calls.length;
+    expect(afterFillCalls).toBeGreaterThan(beforeFillCalls);
   });
 });

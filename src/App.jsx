@@ -667,31 +667,17 @@ function App() {
     }
     // Default initial state if no saved state exists
     return [
-      createEnhancedNode({ id: 1, label: 'Start Node', x: 400, y: 300, parentId: null }),
-      createEnhancedNode({ id: 2, label: 'Branch 1', x: 250, y: 200, parentId: 1 }),
-      createEnhancedNode({ id: 3, label: 'Branch 2', x: 550, y: 200, parentId: 1 }),
-      createEnhancedNode({ id: 4, label: 'Branch 3', x: 250, y: 400, parentId: 1 }),
-      createEnhancedNode({ id: 5, label: 'Branch 4', x: 550, y: 400, parentId: 1 }),
+      createEnhancedNode({ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, parentId: null }),
+      createEnhancedNode({ id: 2, label: `${intl.formatMessage({ id: 'node.branch' })} 1`, x: 250, y: 200, parentId: 1 }),
+      createEnhancedNode({ id: 3, label: `${intl.formatMessage({ id: 'node.branch' })} 2`, x: 550, y: 200, parentId: 1 }),
+      createEnhancedNode({ id: 4, label: `${intl.formatMessage({ id: 'node.branch' })} 3`, x: 250, y: 400, parentId: 1 }),
+      createEnhancedNode({ id: 5, label: `${intl.formatMessage({ id: 'node.branch' })} 4`, x: 550, y: 400, parentId: 1 }),
     ];
   });
   const [selectedNodeIds, setSelectedNodeIds] = useState([]);
   const [selectedNodeId, setSelectedNodeId] = useState(null); // Keep for backward compatibility
 
-  useEffect(() => {
-    setNodes(nodes => {
-      if (nodes && nodes.length > 0 && (nodes[0].label === 'Central Topic' || nodes[0].label === 'Start Node')) {
-        return [
-          { ...nodes[0], label: intl.formatMessage({ id: 'node.centralTopic' }) },
-          { ...nodes[1], label: `${intl.formatMessage({ id: 'node.branch' })} 1` },
-          { ...nodes[2], label: `${intl.formatMessage({ id: 'node.branch' })} 2` },
-          { ...nodes[3], label: `${intl.formatMessage({ id: 'node.branch' })} 3` },
-          { ...nodes[4], label: `${intl.formatMessage({ id: 'node.branch' })} 4` },
-          ...nodes.slice(5)
-        ];
-      }
-      return nodes;
-    });
-  }, [intl]);
+  // Do not localize existing node titles on language switch to avoid modifying user content
 
   // Help panel visibility state
   const [isHelpVisible, setIsHelpVisible] = useState(false);

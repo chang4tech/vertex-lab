@@ -1,9 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { 
-  createEnhancedNode, 
-  upgradeNode, 
-  getVisibleNodes, 
-  NODE_SHAPES 
+  createEnhancedNode,
+  upgradeNode,
+  getVisibleNodes,
+  NODE_SHAPES,
+  hasTag,
+  addTag,
+  removeTag,
+  getAllTags,
+  isNodeVisible
 } from '../../utils/nodeUtils';
 
 describe('nodeUtils', () => {
@@ -95,6 +100,48 @@ describe('nodeUtils', () => {
       const visibleNodes = getVisibleNodes(nodes);
       expect(visibleNodes).toHaveLength(3);
       expect(visibleNodes.find(n => n.id === 4)).toBeUndefined();
+    });
+  });
+
+  describe('hierarchy helpers', () => {
+    it('getChildNodes and getDescendantNodes return expected sets', () => {
+      const root = createEnhancedNode({ id: 1, label: 'root', x: 0, y: 0, parentId: null });
+      const c1 = createEnhancedNode({ id: 2, label: 'c1', x: 10, y: 10, parentId: 1 });
+      const c2 = createEnhancedNode({ id: 3, label: 'c2', x: 20, y: 20, parentId: 1 });
+      const g1 = createEnhancedNode({ id: 4, label: 'g1', x: 30, y: 30, parentId: 2 });
+      const nodes = [root, c1, c2, g1];
+
+      const { getChildNodes, getDescendantNodes } = require('../../utils/nodeUtils');
+      const children = getChildNodes(nodes, 1).map(n => n.id);
+      expect(children.sort()).toEqual([2,3]);
+      const desc = getDescendantNodes(nodes, 1).map(n => n.id);
+      expect(desc.sort()).toEqual([2,3,4]);
+    });
+  });
+
+  describe('tags and visibility helpers', () => {
+    it('hasTag/addTag/removeTag/getAllTags work as expected', () => {
+      const n1 = createEnhancedNode({ id: 10, label: 'A', x: 0, y: 0, tags: ['t1'] });
+      expect(hasTag(n1, 't1')).toBe(true);
+      const n2 = addTag(n1, 't2');
+      expect(n2.tags).toEqual(expect.arrayContaining(['t1','t2']));
+      const n3 = removeTag(n2, 't1');
+      expect(hasTag(n3, 't1')).toBe(false);
+      const all = getAllTags([n3, createEnhancedNode({ id: 11, label:'B', x:1, y:1, tags:['t3'] })]);
+      expect(all).toEqual(expect.arrayContaining(['t2','t3']));
+    });
+
+    it('isNodeVisible returns false for descendants of collapsed nodes', () => {
+      const nodes = [
+        createEnhancedNode({ id: 1, label: 'root', x: 0, y: 0, parentId: null, isCollapsed: true }),
+        createEnhancedNode({ id: 2, label: 'child', x: 10, y: 10, parentId: 1 }),
+        createEnhancedNode({ id: 3, label: 'sibling', x: 20, y: 20, parentId: null })
+      ];
+      expect(isNodeVisible(nodes, nodes[0])).toBe(true);
+      expect(isNodeVisible(nodes, nodes[1])).toBe(false);
+      const visible = getVisibleNodes(nodes).map(n => n.id);
+      expect(visible).toEqual(expect.arrayContaining([1,3]));
+      expect(visible).not.toContain(2);
     });
   });
 });
