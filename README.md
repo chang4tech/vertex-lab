@@ -9,6 +9,7 @@ A powerful and intuitive diagramming tool built with React and HTML5 Canvas. Cre
   - Drag and drop nodes to reposition
   - Quick node editing and deletion
   - Multi-node selection
+  - Tag manager to add/edit/remove tags
 
 - 🎨 **Interactive Canvas**
   - Smooth pan and zoom
@@ -145,3 +146,7 @@ react-mindmap-app/
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+5. **Tags**
+   - Open Settings → Tags to manage available tags (add, rename, recolor, delete)
+   - Import/Export your tag presets as JSON for reuse or sharing
+   - In the Node Editor → Tags tab, toggle tags per node

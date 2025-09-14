@@ -6,12 +6,12 @@ import {
   NODE_COLOR_INFO, 
   NODE_SHAPES, 
   NODE_ICONS, 
-  COMMON_TAGS,
   updateNode,
   addTag,
   removeTag,
   hasTag
 } from '../utils/nodeUtils';
+import { loadTags } from '../utils/tagUtils';
 
 const NodeEditor = ({ node, visible, onSave, onClose, onDelete }) => {
   const { currentTheme } = useTheme();
@@ -511,6 +511,7 @@ const StyleTab = ({ editedNode, setEditedNode, currentTheme }) => {
 
 // Tags tab component
 const TagsTab = ({ editedNode, onTagToggle, currentTheme }) => {
+  const availableTags = loadTags();
   const gridStyle = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
@@ -544,7 +545,7 @@ const TagsTab = ({ editedNode, onTagToggle, currentTheme }) => {
             <FormattedMessage id="nodeEditor.availableTags" defaultMessage="Available Tags" />
           </label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            {COMMON_TAGS.map(tag => (
+            {availableTags.map(tag => (
               <button
                 key={tag.id}
                 onClick={() => onTagToggle(tag.id)}
@@ -571,22 +572,42 @@ const TagsTab = ({ editedNode, onTagToggle, currentTheme }) => {
           </label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
             {(editedNode.tags || []).map(tagId => {
-              const tag = COMMON_TAGS.find(t => t.id === tagId);
-              return tag ? (
+              const tag = availableTags.find(t => t.id === tagId);
+              if (tag) {
+                return (
+                  <span
+                    key={tagId}
+                    style={{
+                      padding: '4px 8px',
+                      backgroundColor: tag.color,
+                      color: 'white',
+                      borderRadius: '12px',
+                      fontSize: '11px',
+                      fontWeight: '600'
+                    }}
+                  >
+                    {tag.name}
+                  </span>
+                );
+              }
+              // Deleted tag: show greyed out with marker
+              return (
                 <span
                   key={tagId}
+                  title={String(tagId)}
                   style={{
                     padding: '4px 8px',
-                    backgroundColor: tag.color,
-                    color: 'white',
+                    backgroundColor: currentTheme.colors.menuHover,
+                    color: currentTheme.colors.secondaryText,
                     borderRadius: '12px',
                     fontSize: '11px',
-                    fontWeight: '600'
+                    fontWeight: '600',
+                    border: `1px dashed ${currentTheme.colors.panelBorder}`
                   }}
                 >
-                  {tag.name}
+                  {`${tagId} (Deleted)`}
                 </span>
-              ) : null;
+              );
             })}
             {(editedNode.tags || []).length === 0 && (
               <span style={{ color: currentTheme.colors.secondaryText, fontSize: '13px' }}>
