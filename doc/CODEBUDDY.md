@@ -1,3 +1,5 @@
+*** MOVED: This file was moved from the repository root (CODEBUDDY.md) ***
+
 # Vertex Lab
 
 This is a powerful and intuitive diagramming tool built with React and HTML5 Canvas. The application allows users to create, organize, and visualize thoughts with an interactive interface featuring drag-and-drop nodes, pan/zoom controls, and comprehensive keyboard shortcuts.
@@ -108,3 +110,4 @@ The application uses React's built-in state management with:
 - Debounced operations for smooth interactions
 - Efficient node lookup with ID-based indexing
 - Minimal re-renders through proper dependency arrays
+

@@ -1,3 +1,5 @@
+*** MOVED: This file was moved from the repository root (GEMINI.md) ***
+
 # Vertex Lab
 
 This is a powerful and intuitive diagramming tool built with React and HTML5 Canvas. The application allows users to create, organize, and visualize thoughts with an interactive interface featuring drag-and-drop nodes, pan/zoom controls, and comprehensive keyboard shortcuts.
@@ -76,4 +78,5 @@ For a full list of shortcuts, see **Settings → Keyboard Shortcuts**.
 - **Collaboration**: Add real-time collaboration features.
 - **Advanced Export**: Export to more formats like Markdown and FreeMind.
 
-See `TODO.md` for a detailed list of planned features.
+See `doc/TODO.md` for a detailed list of planned features.
+

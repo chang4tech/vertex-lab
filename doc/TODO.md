@@ -1,3 +1,5 @@
+*** MOVED: This file was moved from the repository root (TODO.md) ***
+
 # Vertex Lab TODOs
 
 ## Recently Completed ✅
@@ -187,3 +189,4 @@ export function useAutosave(data, key, delay = 1000) {
 - Update documentation with new features (✅ CODEBUDDY.md updated)
 - Consider backward compatibility
 - Maintain internationalization support for new features
+

@@ -1,3 +1,5 @@
+*** MOVED: This file was moved from the repository root (NODE_INFO_PANEL_FEATURE.md) ***
+
 # Node Info Panel Feature
 
 A comprehensive right-side panel that displays detailed metadata for selected nodes with support for multi-selection analysis.
@@ -199,16 +201,3 @@ npm test -- src/__tests__/components/NodeInfoPanel.test.jsx
 - **Memoization**: Optimize statistics calculations
 - **Lazy Loading**: Load metadata on demand
 
-## 📋 **Summary**
-
-The Node Info Panel feature provides a comprehensive solution for viewing and managing node metadata with excellent multi-selection support. Key achievements:
-
-- ✅ **Complete Metadata Display**: All node properties visible and organized
-- ✅ **Multi-Selection Analysis**: Statistical insights for multiple nodes
-- ✅ **Seamless Integration**: Works with existing node enhancement features
-- ✅ **Excellent UX**: Intuitive controls and visual feedback
-- ✅ **Full Internationalization**: Supports multiple languages
-- ✅ **Comprehensive Testing**: Well-tested with good coverage
-- ✅ **Theme Compatibility**: Works perfectly with all themes
-
-The feature enhances the diagramming experience by providing detailed insights into node properties and enabling efficient bulk operations through an intuitive interface.
