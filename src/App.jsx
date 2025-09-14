@@ -742,6 +742,8 @@ function App() {
     } catch {}
     return [];
   });
+  // Shift+E progressive mode: 'connect' or 'disconnect'
+  const [shiftPairMode, setShiftPairMode] = useState('connect');
 
   // Do not localize existing node titles on language switch to avoid modifying user content
 
@@ -1318,17 +1320,34 @@ function App() {
         const hasPair = (a, b) => newEdges.some(e => pairKey(e.source, e.target) === pairKey(a, b) && !e.directed);
 
         if (isShift) {
-          // Progressive connect: add the first missing pair (deterministic order)
-          let added = false;
-          for (let i = 0; i < pairs.length; i++) {
-            const [a, b] = pairs[i];
-            if (!hasPair(a, b)) {
+          // Progressive mode with memory: connect-first until complete, then disconnect-first until empty
+          const connectedPairs = pairs.filter(([a, b]) => hasPair(a, b));
+          const missingPairs = pairs.filter(([a, b]) => !hasPair(a, b));
+          if (shiftPairMode === 'connect') {
+            if (missingPairs.length > 0) {
+              const [a, b] = missingPairs[0];
               newEdges.push({ source: a, target: b, directed: false });
-              added = true;
-              break;
+              // stay in connect mode
+            } else if (connectedPairs.length > 0) {
+              // switch to disconnect mode and remove first
+              const [a, b] = connectedPairs[0];
+              const rmKey = pairKey(a, b);
+              newEdges = newEdges.filter(e => pairKey(e.source, e.target) !== rmKey || !!e.directed);
+              setShiftPairMode('disconnect');
+            }
+          } else { // disconnect mode
+            if (connectedPairs.length > 0) {
+              const [a, b] = connectedPairs[0];
+              const rmKey = pairKey(a, b);
+              newEdges = newEdges.filter(e => pairKey(e.source, e.target) !== rmKey || !!e.directed);
+              // stay in disconnect mode
+            } else if (missingPairs.length > 0) {
+              // switch to connect mode and add first
+              const [a, b] = missingPairs[0];
+              newEdges.push({ source: a, target: b, directed: false });
+              setShiftPairMode('connect');
             }
           }
-          // If none missing, do nothing
         } else {
           // Toggle all pairs: if any missing, connect all missing; else disconnect all
           const allPresent = pairs.length > 0 && pairs.every(([a, b]) => hasPair(a, b));
