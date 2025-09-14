@@ -60,6 +60,8 @@ export const APP_SHORTCUTS = [
   { key: 'Delete', modifiers: [], description: 'Delete Selected' },
   { key: 'Backspace', modifiers: [], description: 'Delete Selected' },
   { key: 'Enter', modifiers: [], description: 'Rename Node' },
+  // Connections
+  { key: 'e', modifiers: [], description: 'Connect/Disconnect Selected' },
 ];
 
 /**

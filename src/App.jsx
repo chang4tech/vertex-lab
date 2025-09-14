@@ -1166,12 +1166,57 @@ function App() {
     onUndo: handleUndo,
     onRedo: handleRedo,
     selectedNodeId,
+    selectedNodeIds,
     onDeleteNode: handleDeleteNode,
     onCenter: () => canvasRef.current?.fitToView?.(),
     onZoomIn: () => canvasRef.current?.zoom?.(1.1),
     onZoomOut: () => canvasRef.current?.zoom?.(0.9),
     onResetZoom: () => canvasRef.current?.resetZoom?.(),
-    onToggleMinimap: () => setShowMinimap(v => !v)
+    onToggleMinimap: () => setShowMinimap(v => !v),
+    onToggleConnections: (ids) => {
+      if (!Array.isArray(ids) || ids.length < 2) return;
+      // Toggle connect/disconnect: use first selected as anchor
+      const anchorId = ids[0];
+      const others = ids.slice(1);
+
+      // Helper: check if targetId is an ancestor of sourceId (to avoid cycles)
+      const isAncestor = (maybeAncestorId, nodeId) => {
+        let current = nodes.find(n => n.id === nodeId);
+        const visited = new Set();
+        while (current && current.parentId != null) {
+          if (visited.has(current.id)) break; // safeguard
+          visited.add(current.id);
+          if (current.parentId === maybeAncestorId) return true;
+          current = nodes.find(n => n.id === current.parentId);
+        }
+        return false;
+      };
+
+      // Determine if all others are already connected to anchor
+      const allConnected = others.length > 0 && others.every(id => {
+        const node = nodes.find(n => n.id === id);
+        return node && node.parentId === anchorId;
+      });
+
+      const updated = nodes.map(n => {
+        if (!others.includes(n.id)) return n;
+        if (allConnected) {
+          // Disconnect: only if currently child of anchor
+          if (n.parentId === anchorId) {
+            return { ...n, parentId: null };
+          }
+          return n;
+        } else {
+          // Connect: avoid creating cycles and self-parenting
+          if (n.id === anchorId) return n;
+          // If connecting n under anchor would make a cycle (n is ancestor of anchor), skip
+          if (isAncestor(n.id, anchorId)) return n;
+          return { ...n, parentId: anchorId };
+        }
+      });
+
+      pushUndo(updated);
+    }
   });
 
   const handleEditNodeFromPanel = useCallback((nodeId) => {

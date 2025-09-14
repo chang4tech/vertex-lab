@@ -195,4 +195,42 @@ describe('useKeyboardShortcuts', () => {
 
     expect(mockHandlers.onDeleteNode).not.toHaveBeenCalled();
   });
+
+  it('handles E to toggle connections when multiple selected', () => {
+    const handlers = {
+      ...mockHandlers,
+      selectedNodeIds: [1, 2, 3],
+      onToggleConnections: vi.fn(),
+    };
+    renderHook(() => useKeyboardShortcuts(handlers));
+
+    act(() => {
+      const event = new KeyboardEvent('keydown', {
+        key: 'e',
+        bubbles: true,
+      });
+      document.dispatchEvent(event);
+    });
+
+    expect(handlers.onToggleConnections).toHaveBeenCalledWith([1, 2, 3]);
+  });
+
+  it('does not trigger E toggle when fewer than two selected', () => {
+    const handlers = {
+      ...mockHandlers,
+      selectedNodeIds: [1],
+      onToggleConnections: vi.fn(),
+    };
+    renderHook(() => useKeyboardShortcuts(handlers));
+
+    act(() => {
+      const event = new KeyboardEvent('keydown', {
+        key: 'e',
+        bubbles: true,
+      });
+      document.dispatchEvent(event);
+    });
+
+    expect(handlers.onToggleConnections).not.toHaveBeenCalled();
+  });
 });

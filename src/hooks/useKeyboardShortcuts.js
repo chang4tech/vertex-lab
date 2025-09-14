@@ -8,12 +8,14 @@ export function useKeyboardShortcuts({
   onUndo,
   onRedo,
   selectedNodeId,
+  selectedNodeIds,
   onDeleteNode,
   onCenter,
   onZoomIn,
   onZoomOut,
   onResetZoom,
-  onToggleMinimap
+  onToggleMinimap,
+  onToggleConnections
 }) {
   const handleKeyDown = useCallback((e) => {
     // Don't trigger shortcuts when typing in inputs
@@ -140,6 +142,15 @@ export function useKeyboardShortcuts({
           onToggleMinimap?.();
           break;
         }
+
+        case 'e': {
+          // Toggle connect/disconnect between selected nodes when multi-selected
+          if (Array.isArray(selectedNodeIds) && selectedNodeIds.length >= 2) {
+            e.preventDefault();
+            onToggleConnections?.(selectedNodeIds);
+          }
+          break;
+        }
       }
     }
   }, [
@@ -150,12 +161,14 @@ export function useKeyboardShortcuts({
     onUndo,
     onRedo,
     selectedNodeId,
+    selectedNodeIds,
     onDeleteNode,
     onCenter,
     onZoomIn,
     onZoomOut,
     onResetZoom,
-    onToggleMinimap
+    onToggleMinimap,
+    onToggleConnections
   ]);
 
   useEffect(() => {

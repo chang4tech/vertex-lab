@@ -23,21 +23,23 @@ A powerful and intuitive diagramming tool built with React and HTML5 Canvas. Cre
   - Template library system
   - Undo/Redo support
 
-- ⌨️ **Keyboard Shortcuts**
-  - `Tab`: Insert child node
-  - `Enter`: Insert sibling node after
-  - `Shift + Enter`: Insert sibling node before
-  - `Ctrl/Cmd + Enter`: Insert parent node
-  - `Ctrl/Cmd + ←↑↓→`: Multi-node selection
-  - `Shift + ←↑↓→`: Move node
-  - `Ctrl/Cmd + E`: Expand/collapse node
-  - `Space + Left Click`: Pan canvas
-  - `Ctrl/Cmd + O`: Import JSON
-  - `Ctrl/Cmd + S`: Export JSON
-  - `Ctrl/Cmd + Shift + S`: Export PNG
-  - `Ctrl/Cmd + Z`: Undo
-  - `Ctrl/Cmd + Shift + Z`: Redo
-  - `Delete/Backspace`: Delete selected node
+- ⌨️ **Keyboard Shortcuts** (full list in-app: Help → Keyboard Shortcuts)
+  - `⌘/Ctrl + ⇧ + N`: New diagram
+  - `⌘/Ctrl + S`: Export JSON
+  - `⌘/Ctrl + ⇧ + S`: Export PNG
+  - `⌘/Ctrl + ⇧ + O`: Import JSON
+  - `⌘/Ctrl + Z` / `⌘/Ctrl + ⇧ + Z`: Undo / Redo
+  - `⌘/Ctrl + L`: Auto layout
+  - `⌘/Ctrl + F`: Search
+  - `⌥ + =` or `⌥ + +`: Zoom in
+  - `⌥ + -`: Zoom out
+  - `⌥ + 0`: Reset zoom
+  - `⌥ + C`: Center diagram
+  - `⌘/Ctrl + I`: Toggle node info panel
+  - `M`: Toggle minimap
+  - `Delete` / `Backspace`: Delete selected
+  - `Enter`: Rename node
+  - `E`: Connect/Disconnect selected (with 2+ nodes selected; uses first selected as anchor)
 
 ## Getting Started
 
@@ -81,13 +83,14 @@ A powerful and intuitive diagramming tool built with React and HTML5 Canvas. Cre
    - Press `Ctrl/Cmd + Enter` to create a parent node
 
 2. **Editing Nodes**
-   - Click a node to select it
-   - Press `Enter` to edit the selected node's text
-   - Drag nodes to reposition them
-   - Use arrow keys with Shift to move nodes
+  - Click a node to select it
+  - Press `Enter` to rename the selected node
+  - Drag nodes to reposition them
+  - Use Ctrl/Cmd-click to multi-select; Shift + drag to marquee select
+  - With multiple nodes selected, press `E` to connect/disconnect them (first selected is the anchor)
 
 3. **Navigation**
-   - Hold Space + Left Click to pan the canvas
+  - Hold Space + Left Click to pan the canvas
    - Use mouse wheel to zoom in/out
    - Click the Center button to focus on root node
    - Use View menu for zoom controls
