@@ -1675,10 +1675,10 @@ function App() {
               const pos = { x: contextMenu.target?.worldX ?? 0, y: contextMenu.target?.worldY ?? 0 };
               const newNode = createNewNode(null, pos);
               pushUndo([...nodes, newNode]);
-            }}>Add Node Here</button>
-            <button onClick={() => { closeContextMenu(); handleAutoLayout(); }}>Auto Layout</button>
-            <button onClick={() => { closeContextMenu(); canvasRef.current?.center?.(); }}>Center View</button>
-            <button onClick={() => { closeContextMenu(); canvasRef.current?.resetZoom?.(); }}>Reset Zoom</button>
+            }}><FormattedMessage id="node.addHere" defaultMessage="Add Node Here" /></button>
+            <button onClick={() => { closeContextMenu(); handleAutoLayout(); }}><FormattedMessage id="edit.autoLayout" defaultMessage="Auto Layout" /></button>
+            <button onClick={() => { closeContextMenu(); canvasRef.current?.center?.(); }}><FormattedMessage id="view.center" defaultMessage="Center" /></button>
+            <button onClick={() => { closeContextMenu(); canvasRef.current?.resetZoom?.(); }}><FormattedMessage id="view.resetZoom" defaultMessage="Reset Zoom" /></button>
           </div>
         )}
       </ContextMenu>

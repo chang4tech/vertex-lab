@@ -57,6 +57,7 @@ export default {
   'node.centralTopic': '起始节点',
   'node.branch': '分支',
   'node.newNode': '新节点',
+  'node.addHere': '在此添加节点',
 
   // Node operations
   'node.addChild': '添加子节点',

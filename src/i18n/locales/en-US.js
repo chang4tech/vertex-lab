@@ -57,6 +57,7 @@ export default {
   'node.centralTopic': 'Start Node',
   'node.branch': 'Branch',
   'node.newNode': 'New Node',
+  'node.addHere': 'Add Node Here',
 
   // Node operations
   'node.addChild': 'Add Child',
