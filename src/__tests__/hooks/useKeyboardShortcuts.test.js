@@ -20,19 +20,28 @@ describe('useKeyboardShortcuts', () => {
     vi.clearAllMocks();
   });
 
-  it('handles New shortcut (Cmd/Ctrl + N)', () => {
+  it('handles New shortcut (Cmd/Ctrl + Shift + N) and ignores plain Cmd/Ctrl+N', () => {
     renderHook(() => useKeyboardShortcuts(mockHandlers));
 
+    // Plain Cmd/Ctrl+N should be ignored (to avoid browser conflict)
     act(() => {
-      const event = new KeyboardEvent('keydown', {
-        key: 'n',
-        metaKey: true,
-        bubbles: true
-      });
-      document.dispatchEvent(event);
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', metaKey: true, bubbles: true }));
     });
+    expect(mockHandlers.onNew).not.toHaveBeenCalled();
 
+    // Cmd/Ctrl+Shift+N should trigger
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', metaKey: true, shiftKey: true, bubbles: true }));
+    });
     expect(mockHandlers.onNew).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles Import shortcut (Cmd/Ctrl + Shift + O)', () => {
+    renderHook(() => useKeyboardShortcuts(mockHandlers));
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'o', metaKey: true, shiftKey: true, bubbles: true }));
+    });
+    expect(mockHandlers.onImport).toHaveBeenCalledTimes(1);
   });
 
   it('handles Export shortcut (Cmd/Ctrl + S)', () => {

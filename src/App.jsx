@@ -16,6 +16,7 @@ import { LocaleSelector } from './i18n/LocaleProvider';
 import { useTheme } from './contexts/ThemeContext';
 import { organizeLayout, detectCollisions } from './utils/layoutUtils';
 import { formatShortcut } from './utils/shortcutUtils';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { updateNode } from './utils/nodeUtils';
 import { createEnhancedNode } from './utils/nodeUtils';
 
@@ -901,6 +902,17 @@ function App() {
     localStorage.setItem('vertex_nodes', JSON.stringify(nodes));
   }, [nodes]);
 
+  // Create a new diagram initializer used by menu and keyboard
+  const handleNewDiagram = useCallback(() => {
+    const initialNodes = [createEnhancedNode({ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, parentId: null })];
+    setNodes([...initialNodes]);
+    setUndoStack([]);
+    setRedoStack([]);
+    setSelectedNodeId(null);
+    localStorage.removeItem('vertex_nodes');
+    setTimeout(() => { canvasRef.current?.fitToView?.(); }, 0);
+  }, [intl]);
+
   // Node info panel handlers
   const handleToggleNodeInfoPanel = useCallback(() => {
     setShowNodeInfoPanel(prev => !prev);
@@ -1002,27 +1014,8 @@ function App() {
             break;
           }
         }
-      } else if (e.altKey) {
-        // Use e.code for layout-independent detection; fall back to e.key
-        const code = e.code;
-        const key = (e.key || '').toLowerCase();
-        if (code === 'Equal' || key === '+' || key === '=') {
-          e.preventDefault();
-          canvasRef.current?.zoom?.(1.1);
-        } else if (code === 'Minus' || key === '-') {
-          e.preventDefault();
-          canvasRef.current?.zoom?.(0.9);
-        } else if (code === 'Digit0' || key === '0') {
-          e.preventDefault();
-          canvasRef.current?.resetZoom?.();
-        } else if (code === 'KeyC' || key === 'c') {
-          e.preventDefault();
-          // Fit to view (recenter and zoom to proper level)
-          canvasRef.current?.fitToView?.();
-        }
       } else if (!isCommandKey && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'm') {
-        e.preventDefault();
-        setShowMinimap(v => !v);
+        // handled by keyboard hook
       } else if (selectedNodeId) {
         // Node-specific shortcuts that require a selected node
         if (e.key === 'Tab') {
@@ -1132,6 +1125,23 @@ function App() {
     setEditingNodeId(null);
   }, [nodes, pushUndo]);
 
+  // Hook-based common keyboard shortcuts to avoid drift with menus/help
+  useKeyboardShortcuts({
+    onNew: handleNewDiagram,
+    onImport: () => fileInputRef.current?.click?.(),
+    onExport: handleExport,
+    onExportPNG: () => canvasRef.current?.exportAsPNG?.(),
+    onUndo: handleUndo,
+    onRedo: handleRedo,
+    selectedNodeId,
+    onDeleteNode: handleDeleteNode,
+    onCenter: () => canvasRef.current?.fitToView?.(),
+    onZoomIn: () => canvasRef.current?.zoom?.(1.1),
+    onZoomOut: () => canvasRef.current?.zoom?.(0.9),
+    onResetZoom: () => canvasRef.current?.resetZoom?.(),
+    onToggleMinimap: () => setShowMinimap(v => !v)
+  });
+
   const handleEditNodeFromPanel = useCallback((nodeId) => {
     setEditingNodeId(nodeId);
     setShowNodeEditor(true);
@@ -1173,21 +1183,7 @@ function App() {
         setRedoStack={setRedoStack}
         setSelectedNodeId={setSelectedNodeId}
         canvasRef={canvasRef}
-        onNew={() => {
-          console.log('New diagram');
-          const initialNodes = [createEnhancedNode({ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, parentId: null })];
-          setNodes([...initialNodes]);
-          setUndoStack(() => []);
-          setRedoStack(() => []);
-          setSelectedNodeId(null);
-          // Clear the saved state when creating a new diagram
-          localStorage.removeItem('vertex_nodes');
-          // Give a small delay for the canvas to initialize
-          setTimeout(() => {
-            console.log('Centering canvas', { canvasRef: !!canvasRef.current, center: !!canvasRef.current?.center });
-            if (canvasRef.current?.center) canvasRef.current.center();
-          }, 0);
-        }}
+        onNew={handleNewDiagram}
         onExportPNG={() => alert('Export as PNG not implemented yet.')}
         onUndo={handleUndo}
         onRedo={handleRedo}

@@ -1,16 +1,51 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { FormattedMessage } from 'react-intl';
-import { APP_SHORTCUTS, findShortcutConflicts, getShortcutsByKey, formatShortcut } from '../utils/shortcutUtils';
+import { APP_SHORTCUTS, findShortcutConflicts, formatShortcut } from '../utils/shortcutUtils';
 import '../styles/Settings.css';
 
 const Settings = ({ onClose }) => {
-  const [shortcuts, setShortcuts] = useState({});
+  const [shortcuts, setShortcuts] = useState([]);
   const [conflicts, setConflicts] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
 
   useEffect(() => {
-    setShortcuts(getShortcutsByKey());
+    // Build a merged list from APP_SHORTCUTS, combining Cmd/Ctrl variants
+    const groups = new Map();
+    const norm = (mods) => (mods || []).filter(m => m !== 'cmd' && m !== 'ctrl').sort().join('+');
+    APP_SHORTCUTS.forEach(sc => {
+      const baseMods = sc.modifiers || [];
+      const other = norm(baseMods);
+      const key = `${sc.key}|${other}|${sc.description}`;
+      if (!groups.has(key)) {
+        groups.set(key, { key: sc.key, otherMods: other ? other.split('+') : [], desc: sc.description, hasCmd: false, hasCtrl: false, single: null });
+      }
+      const g = groups.get(key);
+      if (baseMods.includes('cmd')) g.hasCmd = true;
+      if (baseMods.includes('ctrl')) g.hasCtrl = true;
+      if (!baseMods.includes('cmd') && !baseMods.includes('ctrl')) g.single = sc; // e.g., Alt-only or no-mod
+    });
+    const list = [];
+    groups.forEach(g => {
+      let combo;
+      if (g.hasCmd && g.hasCtrl) {
+        const cmdStr = formatShortcut({ key: g.key, modifiers: ['cmd', ...g.otherMods] });
+        const ctrlStr = formatShortcut({ key: g.key, modifiers: ['ctrl', ...g.otherMods] });
+        combo = `${cmdStr} / ${ctrlStr}`;
+      } else if (g.single) {
+        combo = formatShortcut({ key: g.single.key, modifiers: g.single.modifiers || [] });
+      } else if (g.hasCmd) {
+        combo = formatShortcut({ key: g.key, modifiers: ['cmd', ...g.otherMods] });
+      } else if (g.hasCtrl) {
+        combo = formatShortcut({ key: g.key, modifiers: ['ctrl', ...g.otherMods] });
+      } else {
+        combo = formatShortcut({ key: g.key, modifiers: g.otherMods });
+      }
+      list.push({ combo, desc: g.desc });
+    });
+    // Sort by description asc
+    list.sort((a, b) => a.desc.localeCompare(b.desc));
+    setShortcuts(list);
     setConflicts(findShortcutConflicts());
   }, []);
 
@@ -48,17 +83,10 @@ const Settings = ({ onClose }) => {
           {activeTab === 'all' ? (
             <div className="shortcuts-list">
               <h3><FormattedMessage id="settings.shortcuts" defaultMessage="Keyboard Shortcuts" /></h3>
-              {Object.entries(shortcuts).map(([key, shortcutList]) => (
-                <div key={key} className="shortcut-group">
-                  <div className="shortcut-key">{key.toUpperCase()}</div>
-                  <div className="shortcut-combinations">
-                    {shortcutList.map((shortcut, index) => (
-                      <div key={index} className="shortcut-item">
-                        <span className="shortcut-combo">{formatShortcut(shortcut)}</span>
-                        <span className="shortcut-description">{shortcut.description}</span>
-                      </div>
-                    ))}
-                  </div>
+              {shortcuts.map((s, i) => (
+                <div key={`${s.desc}-${i}`} className="shortcut-group" style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
+                  <div className="shortcut-description">{s.desc}</div>
+                  <div className="shortcut-combinations"><span className="shortcut-combo">{s.combo}</span></div>
                 </div>
               ))}
             </div>

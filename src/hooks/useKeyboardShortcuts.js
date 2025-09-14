@@ -56,19 +56,9 @@ export function useKeyboardShortcuts({
 
     if (isCommandKey) {
       switch (e.key.toLowerCase()) {
-        case 'n': {
-          e.preventDefault();
-          onNew?.();
-          break;
-        }
         case 's': {
           e.preventDefault();
           onExport?.();
-          break;
-        }
-        case 'o': {
-          e.preventDefault();
-          onImport?.();
           break;
         }
         case 'z': {
@@ -78,6 +68,24 @@ export function useKeyboardShortcuts({
           } else {
             onUndo?.();
           }
+          break;
+        }
+        case 'l': {
+          e.preventDefault();
+          // Optional: if provided
+          // onAutoLayout?.();
+          break;
+        }
+        case 'f': {
+          e.preventDefault();
+          // Optional: if provided
+          // onSearch?.();
+          break;
+        }
+        case 'i': {
+          e.preventDefault();
+          // Optional: if provided
+          // onToggleNodeInfo?.();
           break;
         }
       }
