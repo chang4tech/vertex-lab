@@ -717,7 +717,7 @@ function App() {
   }, [intl]);
 
   // Help panel visibility state
-  const [isHelpVisible, setIsHelpVisible] = useState(true);
+  const [isHelpVisible, setIsHelpVisible] = useState(false);
 
   // Search state
   const [showSearch, setShowSearch] = useState(false);
@@ -733,7 +733,7 @@ function App() {
   // Node info panel state
   const [showNodeInfoPanel, setShowNodeInfoPanel] = useState(() => {
     const saved = localStorage.getItem('vertex_show_node_info_panel');
-    return saved !== null ? saved === 'true' : true;
+    return saved !== null ? saved === 'true' : false;
   });
 
   // Responsive canvas size
@@ -1088,7 +1088,7 @@ function App() {
   // Load help panel state from localStorage on initial render
   useEffect(() => {
     const savedState = window.localStorage.getItem('xmindHelpTriggerState');
-    setIsHelpVisible(savedState !== '0');
+    setIsHelpVisible(savedState === '1');
   }, []);
 
   // Toggles the help panel and saves the state
