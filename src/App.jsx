@@ -1544,7 +1544,16 @@ function App() {
 
       {/* Help trigger button, now floating bottom right */}
   <div style={{ position: 'fixed', right: 32, bottom: 32, zIndex: 10010 }}>
-        <div className={triggerClass} onClick={toggleHelp}>
+        <div
+          className={triggerClass}
+          role="button"
+          aria-label={isHelpVisible ? 'Hide help' : 'Show help'}
+          aria-pressed={isHelpVisible}
+          tabIndex={0}
+          title={isHelpVisible ? 'Hide help' : 'Show help'}
+          onClick={toggleHelp}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleHelp(); } }}
+        >
           <i className="trigger-icon" />
           <div className="trigger-tooltip">
             {isHelpVisible ? '收起' : '帮助'}

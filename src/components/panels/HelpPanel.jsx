@@ -43,7 +43,7 @@ export function HelpPanel({ isVisible, onClose }) {
 
   return (
     <div role="dialog" className={`help ${isVisible ? 'show' : ''}`}>
-      <div className={`rules ${isVisible ? 'show' : ''}`}>
+      <div className={`rules ${isVisible ? 'show' : ''}`} style={{ position: 'relative' }}>
         <h2>Keyboard Shortcuts</h2>
         {mergedShortcuts.map(({ key, desc }) => (
           <div className="rule" key={key}>
@@ -51,8 +51,8 @@ export function HelpPanel({ isVisible, onClose }) {
             <span className="desc">{desc}</span>
           </div>
         ))}
+        <button aria-label="Close help" className="help-close" onClick={onClose}>×</button>
       </div>
-      <button onClick={onClose}>Close</button>
     </div>
   );
 }

@@ -205,35 +205,35 @@ mark {
 
 /* --- Trigger Button --- */
 .trigger {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  width: 40px;
-  height: 40px;
-  background-color: #007bff;
-  color: white;
+  position: relative;
+  width: 48px;
+  height: 48px;
+  background-color: var(--primary-button, #1976d2);
+  color: var(--primary-button-text, #fff);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  transition: background-color 0.3s ease;
-  z-index: 101;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  transition: background-color 150ms ease, box-shadow 180ms ease, transform 120ms ease;
 }
 
 .trigger:hover {
-  background-color: #0056b3;
+  background-color: var(--primary-button-hover, #1565c0);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.22);
+  transform: translateY(-1px);
 }
 
 .trigger.active {
-  background-color: #dc3545;
+  background-color: var(--primary-button, #1976d2);
 }
 
 .trigger-icon::before {
   content: '?';
-  font-size: 20px;
-  font-weight: bold;
+  font-size: 22px;
+  font-weight: 800;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.1);
 }
 
 .trigger.active .trigger-icon::before {
@@ -246,7 +246,7 @@ mark {
   visibility: hidden;
   min-width: 80px;
   max-width: 200px;
-  background-color: #343a40;
+  background-color: rgba(0,0,0,0.85);
   color: #fff;
   text-align: center;
   border-radius: 6px;
@@ -266,6 +266,50 @@ mark {
 .trigger:hover .trigger-tooltip {
   visibility: visible;
   opacity: 1;
+}
+
+/* Subtle pulse to draw attention when closed */
+.trigger:not(.active)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(25,118,210,0.35);
+  animation: triggerPulse 2.4s ease-out infinite;
+}
+
+@keyframes triggerPulse {
+  0% { box-shadow: 0 0 0 0 rgba(25,118,210,0.35); }
+  70% { box-shadow: 0 0 0 14px rgba(25,118,210,0); }
+  100% { box-shadow: 0 0 0 0 rgba(25,118,210,0); }
+}
+
+/* Help panel close button */
+.help-close {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--menu-background, #fff);
+  color: var(--menu-text, #333);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+  cursor: pointer;
+}
+
+.help-close:hover { filter: brightness(0.95); }
+.help-close:active { transform: scale(0.98); }
+
+/* Help rules refinements */
+.rules h2 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+}
+.rule .key {
+  background-color: var(--input-background, #f7f7f7);
+  border-color: var(--input-border, #e0e0e0);
 }
 
 /* --- Mobile tweaks --- */
