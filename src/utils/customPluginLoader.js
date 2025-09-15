@@ -44,7 +44,7 @@ export async function importPluginFromCode(code) {
 export function validatePlugin(plugin) {
   if (!plugin || typeof plugin !== 'object') return false;
   if (typeof plugin.id !== 'string' || !plugin.id) return false;
-  if (plugin.slots && typeof plugin.slots !== 'object') return false;
+  if (plugin.slots && (typeof plugin.slots !== 'object' || Array.isArray(plugin.slots))) return false;
   const panels = plugin.slots?.sidePanels;
   if (panels && !Array.isArray(panels)) return false;
   if (Array.isArray(panels)) {
@@ -83,4 +83,3 @@ export async function loadCustomPluginsFromStorage() {
   }
   return plugins;
 }
-
