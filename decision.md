@@ -44,3 +44,18 @@ Rationale:
 Implications:
 - No new functionality introduced.
 - Tests added to cover preference defaults and plugin validation.
+
+## 2025-09-15: Error isolation and duplicate handling
+
+Context: Custom plugins can fail at render time, and duplicate IDs across core/custom lists can cause subtle bugs.
+
+Decisions
+- Add an error boundary around plugin panels
+  - Rationale: Prevent a single faulty panel from crashing the app; provide a clear fallback so users can recover and disable the plugin if needed.
+  - Considered: Global error boundary (too broad), try/catch inside host (does not catch render errors). React ErrorBoundary is the right tool.
+  - Consequence: Slight markup overhead per panel; dramatically improved resilience.
+
+- Deduplicate plugins by id with first‑wins policy
+  - Rationale: Keep core plugins authoritative and avoid accidental overrides; deterministic order and logging helps debugging.
+  - Considered: last‑wins (more surprising if a custom plugin shadows core), hard error (too strict for user workflows).
+  - Consequence: Duplicates are ignored with a console warning; authors should pick globally unique IDs.

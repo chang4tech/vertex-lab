@@ -7,6 +7,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ## Unreleased
 
 ### Added
+- Plugins: Error isolation via an ErrorBoundary in `PluginHost`; faulty panels render a fallback and no longer crash the app.
+- Plugins: `mergePlugins` utility to merge core + custom plugins and dedupe by id (first occurrence wins) with console warnings for duplicates.
 - Migration: Consolidate plugin toggles into Plugins dialog and render via merged `allPlugins` (core + custom) filtered by preferences.
 - Plugins: Import custom plugins (.js) from the Plugins dialog; validate and persist source in localStorage. Loaded at startup and merged with core plugins.
 - Plugins: New example plugin at `src/plugins/examples/helloPlugin.jsx`.
@@ -18,6 +20,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
  - Docs: Migration guidance consolidated into this changelog and `doc/progress.md`; removed standalone `MIGRATION.md`.
 
 ### Changed
+- App: Uses `mergePlugins` when loading stored custom plugins and importing at runtime.
+- Docs: `README.md` plugin section calls out error isolation and duplicate handling; `doc/PLUGIN_SPEC.md` updated with Error Isolation and Duplicate IDs sections.
 - PluginsManager now shows Core and Custom sections, supports toggling and removing custom plugins. Enabled/Disabled labels are localized.
 - Removed duplicate `customPlugins` state in `MenuBar`; the App component owns plugin state and passes props down.
  - Plugins: Tightened plugin validation to reject array `slots` (must be an object), aligning implementation with the spec. No new features added.

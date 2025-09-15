@@ -14,6 +14,7 @@ import { HelpPanel } from './components/panels/HelpPanel';
 // Plugin system
 import { PluginHost } from './plugins/PluginHost';
 import { corePlugins } from './plugins';
+import { mergePlugins } from './plugins/registry.js';
 import { loadPluginPrefs, savePluginPrefs } from './utils/pluginUtils';
 import { loadCustomPluginsFromStorage, addCustomPluginCode, removeStoredCustomPluginCodeById } from './utils/customPluginLoader';
 import { LocaleSelector } from './i18n/LocaleProvider';
@@ -898,9 +899,9 @@ function App({ graphId = 'default' }) {
     (async () => {
       const loaded = await loadCustomPluginsFromStorage();
       setCustomPlugins(loaded);
-      setAllPlugins([...corePlugins, ...loaded]);
+      setAllPlugins(mergePlugins(corePlugins, loaded));
       setPluginPrefs(prev => {
-        const next = { ...loadPluginPrefs([...corePlugins, ...loaded]), ...prev };
+        const next = { ...loadPluginPrefs(mergePlugins(corePlugins, loaded)), ...prev };
         savePluginPrefs(next);
         return next;
       });
@@ -921,10 +922,7 @@ function App({ graphId = 'default' }) {
         const exists = prev.some(p => p.id === plugin.id);
         return exists ? prev : [...prev, plugin];
       });
-      setAllPlugins(prev => {
-        const exists = prev.some(p => p.id === plugin.id);
-        return exists ? prev : [...prev, plugin];
-      });
+      setAllPlugins(prev => mergePlugins(prev, [plugin]));
       setPluginEnabled(plugin.id, true);
     } catch (e) {
       console.error('Failed to import plugin:', e);
