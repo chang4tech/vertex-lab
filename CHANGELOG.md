@@ -15,11 +15,13 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Tests: Added `customPluginLoader.validatePlugin` tests and extended PluginsManager test to cover the Import control.
  - Tests: Added unit tests for `pluginUtils` default/merge behavior and additional shape checks for `customPluginLoader.validatePlugin`.
  - Docs: Appended migration/progress notes (`doc/progress.md`) and clarified `slots` contract in `doc/PLUGIN_SPEC.md` and `MIGRATION.md`.
+ - Docs: Migration guidance consolidated into this changelog and `doc/progress.md`; removed standalone `MIGRATION.md`.
 
 ### Changed
 - PluginsManager now shows Core and Custom sections, supports toggling and removing custom plugins. Enabled/Disabled labels are localized.
 - Removed duplicate `customPlugins` state in `MenuBar`; the App component owns plugin state and passes props down.
  - Plugins: Tightened plugin validation to reject array `slots` (must be an object), aligning implementation with the spec. No new features added.
+ - Docs: Removed `MIGRATION.md`; migration details now live in Unreleased notes here and in `doc/progress.md`.
 
 ### Notes
 - Security: Custom plugin import executes local JS you select; only import code you trust. Code is stored in localStorage and reloaded on app start.

@@ -49,7 +49,7 @@ For a detailed list of changes and fixes, see `CHANGELOG.md` at the project root
 
 ## Plugins
 
-Vertex Lab supports simple plugins that contribute UI panels. Manage plugins via Settings → Plugins (enable/disable core plugins and import custom `.js/.mjs` plugins). See `doc/PLUGIN_SPEC.md` for the full specification and `MIGRATION.md` for migration notes.
+Vertex Lab supports simple plugins that contribute UI panels. Manage plugins via Settings → Plugins (enable/disable core plugins and import custom `.js/.mjs` plugins). See `doc/PLUGIN_SPEC.md` for the full specification. Migration notes are recorded in the Unreleased section of `CHANGELOG.md` and summarized in `doc/progress.md`.
 
 ## Getting Started
 
