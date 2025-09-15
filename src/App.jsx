@@ -49,8 +49,6 @@ function MenuBar({
   const [settingsTab, setSettingsTab] = useState('all');
   const [showTagManager, setShowTagManager] = useState(false);
   const [showPluginsManager, setShowPluginsManager] = useState(false);
-  const [customPlugins, setCustomPlugins] = useState([]);
-  const [allPlugins, setAllPlugins] = useState(corePlugins);
   const intl = useIntl();
   const { currentTheme, toggleTheme } = useTheme();
   const [helpModal, setHelpModal] = useState({ open: false, titleId: null, messageId: null });
@@ -891,6 +889,9 @@ function App({ graphId = 'default' }) {
   // Node editor state
   const [showNodeEditor, setShowNodeEditor] = useState(false);
   const [editingNodeId, setEditingNodeId] = useState(null);
+  // Plugins (custom + merged)
+  const [customPlugins, setCustomPlugins] = useState([]);
+  const [allPlugins, setAllPlugins] = useState(corePlugins);
   // Plugin preferences
   const [pluginPrefs, setPluginPrefs] = useState(() => loadPluginPrefs(corePlugins));
   useEffect(() => {
