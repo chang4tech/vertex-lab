@@ -1542,8 +1542,8 @@ function App() {
       <div style={{ height: 48 }} />
       <MainHeader />
 
-      {/* Help trigger button, now floating bottom right */}
-  <div style={{ position: 'fixed', right: 32, bottom: 32, zIndex: 10010 }}>
+      {/* Help trigger button, moved to top-right to avoid blocking minimap */}
+  <div style={{ position: 'fixed', right: 24, top: 64, zIndex: 10010 }}>
         <div
           className={triggerClass}
           role="button"
@@ -1554,7 +1554,16 @@ function App() {
           onClick={toggleHelp}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleHelp(); } }}
         >
-          <i className="trigger-icon" />
+          {isHelpVisible ? (
+            <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 7l10 10M17 7l-10 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          ) : (
+            <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 19h0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M9 8a3 3 0 1 1 6 0c0 2-3 2.5-3 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+            </svg>
+          )}
           <div className="trigger-tooltip">
             {isHelpVisible ? '收起' : '帮助'}
           </div>

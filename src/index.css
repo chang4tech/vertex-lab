@@ -254,7 +254,8 @@ mark {
   position: absolute;
   z-index: 10020;
   right: 120%;
-  bottom: 0;
+  top: 50%;
+  transform: translateY(-50%);
   left: auto;
   margin-left: 0;
   opacity: 0;
