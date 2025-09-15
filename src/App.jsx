@@ -32,7 +32,9 @@ function MenuBar({
   fileInputRef,
   graphId,
   graphTitle,
-  setGraphTitle
+  setGraphTitle,
+  pluginPrefs,
+  onTogglePlugin
 }) {
   const isMobile = useIsMobile();
   const menuBarRef = useRef(null);
@@ -106,7 +108,7 @@ function MenuBar({
         <Settings
           onClose={() => setShowSettings(false)}
           pluginPrefs={pluginPrefs}
-          onTogglePlugin={(id, enabled) => setPluginEnabled(id, enabled)}
+          onTogglePlugin={onTogglePlugin}
         />
       )}
       {showTagManager && <TagManager onClose={() => setShowTagManager(false)} />}
@@ -1621,6 +1623,8 @@ function App({ graphId = 'default' }) {
         graphId={graphId}
         graphTitle={graphTitle}
         setGraphTitle={setGraphTitle}
+        pluginPrefs={pluginPrefs}
+        onTogglePlugin={setPluginEnabled}
       />
       <div style={{ height: 80 }} />
       <MainHeader />

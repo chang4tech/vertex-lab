@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { FormattedMessage } from 'react-intl';
 import { APP_SHORTCUTS, findShortcutConflicts, formatShortcut } from '../utils/shortcutUtils';
 import '../styles/Settings.css';
+import { corePlugins } from '../plugins';
 
 const Settings = ({ onClose, pluginPrefs = {}, onTogglePlugin = () => {} }) => {
   const [shortcuts, setShortcuts] = useState([]);
@@ -79,11 +80,16 @@ const Settings = ({ onClose, pluginPrefs = {}, onTogglePlugin = () => {} }) => {
             <FormattedMessage id="settings.conflicts" defaultMessage="Conflicts" />
             {conflicts.length > 0 && <span className="conflict-badge">{conflicts.length}</span>}
           </button>
-          {null}
+          <button 
+            className={`tab-button ${activeTab === 'plugins' ? 'active' : ''}`}
+            onClick={() => setActiveTab('plugins')}
+          >
+            <FormattedMessage id="settings.plugins" defaultMessage="Plugins" />
+          </button>
         </div>
 
         <div className="settings-content">
-          {activeTab === 'all' ? (
+          {activeTab === 'all' && (
             <div className="shortcuts-list">
               <h3><FormattedMessage id="settings.shortcuts" defaultMessage="Keyboard Shortcuts" /></h3>
               {shortcuts.map((s, i) => (
@@ -93,13 +99,15 @@ const Settings = ({ onClose, pluginPrefs = {}, onTogglePlugin = () => {} }) => {
                 </div>
               ))}
             </div>
-          ) : activeTab === 'conflicts' ? (
+          )}
+
+          {activeTab === 'conflicts' && (
             <div className="conflicts-list">
               <h3>Browser Conflicts</h3>
               {conflicts.length === 0 ? (
                 <p className="no-conflicts">
-                <FormattedMessage id="settings.noConflicts" defaultMessage="No conflicts detected! 🎉" />
-              </p>
+                  <FormattedMessage id="settings.noConflicts" defaultMessage="No conflicts detected! 🎉" />
+                </p>
               ) : (
                 conflicts.map((conflict, index) => (
                   <div key={index} className="conflict-item">
@@ -124,40 +132,11 @@ const Settings = ({ onClose, pluginPrefs = {}, onTogglePlugin = () => {} }) => {
                 ))
               )}
             </div>
-          ) : activeTab === 'conflicts' ? (
-            <div className="conflicts-list">
-              <h3>Browser Conflicts</h3>
-              {conflicts.length === 0 ? (
-                <p className="no-conflicts">
-                <FormattedMessage id="settings.noConflicts" defaultMessage="No conflicts detected! 🎉" />
-              </p>
-              ) : (
-                conflicts.map((conflict, index) => (
-                  <div key={index} className="conflict-item">
-                    <div className="conflict-header">
-                      <span className="conflict-combo">{formatShortcut(conflict.appShortcut)}</span>
-                    </div>
-                    <div className="conflict-details">
-                      <div className="conflict-app">
-                        <span className="label">
-                          <FormattedMessage id="settings.app" defaultMessage="App:" />
-                        </span>
-                        <span>{conflict.appShortcut.description}</span>
-                      </div>
-                      <div className="conflict-browser">
-                        <span className="label">
-                          <FormattedMessage id="settings.browser" defaultMessage="Browser:" />
-                        </span>
-                        <span>{conflict.browserShortcut.description}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          ) : activeTab === 'plugins' ? (
+          )}
+
+          {activeTab === 'plugins' && (
             <PluginSettings pluginPrefs={pluginPrefs} onTogglePlugin={onTogglePlugin} />
-          ) : null}
+          )}
         </div>
       </div>
     </div>
@@ -172,8 +151,6 @@ export default Settings;
 
 // Inline plugin settings component
 function PluginSettings({ pluginPrefs, onTogglePlugin }) {
-  // Lazy import to avoid circular issues
-  const { corePlugins } = require('../plugins');
   return (
     <div>
       <h3><FormattedMessage id="settings.plugins" defaultMessage="Plugins" /></h3>
