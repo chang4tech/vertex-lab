@@ -5,6 +5,7 @@ import { Minimap } from './components/panels/Minimap';
 import { ContextMenu } from './components/menu/ContextMenu';
 import Settings from './components/Settings';
 import TagManager from './components/TagManager';
+import PluginsManager from './components/PluginsManager';
 import Search from './components/Search';
 import ThemeSelector from './components/ThemeSelector';
 import NodeEditor from './components/NodeEditor';
@@ -40,7 +41,9 @@ function MenuBar({
   const menuBarRef = useRef(null);
   const [openMenu, setOpenMenu] = useState(null); // 'file' | 'edit' | 'view' | 'settings' | null
   const [showSettings, setShowSettings] = useState(false);
+  const [settingsTab, setSettingsTab] = useState('all');
   const [showTagManager, setShowTagManager] = useState(false);
+  const [showPluginsManager, setShowPluginsManager] = useState(false);
   const intl = useIntl();
   const { currentTheme, toggleTheme } = useTheme();
   const [helpModal, setHelpModal] = useState({ open: false, titleId: null, messageId: null });
@@ -109,9 +112,17 @@ function MenuBar({
           onClose={() => setShowSettings(false)}
           pluginPrefs={pluginPrefs}
           onTogglePlugin={onTogglePlugin}
+          initialTab={settingsTab}
         />
       )}
       {showTagManager && <TagManager onClose={() => setShowTagManager(false)} />}
+      {showPluginsManager && (
+        <PluginsManager
+          onClose={() => setShowPluginsManager(false)}
+          pluginPrefs={pluginPrefs}
+          onTogglePlugin={onTogglePlugin}
+        />
+      )}
       <HelpModal
         open={helpModal.open}
         titleId={helpModal.titleId}
@@ -538,12 +549,25 @@ function MenuBar({
                 e.preventDefault();
                 e.stopPropagation();
                 console.log('Keyboard Shortcuts clicked');
+                setSettingsTab('all');
                 setShowSettings(true);
                 setOpenMenu(null);
               }}
             >
               <span><FormattedMessage id="settings.shortcuts" defaultMessage="Keyboard Shortcuts" /></span>
               <span className="menu-shortcut">?</span>
+            </div>
+            <div
+              className="menu-item"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Plugins clicked');
+                setShowPluginsManager(true);
+                setOpenMenu(null);
+              }}
+            >
+              <span><FormattedMessage id="settings.plugins" defaultMessage="Plugins" /></span>
             </div>
             <div
               className="menu-item"

@@ -3,12 +3,11 @@ import PropTypes from 'prop-types';
 import { FormattedMessage } from 'react-intl';
 import { APP_SHORTCUTS, findShortcutConflicts, formatShortcut } from '../utils/shortcutUtils';
 import '../styles/Settings.css';
-import { corePlugins } from '../plugins';
 
-const Settings = ({ onClose, pluginPrefs = {}, onTogglePlugin = () => {} }) => {
+const Settings = ({ onClose, initialTab = 'all' }) => {
   const [shortcuts, setShortcuts] = useState([]);
   const [conflicts, setConflicts] = useState([]);
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
     // Build a merged list from APP_SHORTCUTS, combining Cmd/Ctrl variants
@@ -80,12 +79,7 @@ const Settings = ({ onClose, pluginPrefs = {}, onTogglePlugin = () => {} }) => {
             <FormattedMessage id="settings.conflicts" defaultMessage="Conflicts" />
             {conflicts.length > 0 && <span className="conflict-badge">{conflicts.length}</span>}
           </button>
-          <button 
-            className={`tab-button ${activeTab === 'plugins' ? 'active' : ''}`}
-            onClick={() => setActiveTab('plugins')}
-          >
-            <FormattedMessage id="settings.plugins" defaultMessage="Plugins" />
-          </button>
+          
         </div>
 
         <div className="settings-content">
@@ -134,9 +128,7 @@ const Settings = ({ onClose, pluginPrefs = {}, onTogglePlugin = () => {} }) => {
             </div>
           )}
 
-          {activeTab === 'plugins' && (
-            <PluginSettings pluginPrefs={pluginPrefs} onTogglePlugin={onTogglePlugin} />
-          )}
+          
         </div>
       </div>
     </div>
@@ -148,27 +140,3 @@ Settings.propTypes = {
 };
 
 export default Settings;
-
-// Inline plugin settings component
-function PluginSettings({ pluginPrefs, onTogglePlugin }) {
-  return (
-    <div>
-      <h3><FormattedMessage id="settings.plugins" defaultMessage="Plugins" /></h3>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8 }}>
-        {corePlugins.map(p => (
-          <React.Fragment key={p.id}>
-            <div>{p.name || p.id}</div>
-            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-              <input
-                type="checkbox"
-                checked={pluginPrefs[p.id] ?? true}
-                onChange={(e) => onTogglePlugin(p.id, e.target.checked)}
-              />
-              <span>{(pluginPrefs[p.id] ?? true) ? 'Enabled' : 'Disabled'}</span>
-            </label>
-          </React.Fragment>
-        ))}
-      </div>
-    </div>
-  );
-}

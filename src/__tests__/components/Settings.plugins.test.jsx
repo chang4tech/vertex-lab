@@ -2,6 +2,7 @@ import React from 'react';
 import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import Settings from '../../components/Settings.jsx';
+import PluginsManager from '../../components/PluginsManager.jsx';
 import { ThemeProvider } from '../../contexts/ThemeContext.jsx';
 import { LocaleProvider } from '../../i18n/LocaleProvider.jsx';
 
@@ -21,12 +22,9 @@ describe('Settings Plugins tab', () => {
     expect(toggles.length).toBe(0);
   });
 
-  it('shows plugin toggles under Plugins tab', () => {
-    renderWithProviders(<Settings onClose={() => {}} pluginPrefs={{}} onTogglePlugin={() => {}} />);
-    fireEvent.click(screen.getByRole('button', { name: /Plugins/i }));
-    // At least one plugin toggle should be present
+  it('shows plugin toggles in PluginsManager dialog (separate from Settings)', () => {
+    renderWithProviders(<PluginsManager onClose={() => {}} pluginPrefs={{}} onTogglePlugin={() => {}} />);
     const toggles = screen.getAllByRole('checkbox');
     expect(toggles.length).toBeGreaterThan(0);
   });
 });
-

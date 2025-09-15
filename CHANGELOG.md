@@ -18,7 +18,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Nodes: Reduce default node radius across themes (32 → 24) for better scale on high‑resolution displays.
 - View: Fit-to-view now adds proportionate padding and caps max zoom at 1.0 so “New Graph” and “Center” aren’t too close on large screens.
 - Settings: Removed Tag management from Keyboard Shortcuts settings; added dedicated Tag Manager dialog under Settings menu.
- - Settings: Added Plugins tab to enable/disable core plugins; preferences persisted in localStorage.
+ - Settings: Plugins moved to a dedicated Plugins dialog (separate from Shortcuts) with enable/disable toggles and persistence.
+ - Settings menu: Rename "Keyboard Shortcuts" action to "Settings" to avoid confusion now that plugins (and other sections) live inside the Settings modal.
 - i18n: Added landing page strings (EN/zh-CN).
 - Tests: New router tests for landing and graph routes.
 
