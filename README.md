@@ -49,7 +49,7 @@ For a detailed list of changes and fixes, see `CHANGELOG.md` at the project root
 
 ## Plugins
 
-Vertex Lab supports simple plugins that contribute UI panels. Manage plugins via Settings → Plugins (enable/disable core plugins and import custom `.js/.mjs` plugins). The host error‑isolates plugin panels and dedupes plugins by id (first occurrence wins). See `doc/PLUGIN_SPEC.md` for the full specification. Migration notes are recorded in the Unreleased section of `CHANGELOG.md` and summarized in `doc/progress.md`.
+Vertex Lab supports plugins that contribute UI panels, canvas overlays, and commands. Manage plugins via Settings → Plugins (enable/disable core plugins and import custom `.js/.mjs` plugins). The host error‑isolates plugin panels, dedupes plugins by id (first occurrence wins), and surfaces plugin commands in the context menu when applicable. See `doc/PLUGIN_SPEC.md` for the full specification. Migration notes are recorded in the Unreleased section of `CHANGELOG.md` and summarized in `doc/progress.md`.
 
 ## Getting Started
 

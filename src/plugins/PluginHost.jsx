@@ -13,13 +13,23 @@ export function PluginHost({ plugins = [], appApi }) {
     <>
       {plugins.flatMap((plugin) => {
         const panels = Array.isArray(plugin?.slots?.sidePanels) ? plugin.slots.sidePanels : [];
+        const overlays = Array.isArray(plugin?.slots?.canvasOverlays) ? plugin.slots.canvasOverlays : [];
         return panels
           .filter((p) => (typeof p.visible === 'function' ? p.visible(appApi) : true))
           .map((panel) => (
             <PluginErrorBoundary key={`${plugin.id}:${panel.id}`} pluginId={plugin.id}>
               <PanelRenderer render={panel.render} appApi={appApi} />
             </PluginErrorBoundary>
-          ));
+          ))
+          .concat(
+            overlays
+              .filter((o) => (typeof o.visible === 'function' ? o.visible(appApi) : true))
+              .map((overlay) => (
+                <PluginErrorBoundary key={`${plugin.id}:overlay:${overlay.id}`} pluginId={plugin.id}>
+                  <PanelRenderer render={overlay.render} appApi={appApi} />
+                </PluginErrorBoundary>
+              ))
+          );
       })}
     </>
   );

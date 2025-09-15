@@ -58,4 +58,19 @@ Decisions
 - Deduplicate plugins by id with first‑wins policy
   - Rationale: Keep core plugins authoritative and avoid accidental overrides; deterministic order and logging helps debugging.
   - Considered: last‑wins (more surprising if a custom plugin shadows core), hard error (too strict for user workflows).
-  - Consequence: Duplicates are ignored with a console warning; authors should pick globally unique IDs.
+- Consequence: Duplicates are ignored with a console warning; authors should pick globally unique IDs.
+
+## 2025-09-15: New slots and visible UX
+
+Context: Users asked for visible impact from the plugin system improvements and more extension points.
+
+Decisions
+- Add `canvasOverlays` and `commands` slots
+  - Rationale: Overlays enable lightweight HUD/UI without modifying core; commands integrate into existing context menu for discoverability.
+  - Alternatives: Separate commands palette or keyboard registry first (deferred to avoid scope creep).
+  - Consequence: Minimal wiring in App; documented shapes; future work can expand command contexts and keyboard integration.
+
+- Surface plugin metadata and errors in Plugins Manager
+  - Rationale: Make plugin state tangible to users and aid debugging.
+  - Considered: Dedicated error panel; chosen to start small within existing modal.
+  - Consequence: Slightly denser Plugins UI but keeps information close to controls (enable/disable/remove).

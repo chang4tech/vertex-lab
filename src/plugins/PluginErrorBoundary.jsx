@@ -1,4 +1,5 @@
 import React from 'react';
+import { appendPluginError } from './errorLog.js';
 
 class PluginErrorBoundary extends React.Component {
   constructor(props) {
@@ -14,6 +15,7 @@ class PluginErrorBoundary extends React.Component {
     const { pluginId } = this.props;
     // Log plugin errors without breaking the app
     console.error(`[PluginErrorBoundary] Plugin '${pluginId}' crashed:`, error, info);
+    appendPluginError({ pluginId, message: String(error?.message || error), stack: String(error?.stack || ''), componentStack: info?.componentStack || '' });
   }
 
   render() {
@@ -37,4 +39,3 @@ class PluginErrorBoundary extends React.Component {
 }
 
 export default PluginErrorBoundary;
-

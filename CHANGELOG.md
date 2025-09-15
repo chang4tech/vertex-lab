@@ -7,12 +7,14 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ## Unreleased
 
 ### Added
+- Plugins: New slots — `canvasOverlays` (render HUD/UI above canvas) and `commands` (actions surfaced in context menu with context-aware filtering).
 - Plugins: Error isolation via an ErrorBoundary in `PluginHost`; faulty panels render a fallback and no longer crash the app.
 - Plugins: `mergePlugins` utility to merge core + custom plugins and dedupe by id (first occurrence wins) with console warnings for duplicates.
 - Migration: Consolidate plugin toggles into Plugins dialog and render via merged `allPlugins` (core + custom) filtered by preferences.
 - Plugins: Import custom plugins (.js) from the Plugins dialog; validate and persist source in localStorage. Loaded at startup and merged with core plugins.
 - Plugins: New example plugin at `src/plugins/examples/helloPlugin.jsx`.
 - Docs: Added `doc/PLUGIN_SPEC.md` describing plugin API, slots, App API, import process, and testing.
+  - Docs: Updated plugin spec for `canvasOverlays` and `commands`; documented command context API.
 - i18n: Added Plugins Manager strings (EN/zh-CN).
 - Tests: Added `customPluginLoader.validatePlugin` tests and extended PluginsManager test to cover the Import control.
  - Tests: Added unit tests for `pluginUtils` default/merge behavior and additional shape checks for `customPluginLoader.validatePlugin`.
@@ -20,6 +22,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
  - Docs: Migration guidance consolidated into this changelog and `doc/progress.md`; removed standalone `MIGRATION.md`.
 
 ### Changed
+- App: Context menu now surfaces plugin commands (node/canvas contexts) collected from enabled plugins.
 - App: Uses `mergePlugins` when loading stored custom plugins and importing at runtime.
 - Docs: `README.md` plugin section calls out error isolation and duplicate handling; `doc/PLUGIN_SPEC.md` updated with Error Isolation and Duplicate IDs sections.
 - PluginsManager now shows Core and Custom sections, supports toggling and removing custom plugins. Enabled/Disabled labels are localized.

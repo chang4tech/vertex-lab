@@ -17,6 +17,7 @@ import { corePlugins } from './plugins';
 import { mergePlugins } from './plugins/registry.js';
 import { loadPluginPrefs, savePluginPrefs } from './utils/pluginUtils';
 import { loadCustomPluginsFromStorage, addCustomPluginCode, removeStoredCustomPluginCodeById } from './utils/customPluginLoader';
+import { collectPluginCommands, filterCommandsForContext } from './plugins/commands.js';
 import { LocaleSelector } from './i18n/LocaleProvider';
 import { useTheme } from './contexts/ThemeContext';
 import { organizeLayout, detectCollisions } from './utils/layoutUtils';
@@ -969,6 +970,8 @@ function App({ graphId = 'default' }) {
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, target: null });
+  const activePlugins = allPlugins.filter(p => (pluginPrefs[p.id] ?? true));
+  const pluginCommands = React.useMemo(() => collectPluginCommands(activePlugins), [activePlugins]);
 
   // Save node info panel visibility preference
   useEffect(() => {
@@ -1807,7 +1810,7 @@ function App({ graphId = 'default' }) {
 
       {/* Plugins */}
       <PluginHost
-        plugins={allPlugins.filter(p => (pluginPrefs[p.id] ?? true))}
+        plugins={activePlugins}
         appApi={{
           // selection and nodes
           nodes,
@@ -1865,6 +1868,16 @@ function App({ graphId = 'default' }) {
               closeContextMenu();
               canvasRef.current?.focusOnNode?.(contextMenu.target.nodeId);
             }}><FormattedMessage id="view.center" defaultMessage="Center" /></button>
+            {/* Plugin Commands (node context) */}
+            {filterCommandsForContext(pluginCommands, null, contextMenu.target).map(cmd => (
+              <button key={cmd.id} onClick={() => { closeContextMenu(); try { cmd.run({
+                nodes,
+                selectedNodeIds,
+                selectedNodes: selectedNodeIds.map(id => nodes.find(n => n.id === id)).filter(Boolean),
+              }, contextMenu.target); } catch (e) { console.error('Plugin command error:', e); } }}>
+                {cmd.title}
+              </button>
+            ))}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -1877,6 +1890,16 @@ function App({ graphId = 'default' }) {
             <button onClick={() => { closeContextMenu(); handleAutoLayout(); }}><FormattedMessage id="edit.autoLayout" defaultMessage="Auto Layout" /></button>
             <button onClick={() => { closeContextMenu(); canvasRef.current?.center?.(); }}><FormattedMessage id="view.center" defaultMessage="Center" /></button>
             <button onClick={() => { closeContextMenu(); canvasRef.current?.resetZoom?.(); }}><FormattedMessage id="view.resetZoom" defaultMessage="Reset Zoom" /></button>
+            {/* Plugin Commands (canvas context) */}
+            {filterCommandsForContext(pluginCommands, null, contextMenu.target).map(cmd => (
+              <button key={cmd.id} onClick={() => { closeContextMenu(); try { cmd.run({
+                nodes,
+                selectedNodeIds,
+                selectedNodes: selectedNodeIds.map(id => nodes.find(n => n.id === id)).filter(Boolean),
+              }, contextMenu.target); } catch (e) { console.error('Plugin command error:', e); } }}>
+                {cmd.title}
+              </button>
+            ))}
           </div>
         )}
       </ContextMenu>

@@ -1,8 +1,9 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { FormattedMessage } from 'react-intl';
 import { corePlugins } from '../plugins';
 import '../styles/Settings.css';
+import { getPluginErrors, getPluginErrorsById, subscribePluginErrors } from '../plugins/errorLog.js';
 
 const PluginsManager = ({
   onClose,
@@ -14,6 +15,12 @@ const PluginsManager = ({
   onRemoveCustomPlugin = () => {},
 }) => {
   const fileInputRef = useRef(null);
+  const [expanded, setExpanded] = useState({});
+  const [errors, setErrors] = useState(() => getPluginErrors());
+  useEffect(() => {
+    const unsub = subscribePluginErrors(() => setErrors(getPluginErrors()));
+    return unsub;
+  }, []);
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) onClose();
   };
@@ -40,7 +47,28 @@ const PluginsManager = ({
             <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8 }}>
               {availablePlugins.map(p => (
                 <React.Fragment key={p.id}>
-                  <div>{p.name || p.id}</div>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <strong>{p.name || p.id}</strong>
+                      <span style={{ fontSize: 12, color: '#6b7280' }}>{pluginPrefs[p.id] ?? true ? '• Enabled' : '• Disabled'}</span>
+                      {getPluginErrorsById(p.id).length > 0 && (
+                        <span style={{ fontSize: 12, color: '#b91c1c' }}>• Errors: {getPluginErrorsById(p.id).length}</span>
+                      )}
+                      <button style={{ marginLeft: 'auto' }} onClick={() => setExpanded(prev => ({ ...prev, [p.id]: !prev[p.id] }))}>
+                        {expanded[p.id] ? 'Hide Details' : 'Details'}
+                      </button>
+                    </div>
+                    {expanded[p.id] && (
+                      <div style={{ fontSize: 12, color: '#374151', marginTop: 6 }}>
+                        {p.description && <div><strong>Description:</strong> {p.description}</div>}
+                        {p.version && <div><strong>Version:</strong> {p.version}</div>}
+                        {p.author && <div><strong>Author:</strong> {p.author}</div>}
+                        {!p.description && !p.version && !p.author && (
+                          <div style={{ color: '#6b7280' }}>No metadata</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                     <input
                       type="checkbox"
@@ -66,7 +94,28 @@ const PluginsManager = ({
               <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', alignItems: 'center', gap: 8 }}>
                 {customPlugins.map((p) => (
                   <React.Fragment key={p.id}>
-                    <div>{p.name || p.id}</div>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <strong>{p.name || p.id}</strong>
+                        <span style={{ fontSize: 12, color: '#6b7280' }}>{pluginPrefs[p.id] ?? true ? '• Enabled' : '• Disabled'}</span>
+                        {getPluginErrorsById(p.id).length > 0 && (
+                          <span style={{ fontSize: 12, color: '#b91c1c' }}>• Errors: {getPluginErrorsById(p.id).length}</span>
+                        )}
+                        <button style={{ marginLeft: 'auto' }} onClick={() => setExpanded(prev => ({ ...prev, [p.id]: !prev[p.id] }))}>
+                          {expanded[p.id] ? 'Hide Details' : 'Details'}
+                        </button>
+                      </div>
+                      {expanded[p.id] && (
+                        <div style={{ fontSize: 12, color: '#374151', marginTop: 6 }}>
+                          {p.description && <div><strong>Description:</strong> {p.description}</div>}
+                          {p.version && <div><strong>Version:</strong> {p.version}</div>}
+                          {p.author && <div><strong>Author:</strong> {p.author}</div>}
+                          {!p.description && !p.version && !p.author && (
+                            <div style={{ color: '#6b7280' }}>No metadata</div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                       <input
                         type="checkbox"
@@ -79,6 +128,29 @@ const PluginsManager = ({
                   </React.Fragment>
                 ))}
               </div>
+            )}
+          </section>
+
+          <section style={{ marginTop: 16 }}>
+            <h3 style={{ margin: '8px 0' }}>Plugin Errors</h3>
+            {errors.length === 0 ? (
+              <div style={{ color: '#6b7280' }}>No plugin errors captured.</div>
+            ) : (
+              <>
+                <div style={{ marginBottom: 8 }}>
+                  <button onClick={() => {
+                    const text = errors.map(e => `[${new Date(e.time).toISOString()}] ${e.pluginId}: ${e.message}`).join('\n');
+                    navigator.clipboard?.writeText(text).catch(() => {});
+                  }}>Copy</button>
+                </div>
+                <div style={{ maxHeight: 120, overflow: 'auto', fontSize: 12, background: '#f9fafb', border: '1px solid #e5e7eb', padding: 8 }}>
+                  {errors.slice(-10).map((e, idx) => (
+                    <div key={idx} style={{ color: '#111827' }}>
+                      <span style={{ color: '#6b7280' }}>[{new Date(e.time).toLocaleTimeString()}]</span> <strong>{e.pluginId}</strong>: {e.message}
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </section>
         </div>
