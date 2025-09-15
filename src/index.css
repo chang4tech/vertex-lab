@@ -206,8 +206,8 @@ mark {
 /* --- Trigger Button --- */
 .trigger {
   position: relative;
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   background-color: var(--primary-button, #1976d2);
   color: var(--primary-button-text, #fff);
   border-radius: 50%;
@@ -215,13 +215,13 @@ mark {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
   transition: background-color 150ms ease, box-shadow 180ms ease, transform 120ms ease;
 }
 
 .trigger:hover {
   background-color: var(--primary-button-hover, #1565c0);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.22);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
   transform: translateY(-1px);
 }
 

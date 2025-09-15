@@ -13,6 +13,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Help UX: SVG icon, moved to top-right, better tooltip; Help panel close button.
 - Menus: Unified spacing and bolder nav hover background.
 - Header: Move site logo/title and graph title + UUID above menus.
+ - Help icon: align to header (top-right) and reduce size for compact chrome.
 - i18n: Added landing page strings (EN/zh-CN).
 - Tests: New router tests for landing and graph routes.
 

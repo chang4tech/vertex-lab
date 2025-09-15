@@ -1595,7 +1595,7 @@ function App({ graphId = 'default' }) {
       <MainHeader />
 
       {/* Help trigger button, moved to top-right to avoid blocking minimap */}
-  <div style={{ position: 'fixed', right: 24, top: 64, zIndex: 10010 }}>
+  <div style={{ position: 'fixed', right: 24, top: 8, zIndex: 10010 }}>
         <div
           className={triggerClass}
           role="button"
