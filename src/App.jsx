@@ -30,6 +30,7 @@ function MenuBar({
   fileInputRef
 }) {
   const isMobile = useIsMobile();
+  const menuBarRef = useRef(null);
   const [openMenu, setOpenMenu] = useState(null); // 'file' | 'edit' | 'view' | 'settings' | null
   const [showSettings, setShowSettings] = useState(false);
   const intl = useIntl();
@@ -41,29 +42,27 @@ function MenuBar({
     if (!openMenu) return;
 
     const handleClickOutside = (event) => {
-      // Don't close if clicking inside a menu
-      if (event.target.closest('.menu-dropdown')) return;
-      // Don't close if clicking on a menu trigger
-      if (event.target.closest('.menu-trigger')) return;
-      setOpenMenu(null);
+      if (menuBarRef.current && !menuBarRef.current.contains(event.target)) {
+        setOpenMenu(null);
+      }
     };
 
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [openMenu]);
 
   const menuDropdown = (type, items) => openMenu === type && (
     <div className="menu-dropdown" style={{
       position: 'absolute',
-      top: 32,
+      top: 40,
       left: 0,
       background: currentTheme.colors.menuBackground,
       border: `1px solid ${currentTheme.colors.menuBorder}`,
-      borderRadius: 4,
-      boxShadow: `0 2px 8px ${currentTheme.colors.panelShadow}`,
-      minWidth: 140,
+      borderRadius: 8,
+      boxShadow: `0 4px 12px ${currentTheme.colors.panelShadow}`,
+      minWidth: 220,
       zIndex: 1000,
-      padding: '4px 0'
+      padding: '8px'
     }}>{items}</div>
   );
 
@@ -110,7 +109,7 @@ function MenuBar({
         messageId={helpModal.messageId}
         onClose={() => setHelpModal({ open: false, titleId: null, messageId: null })}
       />
-      <nav style={{
+      <nav ref={menuBarRef} style={{
         width: '100%', 
         background: currentTheme.colors.menuBackground, 
         borderBottom: `1px solid ${currentTheme.colors.menuBorder}`,
@@ -118,15 +117,17 @@ function MenuBar({
       }}>
       <div style={{ fontWeight: 700, fontSize: isMobile ? 16 : 18, marginRight: 16, color: currentTheme.colors.menuText, flex: '0 0 auto' }}>🧠 Vertex Lab</div>
       <div style={{ display: 'flex', gap: isMobile ? 12 : 24, flexWrap: 'nowrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
-        <div style={{ cursor: 'pointer', position: 'relative' }}>
+        <div style={{ cursor: 'pointer', position: 'relative', padding: '6px 12px', borderRadius: '6px' }}>
           <span className="menu-trigger" onClick={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             console.log('File menu clicked');
             setOpenMenu(openMenu === 'file' ? null : 'file');
           }}><FormattedMessage id="menu.file" defaultMessage="File" /></span>
           {menuDropdown('file', <>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              className="menu-item"
+              style={{ padding: '10px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -138,8 +139,10 @@ function MenuBar({
               <FormattedMessage id="file.new" defaultMessage="New" />
               <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('New Diagram')}</span>
             </div>
+            <div className="menu-separator" style={{ margin: '4px 0', borderTop: `1px solid ${currentTheme.colors.menuBorder}` }} />
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              className="menu-item"
+              style={{ padding: '10px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -152,7 +155,8 @@ function MenuBar({
               <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('Export JSON')}</span>
             </div>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              className="menu-item"
+              style={{ padding: '10px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -167,7 +171,8 @@ function MenuBar({
               <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('Export PNG')}</span>
             </div>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              className="menu-item"
+              style={{ padding: '10px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -223,15 +228,17 @@ function MenuBar({
           </>)}
         </div>
         
-        <div style={{ cursor: 'pointer', position: 'relative' }}>
+        <div style={{ cursor: 'pointer', position: 'relative', padding: '6px 12px', borderRadius: '6px' }}>
           <span className="menu-trigger" onClick={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             console.log('Edit menu clicked');
             setOpenMenu(openMenu === 'edit' ? null : 'edit');
           }}><FormattedMessage id="menu.edit" defaultMessage="Edit" /></span>
           {menuDropdown('edit', <>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              className="menu-item"
+              style={{ padding: '10px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -244,7 +251,8 @@ function MenuBar({
               <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('Undo')}</span>
             </div>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              className="menu-item"
+              style={{ padding: '10px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -257,7 +265,8 @@ function MenuBar({
               <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('Redo')}</span>
             </div>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              className="menu-item"
+              style={{ padding: '10px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -269,9 +278,10 @@ function MenuBar({
               <FormattedMessage id="edit.delete" defaultMessage="Delete" />
               <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('Delete Selected')}</span>
             </div>
-            <div className="menu-separator" style={{ margin: '4px 0', borderTop: '1px solid #eee' }} />
+            <div className="menu-separator" style={{ margin: '4px 0', borderTop: `1px solid ${currentTheme.colors.menuBorder}` }} />
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              className="menu-item"
+              style={{ padding: '10px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -284,7 +294,8 @@ function MenuBar({
               <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘L</span>
             </div>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              className="menu-item"
+              style={{ padding: '10px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -298,9 +309,10 @@ function MenuBar({
             </div>
           </>)}
         </div>
-        <div style={{ cursor: 'pointer', position: 'relative' }}>
+        <div style={{ cursor: 'pointer', position: 'relative', padding: '6px 12px', borderRadius: '6px' }}>
           <span className="menu-trigger" onClick={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             console.log('View menu clicked');
             setOpenMenu(openMenu === 'view' ? null : 'view');
           }}><FormattedMessage id="menu.view" defaultMessage="View" /></span>
@@ -308,7 +320,8 @@ function MenuBar({
             {/** helper for shortcut display */}
             {(() => { return null; })()}
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              className="menu-item"
+              style={{ padding: '10px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -321,7 +334,8 @@ function MenuBar({
               <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('Center Diagram', { preferKey: 'c' })}</span>
             </div>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              className="menu-item"
+              style={{ padding: '10px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -334,7 +348,8 @@ function MenuBar({
               <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('Zoom In', { preferKey: '+' })}</span>
             </div>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              className="menu-item"
+              style={{ padding: '10px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -347,7 +362,8 @@ function MenuBar({
               <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('Zoom Out', { preferKey: '-' })}</span>
             </div>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              className="menu-item"
+              style={{ padding: '10px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -359,9 +375,10 @@ function MenuBar({
               <FormattedMessage id="view.resetZoom" defaultMessage="Reset Zoom" />
               <span style={{ opacity: 0.5, marginLeft: 20 }}>{getShortcut('Reset Zoom', { preferKey: '0' })}</span>
             </div>
-            <div className="menu-separator" style={{ margin: '4px 0', borderTop: '1px solid #eee' }} />
+            <div className="menu-separator" style={{ margin: '4px 0', borderTop: `1px solid ${currentTheme.colors.menuBorder}` }} />
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              className="menu-item"
+              style={{ padding: '10px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -374,7 +391,8 @@ function MenuBar({
               {showMinimap && <span style={{ marginLeft: 8 }}>✓</span>}
             </div>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              className="menu-item"
+              style={{ padding: '10px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -388,15 +406,16 @@ function MenuBar({
             </div>
           </>)}
         </div>
-        <div style={{ cursor: 'pointer', position: 'relative' }}>
+        <div style={{ cursor: 'pointer', position: 'relative', padding: '6px 12px', borderRadius: '6px' }}>
           <span className="menu-trigger" onClick={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             console.log('Library menu clicked');
             setOpenMenu(openMenu === 'library' ? null : 'library');
           }}><FormattedMessage id="menu.library" defaultMessage="Library" /></span>
           {menuDropdown('library', <>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              style={{ padding: '10px 16px', cursor: 'pointer' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -411,8 +430,9 @@ function MenuBar({
                 setOpenMenu(null);
               }}
             ><FormattedMessage id="library.save" defaultMessage="Save to Library" /></div>
+            <div className="menu-separator" style={{ margin: '4px 0', borderTop: `1px solid ${currentTheme.colors.menuBorder}` }} />
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              style={{ padding: '10px 16px', cursor: 'pointer' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -441,7 +461,7 @@ function MenuBar({
               }}
             ><FormattedMessage id="library.load" defaultMessage="Load from Library" /></div>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              style={{ padding: '10px 16px', cursor: 'pointer' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -469,15 +489,17 @@ function MenuBar({
             ><FormattedMessage id="library.delete" defaultMessage="Delete from Library" /></div>
           </>)}
         </div>
-        <div style={{ cursor: 'pointer', position: 'relative' }}>
+        <div style={{ cursor: 'pointer', position: 'relative', padding: '6px 12px', borderRadius: '6px' }}>
           <span className="menu-trigger" onClick={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             console.log('Settings menu clicked');
             setOpenMenu(openMenu === 'settings' ? null : 'settings');
           }}><FormattedMessage id="menu.settings" defaultMessage="Settings" /></span>
           {menuDropdown('settings', <>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+              className="menu-item"
+              style={{ padding: '10px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -489,12 +511,13 @@ function MenuBar({
               <span><FormattedMessage id="settings.shortcuts" defaultMessage="Keyboard Shortcuts" /></span>
               <span style={{ opacity: 0.5, marginLeft: 20 }}>?</span>
             </div>
-            <div style={{ padding: '8px 20px' }}>
+            <div className="menu-separator" style={{ margin: '4px 0', borderTop: `1px solid ${currentTheme.colors.menuBorder}` }} />
+            <div style={{ padding: '10px 16px' }}>
               <FormattedMessage id="settings.language" defaultMessage="Language" />
               <LocaleSelector />
             </div>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              style={{ padding: '10px 16px', cursor: 'pointer' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -504,7 +527,7 @@ function MenuBar({
               }}
             ><FormattedMessage id="view.toggleTheme" defaultMessage="Toggle Theme" /></div>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              style={{ padding: '10px 16px', cursor: 'pointer' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -515,15 +538,16 @@ function MenuBar({
             ><FormattedMessage id="view.chooseTheme" defaultMessage="Choose Theme" /></div>
           </>)}
         </div>
-        <div style={{ cursor: 'pointer', position: 'relative' }}>
+        <div style={{ cursor: 'pointer', position: 'relative', padding: '6px 12px', borderRadius: '6px' }}>
           <span className="menu-trigger" onClick={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             console.log('Help menu clicked');
             setOpenMenu(openMenu === 'help' ? null : 'help');
           }}><FormattedMessage id="menu.help" defaultMessage="Help" /></span>
           {menuDropdown('help', <>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              style={{ padding: '10px 16px', cursor: 'pointer' }}
               onClick={(e) => {
                 e.preventDefault(); e.stopPropagation();
                 setHelpModal({ open: true, titleId: 'help.documentation', messageId: 'help.documentation.desc' });
@@ -532,8 +556,9 @@ function MenuBar({
             >
               <FormattedMessage id="help.documentation" defaultMessage="Documentation" />
             </div>
+            <div className="menu-separator" style={{ margin: '4px 0', borderTop: `1px solid ${currentTheme.colors.menuBorder}` }} />
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              style={{ padding: '10px 16px', cursor: 'pointer' }}
               onClick={(e) => {
                 e.preventDefault(); e.stopPropagation();
                 setHelpModal({ open: true, titleId: 'help.community', messageId: 'help.community.desc' });
@@ -543,7 +568,7 @@ function MenuBar({
               <FormattedMessage id="help.community" defaultMessage="Help Community" />
             </div>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              style={{ padding: '10px 16px', cursor: 'pointer' }}
               onClick={(e) => {
                 e.preventDefault(); e.stopPropagation();
                 setHelpModal({ open: true, titleId: 'help.feedback', messageId: 'help.feedback.desc' });
@@ -553,7 +578,7 @@ function MenuBar({
               <FormattedMessage id="help.feedback" defaultMessage="Send Feedback" />
             </div>
             <div
-              style={{ padding: '8px 20px', cursor: 'pointer' }}
+              style={{ padding: '10px 16px', cursor: 'pointer' }}
               onClick={(e) => {
                 e.preventDefault(); e.stopPropagation();
                 setHelpModal({ open: true, titleId: 'help.report', messageId: 'help.report.desc' });
