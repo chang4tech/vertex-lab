@@ -47,6 +47,7 @@ export default {
   'settings.language': 'Language',
   'settings.shortcuts': 'Keyboard Shortcuts',
   'settings.allShortcuts': 'All Shortcuts',
+  'settings.shortcutsTitle': 'Shortcuts',
   'settings.conflicts': 'Conflicts',
   'settings.noConflicts': 'No conflicts detected! 🎉',
   'settings.app': 'App:',

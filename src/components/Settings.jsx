@@ -61,7 +61,7 @@ const Settings = ({ onClose, initialTab = 'all' }) => {
     <div className="settings-overlay" onClick={handleOverlayClick}>
       <div className="settings-modal">
         <header className="settings-header">
-          <h2><FormattedMessage id="settings.title" defaultMessage="Settings" /></h2>
+          <h2><FormattedMessage id="settings.shortcutsTitle" defaultMessage="Shortcuts" /></h2>
           <button className="close-button" onClick={onClose}>&times;</button>
         </header>
 

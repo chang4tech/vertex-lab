@@ -47,6 +47,7 @@ export default {
   'settings.language': '语言',
   'settings.shortcuts': '键盘快捷键',
   'settings.allShortcuts': '所有快捷键',
+  'settings.shortcutsTitle': '快捷键',
   'settings.conflicts': '冲突',
   'settings.noConflicts': '没有检测到冲突！🎉',
   'settings.app': '应用：',
