@@ -11,7 +11,7 @@ export const themes = {
       nodeBackground: '#ffffff',
       nodeBorder: '#1976d2',
       nodeText: '#333333',
-      nodeRadius: 32,
+      nodeRadius: 24,
       
       // Selected nodes
       selectedNodeBorder: '#ff9800',
@@ -71,7 +71,7 @@ export const themes = {
       nodeBackground: '#2d2d2d',
       nodeBorder: '#64b5f6',
       nodeText: '#ffffff',
-      nodeRadius: 32,
+      nodeRadius: 24,
       
       // Selected nodes
       selectedNodeBorder: '#ffb74d',
@@ -131,7 +131,7 @@ export const themes = {
       nodeBackground: '#ffffff',
       nodeBorder: '#0052cc',
       nodeText: '#172b4d',
-      nodeRadius: 32,
+      nodeRadius: 24,
       
       // Selected nodes
       selectedNodeBorder: '#ff5630',
@@ -191,7 +191,7 @@ export const themes = {
       nodeBackground: '#ffffff',
       nodeBorder: '#9c27b0',
       nodeText: '#4a148c',
-      nodeRadius: 32,
+      nodeRadius: 24,
       
       // Selected nodes
       selectedNodeBorder: '#e91e63',
@@ -251,7 +251,7 @@ export const themes = {
       nodeBackground: '#ffffff',
       nodeBorder: '#37474f',
       nodeText: '#263238',
-      nodeRadius: 32,
+      nodeRadius: 24,
       
       // Selected nodes
       selectedNodeBorder: '#00695c',
