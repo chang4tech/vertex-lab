@@ -11,6 +11,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Graph metadata: Title input in navbar and UUID display; persisted per graph.
 - Persistence: Nodes/edges/title stored under `vertex_graph_<uuid>_*` keys; legacy `vertex_*` keys remain for default.
 - Help UX: SVG icon, moved to top-right, better tooltip; Help panel close button.
+ - Help UX: Remove redundant close icon from Help panel (trigger acts as toggle).
 - Menus: Unified spacing and bolder nav hover background.
 - Header: Move site logo/title and graph title + UUID above menus.
  - Help icon: align to header (top-right) and reduce size for compact chrome.

@@ -51,7 +51,6 @@ export function HelpPanel({ isVisible, onClose }) {
             <span className="desc">{desc}</span>
           </div>
         ))}
-        <button aria-label="Close help" className="help-close" onClick={onClose}>×</button>
       </div>
     </div>
   );
