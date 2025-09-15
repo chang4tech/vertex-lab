@@ -7,6 +7,15 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ## Unreleased
 
 ### Added
+- Routing: Simple hash router with landing page and graph page routed by UUID (`#/g/:uuid`).
+- Graph metadata: Title input in navbar and UUID display; persisted per graph.
+- Persistence: Nodes/edges/title stored under `vertex_graph_<uuid>_*` keys; legacy `vertex_*` keys remain for default.
+- Help UX: SVG icon, moved to top-right, better tooltip; Help panel close button.
+- Menus: Unified spacing and bolder nav hover background.
+- i18n: Added landing page strings (EN/zh-CN).
+- Tests: New router tests for landing and graph routes.
+
+### Added
 - Keyboard: `E` toggles Connect/Disconnect when multiple nodes are selected. Uses the first selected node as the anchor; prevents cycles when connecting. The Help panel and shortcut registry have been updated accordingly.
 - Docs: Updated README Keyboard Shortcuts to reflect current shortcuts and describe the new `E` behavior.
 - Tag Manager: Manage available tags in Settings → Tags (add, rename, change color, delete). Import/Export tag presets as JSON. Node Editor reads tags from local storage.

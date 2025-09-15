@@ -191,4 +191,7 @@ export default {
   'help.feedback.desc': '欢迎反馈！专用反馈入口即将上线。目前请提交 Issue 并附详细信息。',
   'help.report.desc': '要报告问题，请附复现步骤和环境信息。报告表单即将提供。',
   'help.comingSoon': '更多改进即将到来。',
+  // Landing
+  'landing.subtitle': '创建一个新图开始使用。',
+  'landing.newGraph': '新建图',
 };

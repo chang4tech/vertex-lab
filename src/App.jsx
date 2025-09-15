@@ -27,7 +27,10 @@ function MenuBar({
   nodes, setNodes, setUndoStack, setRedoStack, setSelectedNodeId, canvasRef,
   showMinimap, setShowMinimap, showNodeInfoPanel, onToggleNodeInfoPanel,
   onToggleHelp, isHelpVisible,
-  fileInputRef
+  fileInputRef,
+  graphId,
+  graphTitle,
+  setGraphTitle
 }) {
   const isMobile = useIsMobile();
   const menuBarRef = useRef(null);
@@ -117,7 +120,25 @@ function MenuBar({
         left: 0,
         right: 0
       }}>
-      <div style={{ fontWeight: 700, fontSize: isMobile ? 16 : 18, marginRight: 16, color: currentTheme.colors.menuText, flex: '0 0 auto' }}>🧠 Vertex Lab</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginRight: 16, flex: '0 0 auto' }}>
+        <div style={{ fontWeight: 700, fontSize: isMobile ? 16 : 18, color: currentTheme.colors.menuText }}>🧠 Vertex Lab</div>
+        <input
+          aria-label="Graph title"
+          value={graphTitle}
+          onChange={(e) => setGraphTitle(e.target.value)}
+          placeholder="Untitled"
+          style={{
+            height: 28,
+            borderRadius: 6,
+            border: `1px solid ${currentTheme.colors.inputBorder}`,
+            background: currentTheme.colors.inputBackground,
+            color: currentTheme.colors.primaryText,
+            padding: '0 8px',
+            outline: 'none'
+          }}
+        />
+        <span style={{ fontSize: 12, opacity: 0.6, color: currentTheme.colors.secondaryText }}>ID: {graphId}</span>
+      </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 4 : 8, flexWrap: 'nowrap', overflow: 'visible', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
         <div style={{ cursor: 'pointer', position: 'relative' }}>
           <span className="menu-trigger" onClick={(e) => {
@@ -677,7 +698,7 @@ const MainHeader = () => {
 /**
  * The main application component.
  */
-function App() {
+function App({ graphId = 'default' }) {
   const intl = useIntl();
   const isMobile = useIsMobile();
 
@@ -690,6 +711,19 @@ function App() {
 
   // Create file input ref
   const fileInputRef = useRef();
+
+  // Graph-specific storage key helper
+  const graphKey = useCallback((suffix) => (
+    graphId === 'default' ? `vertex_${suffix}` : `vertex_graph_${graphId}_${suffix}`
+  ), [graphId]);
+
+  // Graph title state
+  const [graphTitle, setGraphTitle] = useState(() => {
+    try { return localStorage.getItem(graphKey('title')) || 'Untitled'; } catch { return 'Untitled'; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(graphKey('title'), graphTitle); } catch {}
+  }, [graphTitle, graphKey]);
 
   // Minimap and viewport state
   const [showMinimap, setShowMinimap] = useState(() => {
@@ -713,7 +747,7 @@ function App() {
 
   // Diagram state with localStorage persistence
   const [nodes, setNodes] = useState(() => {
-    const savedNodes = localStorage.getItem('vertex_nodes');
+    const savedNodes = localStorage.getItem(graphKey('nodes'));
     if (savedNodes) {
       try {
         const parsedNodes = JSON.parse(savedNodes);
@@ -736,7 +770,7 @@ function App() {
   const [selectedNodeId, setSelectedNodeId] = useState(null); // Keep for backward compatibility
   const [edges, setEdges] = useState(() => {
     try {
-      const saved = localStorage.getItem('vertex_edges');
+      const saved = localStorage.getItem(graphKey('edges'));
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) return parsed;
@@ -744,7 +778,7 @@ function App() {
     } catch {}
     // Derive from parentId for legacy diagrams
     try {
-      const savedNodes = localStorage.getItem('vertex_nodes');
+      const savedNodes = localStorage.getItem(graphKey('nodes'));
       if (savedNodes) {
         const parsedNodes = JSON.parse(savedNodes);
         if (Array.isArray(parsedNodes)) {
@@ -1053,13 +1087,13 @@ function App() {
 
   // Save nodes to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem('vertex_nodes', JSON.stringify(nodes));
-  }, [nodes]);
+    try { localStorage.setItem(graphKey('nodes'), JSON.stringify(nodes)); } catch {}
+  }, [nodes, graphKey]);
 
   // Save edges to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem('vertex_edges', JSON.stringify(edges));
-  }, [edges]);
+    try { localStorage.setItem(graphKey('edges'), JSON.stringify(edges)); } catch {}
+  }, [edges, graphKey]);
 
   // Create a new diagram initializer used by menu and keyboard
   const handleNewDiagram = useCallback(() => {
@@ -1069,8 +1103,8 @@ function App() {
     setUndoStack([]);
     setRedoStack([]);
     setSelectedNodeId(null);
-    localStorage.removeItem('vertex_nodes');
-    localStorage.removeItem('vertex_edges');
+    localStorage.removeItem(graphKey('nodes'));
+    localStorage.removeItem(graphKey('edges'));
     setTimeout(() => { canvasRef.current?.fitToView?.(); }, 0);
   }, [intl]);
 
@@ -1104,7 +1138,7 @@ function App() {
               setUndoStack([]);
               setRedoStack([]);
               setSelectedNodeId(null);
-              localStorage.removeItem('vertex_nodes');
+                  localStorage.removeItem(graphKey('nodes'));
               setTimeout(() => {
                 canvasRef.current?.center?.();
               }, 0);
@@ -1538,6 +1572,9 @@ function App() {
         onToggleHelp={toggleHelp}
         isHelpVisible={isHelpVisible}
         fileInputRef={fileInputRef}
+        graphId={graphId}
+        graphTitle={graphTitle}
+        setGraphTitle={setGraphTitle}
       />
       <div style={{ height: 48 }} />
       <MainHeader />

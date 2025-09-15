@@ -191,4 +191,7 @@ export default {
   'help.feedback.desc': 'Feedback is welcome! A dedicated feedback flow will be added soon. Please file an issue with details.',
   'help.report.desc': 'To report a problem, please include steps to reproduce and environment details. The report form will be available soon.',
   'help.comingSoon': 'More improvements coming soon.',
+  // Landing
+  'landing.subtitle': 'Create a new graph to get started.',
+  'landing.newGraph': 'New Graph',
 };
