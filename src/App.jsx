@@ -115,7 +115,7 @@ function MenuBar({
         alignItems: 'center',
         gap: 12,
         padding: '0 12px',
-        height: 56,
+        height: 44,
         zIndex: 210,
         position: 'fixed',
         top: 0,
@@ -129,7 +129,7 @@ function MenuBar({
           onChange={(e) => setGraphTitle(e.target.value)}
           placeholder={intl.formatMessage({ id: 'graph.untitled', defaultMessage: 'Untitled' })}
           style={{
-            height: 28,
+            height: 24,
             borderRadius: 6,
             border: `1px solid ${currentTheme.colors.inputBorder}`,
             background: currentTheme.colors.inputBackground,
@@ -147,10 +147,10 @@ function MenuBar({
         display: 'flex',
         alignItems: 'center',
         padding: '0 12px',
-        height: 48,
+        height: 36,
         zIndex: 200,
         position: 'fixed',
-        top: 56,
+        top: 44,
         left: 0,
         right: 0
       }}>
@@ -1591,7 +1591,7 @@ function App({ graphId = 'default' }) {
         graphTitle={graphTitle}
         setGraphTitle={setGraphTitle}
       />
-      <div style={{ height: 104 }} />
+      <div style={{ height: 80 }} />
       <MainHeader />
 
       {/* Help trigger button, moved to top-right to avoid blocking minimap */}
