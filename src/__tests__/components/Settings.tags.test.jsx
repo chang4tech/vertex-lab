@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, within, act } from '@testing-library/react';
-import Settings from '../../components/Settings.jsx';
+import TagManager from '../../components/TagManager.jsx';
 import { ThemeProvider } from '../../contexts/ThemeContext.jsx';
 import { LocaleProvider } from '../../i18n/LocaleProvider.jsx';
 
@@ -13,7 +13,7 @@ const renderWithProviders = (ui) => {
   );
 };
 
-describe('Settings Tag Manager import/export and persistence', () => {
+describe('Tag Manager import/export and persistence', () => {
   beforeEach(() => {
     // Reset localStorage mocks
     localStorage.getItem.mockReset();
@@ -37,10 +37,7 @@ describe('Settings Tag Manager import/export and persistence', () => {
       return 'blob://tags';
     });
 
-    renderWithProviders(<Settings onClose={() => {}} />);
-
-    // Switch to Tags tab
-    fireEvent.click(screen.getByRole('button', { name: /Tags/i }));
+    renderWithProviders(<TagManager onClose={() => {}} />);
 
     // Click Export Tags
     fireEvent.click(screen.getByRole('button', { name: /Export Tags/i }));
@@ -64,8 +61,7 @@ describe('Settings Tag Manager import/export and persistence', () => {
 
   it('imports valid tag presets and validates shape', async () => {
     localStorage.getItem.mockReturnValue(null);
-    renderWithProviders(<Settings onClose={() => {}} />);
-    fireEvent.click(screen.getByRole('button', { name: /Tags/i }));
+    renderWithProviders(<TagManager onClose={() => {}} />);
 
     // Open import (click to focus the hidden input via button)
     const importBtn = screen.getByRole('button', { name: /Import Tags/i });
@@ -99,8 +95,7 @@ describe('Settings Tag Manager import/export and persistence', () => {
 
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
 
-    renderWithProviders(<Settings onClose={() => {}} />);
-    fireEvent.click(screen.getByRole('button', { name: /Tags/i }));
+    renderWithProviders(<TagManager onClose={() => {}} />);
 
     const fileInput = document.querySelector('input[type="file"][accept="application/json"]');
     // Invalid: not an array

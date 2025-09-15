@@ -4,6 +4,7 @@ import VertexCanvas from './VertexCanvas.jsx';
 import { Minimap } from './components/panels/Minimap';
 import { ContextMenu } from './components/menu/ContextMenu';
 import Settings from './components/Settings';
+import TagManager from './components/TagManager';
 import Search from './components/Search';
 import ThemeSelector from './components/ThemeSelector';
 import NodeEditor from './components/NodeEditor';
@@ -36,6 +37,7 @@ function MenuBar({
   const menuBarRef = useRef(null);
   const [openMenu, setOpenMenu] = useState(null); // 'file' | 'edit' | 'view' | 'settings' | null
   const [showSettings, setShowSettings] = useState(false);
+  const [showTagManager, setShowTagManager] = useState(false);
   const intl = useIntl();
   const { currentTheme, toggleTheme } = useTheme();
   const [helpModal, setHelpModal] = useState({ open: false, titleId: null, messageId: null });
@@ -100,6 +102,7 @@ function MenuBar({
   return (
     <>
       {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+      {showTagManager && <TagManager onClose={() => setShowTagManager(false)} />}
       <HelpModal
         open={helpModal.open}
         titleId={helpModal.titleId}
@@ -532,6 +535,18 @@ function MenuBar({
             >
               <span><FormattedMessage id="settings.shortcuts" defaultMessage="Keyboard Shortcuts" /></span>
               <span className="menu-shortcut">?</span>
+            </div>
+            <div
+              className="menu-item"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Tag Manager clicked');
+                setShowTagManager(true);
+                setOpenMenu(null);
+              }}
+            >
+              <span><FormattedMessage id="settings.tagsManager" defaultMessage="Tag Manager" /></span>
             </div>
             <div className="menu-separator" />
             <div className="menu-section">
