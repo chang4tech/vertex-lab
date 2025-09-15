@@ -7,6 +7,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ## Unreleased
 
 ### Added
+- Core Plugins: Selection Tools panel (quick actions for selection).
+- Core Plugins: Clipboard Tools commands (Copy Selected IDs, Copy Node ID).
+- Docs: `doc/PLUGINS_DESIGN.md` outlining core and custom plugin designs for future implementation.
 - Plugins: New slots — `canvasOverlays` (render HUD/UI above canvas) and `commands` (actions surfaced in context menu with context-aware filtering).
 - Plugins: Error isolation via an ErrorBoundary in `PluginHost`; faulty panels render a fallback and no longer crash the app.
 - Plugins: `mergePlugins` utility to merge core + custom plugins and dedupe by id (first occurrence wins) with console warnings for duplicates.
@@ -22,6 +25,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
  - Docs: Migration guidance consolidated into this changelog and `doc/progress.md`; removed standalone `MIGRATION.md`.
 
 ### Changed
+- App: Command filtering now receives minimal api so predicate `when(api, ctx)` can leverage selection state.
 - App: Context menu now surfaces plugin commands (node/canvas contexts) collected from enabled plugins.
 - App: Uses `mergePlugins` when loading stored custom plugins and importing at runtime.
 - Docs: `README.md` plugin section calls out error isolation and duplicate handling; `doc/PLUGIN_SPEC.md` updated with Error Isolation and Duplicate IDs sections.

@@ -73,4 +73,17 @@ Decisions
 - Surface plugin metadata and errors in Plugins Manager
   - Rationale: Make plugin state tangible to users and aid debugging.
   - Considered: Dedicated error panel; chosen to start small within existing modal.
-  - Consequence: Slightly denser Plugins UI but keeps information close to controls (enable/disable/remove).
+- Consequence: Slightly denser Plugins UI but keeps information close to controls (enable/disable/remove).
+
+## 2025-09-15: Core plugin scope and command filtering API
+
+Context: Introduce useful core plugins without expanding the App API too aggressively, and ensure command predicates can use selection context.
+
+Decisions
+- Ship Selection Tools and Clipboard Tools as core plugins
+  - Rationale: They use existing safe App APIs (edit, toggle collapse, delete) or browser clipboard; provide immediate user value.
+  - Consequence: Visible, low-risk additions that demonstrate panel and command slots.
+
+- Pass minimal API to command filtering
+  - Rationale: Function predicates in `when(api, ctx)` should have access to selection/nodes to enable/disable accurately.
+  - Consequence: Predictable command visibility; still read‑only to avoid exposing mutating actions widely.
