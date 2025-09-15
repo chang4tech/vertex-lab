@@ -34,7 +34,18 @@ mark {
 }
 
 .menu-trigger:hover {
+  /* fallback */
   background-color: var(--menu-hover, #f5f5f5);
+  /* bolder contrast using theme accent */
+  background-color: color-mix(in srgb, var(--primary-button, #1976d2) 18%, var(--menu-hover, #f5f5f5));
+}
+
+.menu-trigger[aria-expanded="true"],
+.menu-trigger:focus-visible {
+  /* fallback */
+  background-color: var(--menu-hover, #f5f5f5);
+  /* same bolder background when open or focused */
+  background-color: color-mix(in srgb, var(--primary-button, #1976d2) 18%, var(--menu-hover, #f5f5f5));
 }
 
 /* Common menu container: used by both inline menus and dropdowns */
