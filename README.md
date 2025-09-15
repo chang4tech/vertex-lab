@@ -47,6 +47,10 @@ A powerful and intuitive diagramming tool built with React and HTML5 Canvas. Cre
 
 For a detailed list of changes and fixes, see `CHANGELOG.md` at the project root.
 
+## Plugins
+
+Vertex Lab supports simple plugins that contribute UI panels. To build and import your own plugin, see `doc/PLUGIN_SPEC.md` for the full specification and a copy‑pasteable example.
+
 ## Getting Started
 
 ### Prerequisites
