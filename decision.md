@@ -28,3 +28,19 @@ The app had plugin toggles interleaved with general settings and relied on a sta
 - Codebase simplifies around a single merged plugin list and persisted preferences.
 - Future slot expansion remains possible without breaking current plugins.
 
+---
+
+## 2025-09-15: Validation tightening without new features
+
+Context: Improve plugin system focused on migration from legacy code, not feature work.
+
+Decision: Tighten `validatePlugin` to reject `slots` supplied as an array. Spec requires `slots` to be an object; allowing arrays was an oversight.
+
+Rationale:
+- Aligns implementation to documented contract (object `slots`).
+- Prevents ambiguous schemas and catches authoring errors early.
+- Non-breaking for compliant plugins; corrective for malformed ones.
+
+Implications:
+- No new functionality introduced.
+- Tests added to cover preference defaults and plugin validation.

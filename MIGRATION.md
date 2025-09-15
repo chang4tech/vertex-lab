@@ -34,9 +34,9 @@ This document captures the migration progress, results, and guidance for moving 
 - Security: runtime import only accepts local files you select; remote URLs are not supported.
 - Backward compatibility: system plugins continue to work; the host adapts to enabled/disabled states.
 - Persistence: custom plugin sources are stored in `localStorage` under `vertex_custom_plugins`.
+- Validation: `slots` must be an object and not an array; invalid shapes are rejected during import to prevent ambiguous schemas.
 
 ## Open Items
 
 - Formalize additional slots (context menus, overlays, commands) in future iterations.
 - Optional sandbox for custom plugins if needed in constrained environments.
-
