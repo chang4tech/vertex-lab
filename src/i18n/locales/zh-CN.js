@@ -52,6 +52,7 @@ export default {
   'settings.app': '应用：',
   'settings.browser': '浏览器：',
   'settings.darkMode': '暗黑模式',
+  'settings.plugins': '插件',
 
   // Node labels
   'node.centralTopic': '起始节点',

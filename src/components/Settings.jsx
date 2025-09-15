@@ -4,7 +4,7 @@ import { FormattedMessage } from 'react-intl';
 import { APP_SHORTCUTS, findShortcutConflicts, formatShortcut } from '../utils/shortcutUtils';
 import '../styles/Settings.css';
 
-const Settings = ({ onClose }) => {
+const Settings = ({ onClose, pluginPrefs = {}, onTogglePlugin = () => {} }) => {
   const [shortcuts, setShortcuts] = useState([]);
   const [conflicts, setConflicts] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
@@ -155,6 +155,8 @@ const Settings = ({ onClose }) => {
                 ))
               )}
             </div>
+          ) : activeTab === 'plugins' ? (
+            <PluginSettings pluginPrefs={pluginPrefs} onTogglePlugin={onTogglePlugin} />
           ) : null}
         </div>
       </div>
@@ -167,3 +169,29 @@ Settings.propTypes = {
 };
 
 export default Settings;
+
+// Inline plugin settings component
+function PluginSettings({ pluginPrefs, onTogglePlugin }) {
+  // Lazy import to avoid circular issues
+  const { corePlugins } = require('../plugins');
+  return (
+    <div>
+      <h3><FormattedMessage id="settings.plugins" defaultMessage="Plugins" /></h3>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8 }}>
+        {corePlugins.map(p => (
+          <React.Fragment key={p.id}>
+            <div>{p.name || p.id}</div>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <input
+                type="checkbox"
+                checked={pluginPrefs[p.id] ?? true}
+                onChange={(e) => onTogglePlugin(p.id, e.target.checked)}
+              />
+              <span>{(pluginPrefs[p.id] ?? true) ? 'Enabled' : 'Disabled'}</span>
+            </label>
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
+}

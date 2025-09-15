@@ -13,6 +13,7 @@ import { HelpPanel } from './components/panels/HelpPanel';
 // Plugin system
 import { PluginHost } from './plugins/PluginHost';
 import { corePlugins } from './plugins';
+import { loadPluginPrefs, savePluginPrefs } from './utils/pluginUtils';
 import { LocaleSelector } from './i18n/LocaleProvider';
 import { useTheme } from './contexts/ThemeContext';
 import { organizeLayout, detectCollisions } from './utils/layoutUtils';
@@ -101,7 +102,13 @@ function MenuBar({
   };
   return (
     <>
-      {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+      {showSettings && (
+        <Settings
+          onClose={() => setShowSettings(false)}
+          pluginPrefs={pluginPrefs}
+          onTogglePlugin={(id, enabled) => setPluginEnabled(id, enabled)}
+        />
+      )}
       {showTagManager && <TagManager onClose={() => setShowTagManager(false)} />}
       <HelpModal
         open={helpModal.open}
@@ -847,6 +854,15 @@ function App({ graphId = 'default' }) {
   // Node editor state
   const [showNodeEditor, setShowNodeEditor] = useState(false);
   const [editingNodeId, setEditingNodeId] = useState(null);
+  // Plugin preferences
+  const [pluginPrefs, setPluginPrefs] = useState(() => loadPluginPrefs(corePlugins));
+  const setPluginEnabled = useCallback((pluginId, enabled) => {
+    setPluginPrefs(prev => {
+      const next = { ...prev, [pluginId]: enabled };
+      savePluginPrefs(next);
+      return next;
+    });
+  }, []);
 
   // Node info panel state
   const [showNodeInfoPanel, setShowNodeInfoPanel] = useState(() => {
@@ -1707,7 +1723,7 @@ function App({ graphId = 'default' }) {
 
       {/* Plugins */}
       <PluginHost
-        plugins={corePlugins}
+        plugins={corePlugins.filter(p => (pluginPrefs[p.id] ?? true))}
         appApi={{
           // selection and nodes
           nodes,
@@ -1719,6 +1735,8 @@ function App({ graphId = 'default' }) {
           onEditNode: handleEditNodeFromPanel,
           onDeleteNodes: handleDeleteNodesFromPanel,
           onToggleCollapse: handleToggleCollapseFromPanel,
+          setPluginEnabled,
+          pluginPrefs,
         }}
       />
 

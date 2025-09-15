@@ -51,6 +51,7 @@ export default {
   'settings.noConflicts': 'No conflicts detected! 🎉',
   'settings.app': 'App:',
   'settings.browser': 'Browser:',
+  'settings.plugins': 'Plugins',
   'settings.darkMode': 'Dark Mode',
 
   // Node labels
