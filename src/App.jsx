@@ -54,7 +54,7 @@ function MenuBar({
   const menuDropdown = (type, items) => openMenu === type && (
     <div className="menu-dropdown" style={{
       position: 'absolute',
-      top: 40,
+      top: 'calc(100% + 4px)',
       left: 0,
       zIndex: 1000
     }}>{items}</div>
@@ -118,7 +118,7 @@ function MenuBar({
         right: 0
       }}>
       <div style={{ fontWeight: 700, fontSize: isMobile ? 16 : 18, marginRight: 16, color: currentTheme.colors.menuText, flex: '0 0 auto' }}>🧠 Vertex Lab</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 4 : 8, flexWrap: 'nowrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 4 : 8, flexWrap: 'nowrap', overflow: 'visible', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
         <div style={{ cursor: 'pointer', position: 'relative' }}>
           <span className="menu-trigger" onClick={(e) => {
             e.preventDefault();
