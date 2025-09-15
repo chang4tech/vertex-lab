@@ -15,6 +15,7 @@ import { HelpPanel } from './components/panels/HelpPanel';
 import { PluginHost } from './plugins/PluginHost';
 import { corePlugins } from './plugins';
 import { loadPluginPrefs, savePluginPrefs } from './utils/pluginUtils';
+import { loadCustomPluginsFromStorage, addCustomPluginCode, removeStoredCustomPluginCodeById } from './utils/customPluginLoader';
 import { LocaleSelector } from './i18n/LocaleProvider';
 import { useTheme } from './contexts/ThemeContext';
 import { organizeLayout, detectCollisions } from './utils/layoutUtils';
@@ -35,7 +36,11 @@ function MenuBar({
   graphTitle,
   setGraphTitle,
   pluginPrefs,
-  onTogglePlugin
+  onTogglePlugin,
+  availablePlugins,
+  customPlugins,
+  onImportCustomPlugin,
+  onRemoveCustomPlugin,
 }) {
   const isMobile = useIsMobile();
   const menuBarRef = useRef(null);
@@ -44,6 +49,8 @@ function MenuBar({
   const [settingsTab, setSettingsTab] = useState('all');
   const [showTagManager, setShowTagManager] = useState(false);
   const [showPluginsManager, setShowPluginsManager] = useState(false);
+  const [customPlugins, setCustomPlugins] = useState([]);
+  const [allPlugins, setAllPlugins] = useState(corePlugins);
   const intl = useIntl();
   const { currentTheme, toggleTheme } = useTheme();
   const [helpModal, setHelpModal] = useState({ open: false, titleId: null, messageId: null });
@@ -121,6 +128,10 @@ function MenuBar({
           onClose={() => setShowPluginsManager(false)}
           pluginPrefs={pluginPrefs}
           onTogglePlugin={onTogglePlugin}
+          availablePlugins={availablePlugins}
+          customPlugins={customPlugins}
+          onImportCustomPlugin={onImportCustomPlugin}
+          onRemoveCustomPlugin={onRemoveCustomPlugin}
         />
       )}
       <HelpModal
@@ -882,9 +893,51 @@ function App({ graphId = 'default' }) {
   const [editingNodeId, setEditingNodeId] = useState(null);
   // Plugin preferences
   const [pluginPrefs, setPluginPrefs] = useState(() => loadPluginPrefs(corePlugins));
+  useEffect(() => {
+    (async () => {
+      const loaded = await loadCustomPluginsFromStorage();
+      setCustomPlugins(loaded);
+      setAllPlugins([...corePlugins, ...loaded]);
+      setPluginPrefs(prev => {
+        const next = { ...loadPluginPrefs([...corePlugins, ...loaded]), ...prev };
+        savePluginPrefs(next);
+        return next;
+      });
+    })();
+  }, []);
   const setPluginEnabled = useCallback((pluginId, enabled) => {
     setPluginPrefs(prev => {
       const next = { ...prev, [pluginId]: enabled };
+      savePluginPrefs(next);
+      return next;
+    });
+  }, []);
+
+  const importCustomPlugin = useCallback(async (code) => {
+    try {
+      const plugin = await addCustomPluginCode(code);
+      setCustomPlugins(prev => {
+        const exists = prev.some(p => p.id === plugin.id);
+        return exists ? prev : [...prev, plugin];
+      });
+      setAllPlugins(prev => {
+        const exists = prev.some(p => p.id === plugin.id);
+        return exists ? prev : [...prev, plugin];
+      });
+      setPluginEnabled(plugin.id, true);
+    } catch (e) {
+      console.error('Failed to import plugin:', e);
+      alert('Failed to import plugin. Ensure it exports a valid plugin object.');
+    }
+  }, [setPluginEnabled]);
+
+  const removeCustomPlugin = useCallback((pluginId) => {
+    removeStoredCustomPluginCodeById(pluginId);
+    setCustomPlugins(prev => prev.filter(p => p.id !== pluginId));
+    setAllPlugins(prev => prev.filter(p => p.id !== pluginId));
+    setPluginPrefs(prev => {
+      const next = { ...prev };
+      delete next[pluginId];
       savePluginPrefs(next);
       return next;
     });
@@ -1649,6 +1702,10 @@ function App({ graphId = 'default' }) {
         setGraphTitle={setGraphTitle}
         pluginPrefs={pluginPrefs}
         onTogglePlugin={setPluginEnabled}
+        availablePlugins={corePlugins}
+        customPlugins={customPlugins}
+        onImportCustomPlugin={importCustomPlugin}
+        onRemoveCustomPlugin={removeCustomPlugin}
       />
       <div style={{ height: 80 }} />
       <MainHeader />
@@ -1751,7 +1808,7 @@ function App({ graphId = 'default' }) {
 
       {/* Plugins */}
       <PluginHost
-        plugins={corePlugins.filter(p => (pluginPrefs[p.id] ?? true))}
+        plugins={allPlugins.filter(p => (pluginPrefs[p.id] ?? true))}
         appApi={{
           // selection and nodes
           nodes,

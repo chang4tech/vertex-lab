@@ -7,6 +7,17 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ## Unreleased
 
 ### Added
+- Plugins: Import custom plugins (.js) from the Plugins dialog; validate and persist source in localStorage. Loaded at startup and merged with core plugins.
+- Plugins: New example plugin at `src/plugins/examples/helloPlugin.jsx`.
+- Docs: Added `doc/PLUGIN_SPEC.md` describing plugin API, slots, App API, import process, and testing.
+- i18n: Added Plugins Manager strings (EN/zh-CN).
+- Tests: Added `customPluginLoader.validatePlugin` tests and extended PluginsManager test to cover the Import control.
+
+### Changed
+- PluginsManager now shows Core and Custom sections, supports toggling and removing custom plugins. Enabled/Disabled labels are localized.
+
+### Notes
+- Security: Custom plugin import executes local JS you select; only import code you trust. Code is stored in localStorage and reloaded on app start.
 - Routing: Simple hash router with landing page and graph page routed by UUID (`#/g/:uuid`).
 - Graph metadata: Title input in navbar and UUID display; persisted per graph.
 - Persistence: Nodes/edges/title stored under `vertex_graph_<uuid>_*` keys; legacy `vertex_*` keys remain for default.

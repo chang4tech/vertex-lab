@@ -55,6 +55,15 @@ export default {
   'settings.plugins': 'Plugins',
   'settings.darkMode': 'Dark Mode',
 
+  // Plugins Manager
+  'plugins.core': 'Core Plugins',
+  'plugins.custom': 'Custom Plugins',
+  'plugins.import': 'Import Plugin (.js)',
+  'plugins.remove': 'Remove',
+  'plugins.none': 'No custom plugins imported yet.',
+  'plugins.enabled': 'Enabled',
+  'plugins.disabled': 'Disabled',
+
   // Node labels
   'node.centralTopic': 'Start Node',
   'node.branch': 'Branch',

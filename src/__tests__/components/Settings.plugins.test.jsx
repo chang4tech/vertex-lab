@@ -26,5 +26,7 @@ describe('Settings Plugins tab', () => {
     renderWithProviders(<PluginsManager onClose={() => {}} pluginPrefs={{}} onTogglePlugin={() => {}} />);
     const toggles = screen.getAllByRole('checkbox');
     expect(toggles.length).toBeGreaterThan(0);
+    // Import button present
+    expect(screen.getByText(/Import Plugin/i)).toBeInTheDocument();
   });
 });

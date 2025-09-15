@@ -55,6 +55,15 @@ export default {
   'settings.darkMode': '暗黑模式',
   'settings.plugins': '插件',
 
+  // Plugins Manager
+  'plugins.core': '核心插件',
+  'plugins.custom': '自定义插件',
+  'plugins.import': '导入插件（.js）',
+  'plugins.remove': '移除',
+  'plugins.none': '尚未导入自定义插件。',
+  'plugins.enabled': '已启用',
+  'plugins.disabled': '已禁用',
+
   // Node labels
   'node.centralTopic': '起始节点',
   'node.branch': '分支',
