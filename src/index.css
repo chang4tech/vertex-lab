@@ -25,8 +25,11 @@ mark {
 .menu-trigger {
   color: var(--menu-text, #333);
   cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 8px;
   transition: background-color 0.2s ease;
 }
 
@@ -34,13 +37,58 @@ mark {
   background-color: var(--menu-hover, #f5f5f5);
 }
 
-.menu-dropdown div {
+/* Common menu container: used by both inline menus and dropdowns */
+.menu,
+.menu-dropdown {
+  background: var(--menu-background, #fff);
   color: var(--menu-text, #333);
-  transition: background-color 0.2s ease;
+  border: 1px solid var(--menu-border, #eee);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px var(--panel-shadow, rgba(0,0,0,0.12));
+  min-width: 240px;
+  padding: 12px;
+  z-index: 1000;
 }
 
-.menu-dropdown div:hover {
+/* Individual menu item */
+.menu-item {
+  color: var(--menu-text, #333);
+  transition: background-color 0.2s ease;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  cursor: pointer;
+}
+
+.menu-item:hover {
   background-color: var(--menu-hover, #f5f5f5);
+}
+
+/* Separator line within menus */
+.menu-separator {
+  height: 1px;
+  background: var(--menu-border, #eee);
+  margin: 10px 6px;
+}
+
+/* Right-aligned shortcut hint */
+.menu-shortcut {
+  opacity: 0.6;
+  margin-left: 24px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+}
+
+/* Optional check indicator (e.g., toggles) */
+.menu-check {
+  margin-left: 8px;
+}
+
+/* Non-clickable section content inside menus */
+.menu-section {
+  padding: 12px 18px;
 }
 
 /* --- Minimap --- */
@@ -219,8 +267,18 @@ mark {
     max-height: 120px;
   }
   .menu-trigger {
-    padding: 6px 8px;
+    height: 34px;
+    padding: 0 12px;
     font-size: 14px;
+    border-radius: 8px;
+  }
+  .menu,
+  .menu-dropdown {
+    min-width: 200px;
+    padding: 10px;
+  }
+  .menu-item {
+    padding: 10px 14px;
   }
   .help { top: 72px; }
 }

@@ -2,25 +2,11 @@ import React from 'react';
 import { formatShortcut } from '../../utils/shortcutUtils';
 
 export function EditMenu({ onUndo, onRedo, onDelete, isOpen, onClose }) {
+  if (!isOpen) return null;
   const menuStyle = {
     position: 'absolute',
     top: 32,
-    left: 0,
-    background: '#fff',
-    border: '1px solid #eee',
-    borderRadius: 4,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-    minWidth: 140,
-    zIndex: 1000,
-    padding: '4px 0',
-    display: isOpen ? 'block' : 'none'
-  };
-
-  const itemStyle = {
-    padding: '8px 20px',
-    cursor: 'pointer',
-    display: 'flex',
-    justifyContent: 'space-between'
+    left: 0
   };
 
   const handleClick = React.useCallback((handler) => (e) => {
@@ -35,18 +21,18 @@ export function EditMenu({ onUndo, onRedo, onDelete, isOpen, onClose }) {
   const key = (k, mods=[]) => formatShortcut({ key: k, modifiers: mods });
 
   return (
-    <div className="menu-dropdown" style={menuStyle}>
-      <div style={itemStyle} onClick={handleClick(onUndo)}>
+    <div role="menu" className="menu-dropdown" style={menuStyle}>
+      <div className="menu-item" onClick={handleClick(onUndo)}>
         <span>Undo</span>
-        <span style={{ opacity: 0.5, marginLeft: 20 }}>⌘Z</span>
+        <span className="menu-shortcut">⌘Z</span>
       </div>
-      <div style={itemStyle} onClick={handleClick(onRedo)}>
+      <div className="menu-item" onClick={handleClick(onRedo)}>
         <span>Redo</span>
-        <span style={{ opacity: 0.5, marginLeft: 20 }}>⇧⌘Z</span>
+        <span className="menu-shortcut">⇧⌘Z</span>
       </div>
-      <div style={itemStyle} onClick={handleClick(onDelete)}>
+      <div className="menu-item" onClick={handleClick(onDelete)}>
         <span>Delete</span>
-        <span style={{ opacity: 0.5, marginLeft: 20 }}>⌫</span>
+        <span className="menu-shortcut">⌫</span>
       </div>
     </div>
   );

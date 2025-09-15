@@ -58,11 +58,6 @@ export function ContextMenu({ x, y, isOpen, onClose, children }) {
     position: 'absolute',
     left: x,
     top: y,
-    backgroundColor: 'white',
-    border: '1px solid #ccc',
-    borderRadius: '4px',
-    padding: '8px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
     zIndex: 1000
   };
 
@@ -74,6 +69,7 @@ export function ContextMenu({ x, y, isOpen, onClose, children }) {
     <div 
       data-testid="context-menu"
       ref={menuRef}
+      className="menu"
       style={menuStyle}
       onMouseDown={handleMouseDown}
     >
