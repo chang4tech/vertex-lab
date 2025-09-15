@@ -279,12 +279,14 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       }
       const contentW = Math.max(1, maxX - minX);
       const contentH = Math.max(1, maxY - minY);
-      // Dynamic padding: min 16px, max 64px, or 1x node radius
+      // Dynamic padding scales with canvas size; use 8% of min dimension, clamped
       const basePad = currentTheme.colors.nodeRadius;
-      const dynamicPad = Math.min(64, Math.max(16, basePad));
+      const fracPad = Math.round(0.08 * Math.min(canvas.width, canvas.height));
+      const dynamicPad = Math.min(128, Math.max(24, basePad, fracPad));
       const scaleX = (canvas.width - 2 * dynamicPad) / contentW;
       const scaleY = (canvas.height - 2 * dynamicPad) / contentH;
-      const s = Math.max(0.05, Math.min(scaleX, scaleY));
+      // Do not zoom in beyond 1:1 for large screens/content; keep a minimum scale
+      const s = Math.max(0.05, Math.min(1, Math.min(scaleX, scaleY)));
       view.current.scale = s;
       // center after scaling
       const cx = (minX + maxX) / 2;

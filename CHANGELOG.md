@@ -15,7 +15,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Menus: Unified spacing and bolder nav hover background.
 - Header: Move site logo/title and graph title + UUID above menus.
  - Help icon: align to header (top-right) and reduce size for compact chrome.
- - Nodes: Reduce default node radius across themes (32 → 24) for better scale on high‑resolution displays.
+- Nodes: Reduce default node radius across themes (32 → 24) for better scale on high‑resolution displays.
+ - View: Fit-to-view now adds proportionate padding and caps max zoom at 1.0 so “New Graph” and “Center” aren’t too close on large screens.
 - i18n: Added landing page strings (EN/zh-CN).
 - Tests: New router tests for landing and graph routes.
 
