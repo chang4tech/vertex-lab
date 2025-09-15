@@ -194,4 +194,7 @@ export default {
   // Landing
   'landing.subtitle': 'Create a new graph to get started.',
   'landing.newGraph': 'New Graph',
+  // Graph
+  'graph.untitled': 'Untitled',
+  'graph.title': 'Graph title',
 };

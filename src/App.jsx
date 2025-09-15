@@ -106,27 +106,28 @@ function MenuBar({
         messageId={helpModal.messageId}
         onClose={() => setHelpModal({ open: false, titleId: null, messageId: null })}
       />
-      <nav ref={menuBarRef} style={{
+      {/* Header above menus: site title + graph title and ID */}
+      <div style={{
         width: '100%',
         background: currentTheme.colors.menuBackground,
         borderBottom: `1px solid ${currentTheme.colors.menuBorder}`,
         display: 'flex',
         alignItems: 'center',
+        gap: 12,
         padding: '0 12px',
-        height: 48,
-        zIndex: 200,
+        height: 56,
+        zIndex: 210,
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0
       }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginRight: 16, flex: '0 0 auto' }}>
         <div style={{ fontWeight: 700, fontSize: isMobile ? 16 : 18, color: currentTheme.colors.menuText }}>🧠 Vertex Lab</div>
         <input
-          aria-label="Graph title"
+          aria-label={intl.formatMessage({ id: 'graph.title', defaultMessage: 'Graph title' })}
           value={graphTitle}
           onChange={(e) => setGraphTitle(e.target.value)}
-          placeholder="Untitled"
+          placeholder={intl.formatMessage({ id: 'graph.untitled', defaultMessage: 'Untitled' })}
           style={{
             height: 28,
             borderRadius: 6,
@@ -139,6 +140,20 @@ function MenuBar({
         />
         <span style={{ fontSize: 12, opacity: 0.6, color: currentTheme.colors.secondaryText }}>ID: {graphId}</span>
       </div>
+      <nav ref={menuBarRef} style={{
+        width: '100%',
+        background: currentTheme.colors.menuBackground,
+        borderBottom: `1px solid ${currentTheme.colors.menuBorder}`,
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0 12px',
+        height: 48,
+        zIndex: 200,
+        position: 'fixed',
+        top: 56,
+        left: 0,
+        right: 0
+      }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 4 : 8, flexWrap: 'nowrap', overflow: 'visible', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
         <div style={{ cursor: 'pointer', position: 'relative' }}>
           <span className="menu-trigger" onClick={(e) => {
@@ -1576,7 +1591,7 @@ function App({ graphId = 'default' }) {
         graphTitle={graphTitle}
         setGraphTitle={setGraphTitle}
       />
-      <div style={{ height: 48 }} />
+      <div style={{ height: 104 }} />
       <MainHeader />
 
       {/* Help trigger button, moved to top-right to avoid blocking minimap */}

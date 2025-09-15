@@ -194,4 +194,7 @@ export default {
   // Landing
   'landing.subtitle': '创建一个新图开始使用。',
   'landing.newGraph': '新建图',
+  // Graph
+  'graph.untitled': '未命名',
+  'graph.title': '图标题',
 };

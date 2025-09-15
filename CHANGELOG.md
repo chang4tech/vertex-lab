@@ -12,6 +12,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Persistence: Nodes/edges/title stored under `vertex_graph_<uuid>_*` keys; legacy `vertex_*` keys remain for default.
 - Help UX: SVG icon, moved to top-right, better tooltip; Help panel close button.
 - Menus: Unified spacing and bolder nav hover background.
+- Header: Move site logo/title and graph title + UUID above menus.
 - i18n: Added landing page strings (EN/zh-CN).
 - Tests: New router tests for landing and graph routes.
 
