@@ -73,6 +73,22 @@ mark {
   cursor: pointer;
 }
 
+/* Mobile/touch-friendly menus */
+@media (pointer: coarse), (max-width: 768px) {
+  .menu,
+  .menu-dropdown {
+    min-width: 220px;
+    padding: 10px;
+  }
+  .menu-item {
+    padding: 14px 20px;
+    min-height: 44px;
+  }
+  .help.with-panel {
+    right: 300px;
+  }
+}
+
 .menu-item:hover {
   background-color: var(--menu-hover, #f5f5f5);
 }

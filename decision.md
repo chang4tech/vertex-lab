@@ -133,3 +133,25 @@ Decisions
 - Fix effect ordering for tip banner
   - Rationale: Avoid referencing `activePlugins` before initialization to prevent runtime errors.
   - Consequence: Single effect lives below `activePlugins`; eliminates temporal dead zone.
+
+## 2025-09-16: Mobile experience improvements
+
+Context: The app is frequently used on touch devices; canvas clarity and touch ergonomics needed refinement.
+
+Decisions
+- Add high‑DPI (devicePixelRatio) scaling
+  - Rationale: Canvas appears blurry on retina/mobile without DPR-aware backing store.
+  - Approach: Scale the 2D context using setTransform and size the backing store to CSS×DPR while keeping world units in CSS space.
+  - Considered: Rewriting draw logic to account for pixels; rejected—transform is simpler and safer.
+
+- Improve long‑press handling for context menu
+  - Rationale: Users could accidentally trigger the menu during slow pans.
+  - Change: Increase movement cancel threshold from 12px to 20px while keeping ~500ms delay.
+
+- Respect safe‑area and touch targets for quick controls
+  - Rationale: Avoid overlap with iOS home indicators; ensure accessible hit areas.
+  - Change: Offset controls using CSS env() and enforce 44×44 button sizes.
+
+- Adjust Node Info panel and menus on mobile
+  - Rationale: Reduce canvas occlusion and make tapping easier.
+  - Change: Narrow panel width on mobile; increase menu item spacing via media query for coarse pointers.
