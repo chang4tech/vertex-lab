@@ -7,6 +7,10 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ## Unreleased
 
 ### Added
+- Router: `#/plugin/:id/:tab` route enabling per-plugin Config and Console pages.
+- Plugins Manager: Buttons to open Config and Console for each plugin under Details.
+- Host API: `api.plugin` helpers (log, openConfig, openConsole) accessible in panels and overlays.
+- Logs: General plugin log store with levels (info/warn/error); Console page displays and allows copy/clear.
 - Core Plugins: Selection Tools panel (quick actions for selection).
 - Core Plugins: Clipboard Tools commands (Copy Selected IDs, Copy Node ID).
 - Core Plugins: Graph Stats panel (nodes, edges, selection).
@@ -33,6 +37,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - App: Context menu now surfaces plugin commands (node/canvas contexts) collected from enabled plugins.
 - App: Uses `mergePlugins` when loading stored custom plugins and importing at runtime.
 - Docs: `README.md` plugin section calls out error isolation and duplicate handling; `doc/PLUGIN_SPEC.md` updated with Error Isolation and Duplicate IDs sections.
+ - Spec: Documented `configPage` slot, logging helpers, and per-plugin pages.
 - PluginsManager now shows Core and Custom sections, supports toggling and removing custom plugins. Enabled/Disabled labels are localized.
 - Removed duplicate `customPlugins` state in `MenuBar`; the App component owns plugin state and passes props down.
  - Plugins: Tightened plugin validation to reject array `slots` (must be an object), aligning implementation with the spec. No new features added.

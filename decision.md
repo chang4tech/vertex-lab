@@ -96,4 +96,18 @@ Decision
 - Include `edges` and `setHighlightedNodes` in the command runner API
   - Rationale: Commands often need graph context to compute results and a way to present them; highlighting is reversible and safe.
   - Alternatives: Add full write APIs; rejected for now to keep safety and simplicity.
-  - Consequence: Plugins can implement helpful visual tools (neighbors, heatmaps later) while keeping data integrity intact.
+- Consequence: Plugins can implement helpful visual tools (neighbors, heatmaps later) while keeping data integrity intact.
+
+## 2025-09-15: Per-plugin pages and logging helpers
+
+Context: Users want each plugin to have its own page for configuration and console.
+
+Decisions
+- Add router support for `#/plugin/:id/:tab` and a `PluginPage` component
+  - Rationale: Keep plugin management discoverable via deep links and allow plugins to grow settings UIs without cluttering global Settings.
+  - Consequence: A simple page frame with tabs (Config/Console); minimal app API exposure on config pages.
+
+- Provide `api.plugin` helpers (log/openConfig/openConsole)
+  - Rationale: Give plugins a standard way to log to the console page and navigate users to their pages.
+  - Alternatives: Global logging API via imports (not compatible with runtime-loaded plugins); using window events (more brittle).
+  - Consequence: More cohesive developer experience and easier debugging for users.

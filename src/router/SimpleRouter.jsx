@@ -1,5 +1,6 @@
 import React from 'react';
 import App from '../App.jsx';
+import PluginPage from '../components/PluginPage.jsx';
 import { FormattedMessage } from 'react-intl';
 
 function parseHash() {
@@ -8,6 +9,11 @@ function parseHash() {
   const segments = path.split('/').filter(Boolean);
   if (segments[0] === 'g' && segments[1]) {
     return { route: 'graph', graphId: segments[1] };
+  }
+  if (segments[0] === 'plugin' && segments[1]) {
+    const pluginId = decodeURIComponent(segments[1]);
+    const tab = segments[2] === 'console' ? 'console' : 'config';
+    return { route: 'plugin', pluginId, tab };
   }
   return { route: 'landing' };
 }
@@ -23,6 +29,9 @@ export function SimpleRouter() {
 
   if (state.route === 'graph') {
     return <App graphId={state.graphId} />;
+  }
+  if (state.route === 'plugin') {
+    return <PluginPage pluginId={state.pluginId} tab={state.tab} />;
   }
   return <Landing />;
 }

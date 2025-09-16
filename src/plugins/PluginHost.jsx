@@ -1,5 +1,6 @@
 import React from 'react';
 import PluginErrorBoundary from './PluginErrorBoundary.jsx';
+import { appendPluginLog } from './errorLog.js';
 
 function PanelRenderer({ render, appApi }) {
   // Call provided render so errors bubble to the boundary above
@@ -14,11 +15,23 @@ export function PluginHost({ plugins = [], appApi }) {
       {plugins.flatMap((plugin) => {
         const panels = Array.isArray(plugin?.slots?.sidePanels) ? plugin.slots.sidePanels : [];
         const overlays = Array.isArray(plugin?.slots?.canvasOverlays) ? plugin.slots.canvasOverlays : [];
+        const withPluginApi = (render) => (hostApi) => {
+          const api = {
+            ...hostApi,
+            plugin: {
+              id: plugin.id,
+              log: (message, level = 'info') => appendPluginLog({ pluginId: plugin.id, level, message: String(message) }),
+              openConfig: () => { try { window.location.hash = `#/plugin/${encodeURIComponent(plugin.id)}/config`; } catch {} },
+              openConsole: () => { try { window.location.hash = `#/plugin/${encodeURIComponent(plugin.id)}/console`; } catch {} },
+            },
+          };
+          return render(api);
+        };
         return panels
           .filter((p) => (typeof p.visible === 'function' ? p.visible(appApi) : true))
           .map((panel) => (
             <PluginErrorBoundary key={`${plugin.id}:${panel.id}`} pluginId={plugin.id}>
-              <PanelRenderer render={panel.render} appApi={appApi} />
+              <PanelRenderer render={withPluginApi(panel.render)} appApi={appApi} />
             </PluginErrorBoundary>
           ))
           .concat(
@@ -26,7 +39,7 @@ export function PluginHost({ plugins = [], appApi }) {
               .filter((o) => (typeof o.visible === 'function' ? o.visible(appApi) : true))
               .map((overlay) => (
                 <PluginErrorBoundary key={`${plugin.id}:overlay:${overlay.id}`} pluginId={plugin.id}>
-                  <PanelRenderer render={overlay.render} appApi={appApi} />
+                  <PanelRenderer render={withPluginApi(overlay.render)} appApi={appApi} />
                 </PluginErrorBoundary>
               ))
           );

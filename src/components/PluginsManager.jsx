@@ -66,6 +66,10 @@ const PluginsManager = ({
                         {!p.description && !p.version && !p.author && (
                           <div style={{ color: '#6b7280' }}>No metadata</div>
                         )}
+                        <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+                          <button onClick={() => { window.location.hash = `#/plugin/${encodeURIComponent(p.id)}/config`; }}>Config</button>
+                          <button onClick={() => { window.location.hash = `#/plugin/${encodeURIComponent(p.id)}/console`; }}>Console</button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -104,18 +108,22 @@ const PluginsManager = ({
                         <button style={{ marginLeft: 'auto' }} onClick={() => setExpanded(prev => ({ ...prev, [p.id]: !prev[p.id] }))}>
                           {expanded[p.id] ? 'Hide Details' : 'Details'}
                         </button>
-                      </div>
-                      {expanded[p.id] && (
-                        <div style={{ fontSize: 12, color: '#374151', marginTop: 6 }}>
-                          {p.description && <div><strong>Description:</strong> {p.description}</div>}
-                          {p.version && <div><strong>Version:</strong> {p.version}</div>}
-                          {p.author && <div><strong>Author:</strong> {p.author}</div>}
-                          {!p.description && !p.version && !p.author && (
-                            <div style={{ color: '#6b7280' }}>No metadata</div>
-                          )}
-                        </div>
-                      )}
                     </div>
+                    {expanded[p.id] && (
+                      <div style={{ fontSize: 12, color: '#374151', marginTop: 6 }}>
+                        {p.description && <div><strong>Description:</strong> {p.description}</div>}
+                        {p.version && <div><strong>Version:</strong> {p.version}</div>}
+                        {p.author && <div><strong>Author:</strong> {p.author}</div>}
+                        {!p.description && !p.version && !p.author && (
+                          <div style={{ color: '#6b7280' }}>No metadata</div>
+                        )}
+                        <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+                          <button onClick={() => { window.location.hash = `#/plugin/${encodeURIComponent(p.id)}/config`; }}>Config</button>
+                          <button onClick={() => { window.location.hash = `#/plugin/${encodeURIComponent(p.id)}/console`; }}>Console</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                     <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                       <input
                         type="checkbox"
