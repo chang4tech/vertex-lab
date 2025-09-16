@@ -8,6 +8,19 @@ export const showcasePlugin = {
   author: 'Vertex Lab',
   slots: {
     aboutPage: {
+      markdown: `
+# Plugin Showcase
+
+Demonstrates a simple HUD overlay and two context commands (node + canvas).
+
+How to use:
+- Enable the plugin, then right-click a node to find "Plugin: Hello Node".
+- Right-click empty canvas to find "Plugin: Hello Canvas".
+- Observe a selection HUD at the bottom-left updating as you select nodes.
+
+Tips:
+- Use this as a reference for overlay placement and command registration.
+      `.trim(),
       render: () => (
         <div style={{ color: "#374151" }}>
           <ul style={{ margin: 0, paddingLeft: 18 }}>
@@ -55,4 +68,3 @@ export const showcasePlugin = {
 };
 
 export default showcasePlugin;
-

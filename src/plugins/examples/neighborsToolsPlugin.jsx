@@ -5,6 +5,21 @@ export const neighborsToolsPlugin = {
   version: '1.0.0',
   author: 'Vertex Lab',
   slots: {
+    aboutPage: {
+      markdown: `
+# Neighbors Tools (Example)
+
+Commands that highlight neighbors of a node and clear highlights.
+
+How to use:
+- Right-click a node and choose "Example: Highlight Neighbors" to highlight connected nodes.
+- Right-click the canvas and choose "Example: Clear Highlights" to reset.
+
+Notes:
+- Uses edges when available; otherwise, falls back to parent/child relationships.
+- Demonstrates command slots and access to selection, edges, and highlight APIs.
+      `.trim(),
+    },
     commands: [
       {
         id: 'example.neighbors',

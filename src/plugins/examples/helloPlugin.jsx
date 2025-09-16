@@ -7,6 +7,20 @@ export const helloPlugin = {
   version: '1.0.0',
   author: 'Vertex Lab',
   slots: {
+    aboutPage: {
+      markdown: `
+# Hello Panel
+
+This example plugin adds a simple side panel that always renders and shows the current selection count.
+
+How to use:
+- Open the Plugins dialog and ensure "Hello Panel" is enabled.
+- Select one or more nodes to see the count update live.
+
+Tips:
+- Use this as a minimal starting point for building your own side panels.
+      `.trim(),
+    },
     sidePanels: [
       {
         id: 'helloPanel',
