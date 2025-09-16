@@ -39,7 +39,7 @@ export default function PluginPage({ pluginId }) {
   const configSlot = plugin.slots?.configPage;
   const hasConfig = configSlot && typeof configSlot.render === 'function';
   const aboutSlot = plugin.slots?.aboutPage;
-  const hasAbout = aboutSlot && typeof aboutSlot.render === 'function';
+  const hasAbout = !!(aboutSlot && (typeof aboutSlot.render === 'function' || typeof aboutSlot.markdown === 'string'));
   const ConfigView = () => {
     if (!hasConfig) {
       return <div style={{ color: '#6b7280' }}>This plugin does not provide a config page.</div>;
