@@ -2,6 +2,8 @@ export const neighborsToolsPlugin = {
   id: 'example.neighborsTools',
   name: 'Neighbors Tools (Example)',
   description: 'Example commands to highlight and clear neighbors of a node',
+  version: '1.0.0',
+  author: 'Vertex Lab',
   slots: {
     commands: [
       {
@@ -27,4 +29,3 @@ export const neighborsToolsPlugin = {
 };
 
 export default neighborsToolsPlugin;
-

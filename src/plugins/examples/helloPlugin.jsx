@@ -3,6 +3,9 @@ import React from 'react';
 export const helloPlugin = {
   id: 'example.hello',
   name: 'Hello Panel',
+  description: 'Example side panel that displays current selection count.',
+  version: '1.0.0',
+  author: 'Vertex Lab',
   slots: {
     sidePanels: [
       {
@@ -22,4 +25,3 @@ export const helloPlugin = {
 };
 
 export default helloPlugin;
-
