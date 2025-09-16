@@ -12,8 +12,8 @@ function parseHash() {
   }
   if (segments[0] === 'plugin' && segments[1]) {
     const pluginId = decodeURIComponent(segments[1]);
-    const tab = segments[2] === 'console' ? 'console' : 'config';
-    return { route: 'plugin', pluginId, tab };
+    // Legacy support: ignore extra segments like /config or /console
+    return { route: 'plugin', pluginId };
   }
   return { route: 'landing' };
 }
@@ -31,7 +31,7 @@ export function SimpleRouter() {
     return <App graphId={state.graphId} />;
   }
   if (state.route === 'plugin') {
-    return <PluginPage pluginId={state.pluginId} tab={state.tab} />;
+    return <PluginPage pluginId={state.pluginId} />;
   }
   return <Landing />;
 }

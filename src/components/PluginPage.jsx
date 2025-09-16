@@ -16,11 +16,10 @@ function usePlugins() {
   return plugins;
 }
 
-export default function PluginPage({ pluginId, tab = 'config' }) {
+export default function PluginPage({ pluginId }) {
   const plugins = usePlugins();
   const plugin = plugins.find(p => p.id === pluginId);
   const [logs, setLogs] = React.useState(() => getPluginLogsById(pluginId));
-  const [activeTab, setActiveTab] = React.useState(tab);
 
   React.useEffect(() => {
     return subscribePluginErrors(() => setLogs(getPluginLogsById(pluginId)));
@@ -79,20 +78,25 @@ export default function PluginPage({ pluginId, tab = 'config' }) {
     <div style={{ padding: 24, maxWidth: 960, margin: '0 auto' }}>
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h2 style={{ marginBottom: 4 }}>{plugin.name || plugin.id}</h2>
+          <h2 style={{ marginBottom: 4 }}>{plugin.name || plugin.id} — Control Hub</h2>
           {plugin.description && <div style={{ color: '#6b7280' }}>{plugin.description}</div>}
         </div>
         <nav style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => setActiveTab('config')} disabled={activeTab==='config'}>Config</button>
-          <button onClick={() => setActiveTab('console')} disabled={activeTab==='console'}>Console</button>
           <button onClick={() => { window.location.hash = '#/'; }}>Back</button>
         </nav>
       </header>
 
       <main style={{ marginTop: 16 }}>
-        {activeTab === 'console' ? <ConsoleView /> : <ConfigView />}
+        <section style={{ marginBottom: 16 }}>
+          <h3 style={{ margin: '8px 0' }}>Settings</h3>
+          <ConfigView />
+        </section>
+
+        <section>
+          <h3 style={{ margin: '8px 0' }}>Console</h3>
+          <ConsoleView />
+        </section>
       </main>
     </div>
   );
 }
-

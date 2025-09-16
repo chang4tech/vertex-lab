@@ -67,8 +67,7 @@ const PluginsManager = ({
                           <div style={{ color: '#6b7280' }}>No metadata</div>
                         )}
                         <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                          <button onClick={() => { window.location.hash = `#/plugin/${encodeURIComponent(p.id)}/config`; }}>Config</button>
-                          <button onClick={() => { window.location.hash = `#/plugin/${encodeURIComponent(p.id)}/console`; }}>Console</button>
+                          <button onClick={() => { window.location.hash = `#/plugin/${encodeURIComponent(p.id)}`; }}>Control Hub</button>
                         </div>
                       </div>
                     )}
@@ -118,8 +117,7 @@ const PluginsManager = ({
                           <div style={{ color: '#6b7280' }}>No metadata</div>
                         )}
                         <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                          <button onClick={() => { window.location.hash = `#/plugin/${encodeURIComponent(p.id)}/config`; }}>Config</button>
-                          <button onClick={() => { window.location.hash = `#/plugin/${encodeURIComponent(p.id)}/console`; }}>Console</button>
+                          <button onClick={() => { window.location.hash = `#/plugin/${encodeURIComponent(p.id)}`; }}>Control Hub</button>
                         </div>
                       </div>
                     )}

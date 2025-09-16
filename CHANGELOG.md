@@ -7,10 +7,10 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ## Unreleased
 
 ### Added
-- Router: `#/plugin/:id/:tab` route enabling per-plugin Config and Console pages.
-- Plugins Manager: Buttons to open Config and Console for each plugin under Details.
-- Host API: `api.plugin` helpers (log, openConfig, openConsole) accessible in panels and overlays.
-- Logs: General plugin log store with levels (info/warn/error); Console page displays and allows copy/clear.
+- Router: `#/plugin/:id` route enabling a single Control Hub page per plugin (legacy `#/plugin/:id/(config|console)` tolerated).
+- Plugins Manager: Control Hub button under Details for each plugin.
+- Host API: `api.plugin` helpers (log, openHub) accessible in panels and overlays.
+- Logs: General plugin log store with levels (info/warn/error); Hub console displays and allows copy/clear.
 - Core Plugins: Selection Tools panel (quick actions for selection).
 - Core Plugins: Clipboard Tools commands (Copy Selected IDs, Copy Node ID).
 - Core Plugins: Graph Stats panel (nodes, edges, selection).
