@@ -1918,16 +1918,6 @@ function App({ graphId = 'default' }) {
               canvasRef.current?.focusOnNode?.(contextMenu.target.nodeId);
             }}><FormattedMessage id="view.center" defaultMessage="Center" /></button>
             {/* Plugin Commands (node context) */}
-            {filterCommandsForContext(pluginCommands, null, contextMenu.target).map(cmd => (
-              <button key={cmd.id} onClick={() => { closeContextMenu(); try { cmd.run({
-                nodes,
-                selectedNodeIds,
-                selectedNodes: selectedNodeIds.map(id => nodes.find(n => n.id === id)).filter(Boolean),
-              }, contextMenu.target); } catch (e) { console.error('Plugin command error:', e); } }}>
-                {cmd.title}
-              </button>
-            ))}
-            {/* Plugin Commands (node context) */}
             {(() => {
               const cmdApi = {
                 nodes,

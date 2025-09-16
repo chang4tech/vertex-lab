@@ -111,3 +111,25 @@ Decisions
   - Rationale: Give plugins a standard way to log to the console page and navigate users to their pages.
   - Alternatives: Global logging API via imports (not compatible with runtime-loaded plugins); using window events (more brittle).
   - Consequence: More cohesive developer experience and easier debugging for users.
+
+## 2025-09-16: Control Hub i18n, Markdown docs, and completeness indicator
+
+Context: Users requested clearer, localized plugin guidance and noticed several plugins appear incomplete.
+
+Decisions
+- Localize Control Hub labels and tip banner
+  - Rationale: Make the Hub and first‑time enablement UX readable across locales; avoid hardcoded English strings.
+  - Consequence: Introduces new i18n keys used by PluginPage, PluginsManager, and the tip banner.
+
+- Support `aboutPage.markdown` in addition to `render`
+  - Rationale: Many “How to Use” sections are static lists; Markdown lowers authoring cost while remaining safe (lightweight parser for headings/lists/paragraphs).
+  - Alternatives: Bring a full Markdown library (heavier dependency); render HTML (security concerns). Chosen: minimal internal renderer.
+  - Consequence: Core plugins now ship Markdown docs; Hub prefers Markdown if present.
+
+- Add “Incomplete” badge heuristic in Plugins dialog
+  - Rationale: Surface plugins with no visible contributions so users understand why enabling them has no visible effect yet.
+  - Heuristic: No panels, commands, overlays, about, or config → mark as incomplete. Non-blocking and purely informational.
+
+- Fix effect ordering for tip banner
+  - Rationale: Avoid referencing `activePlugins` before initialization to prevent runtime errors.
+  - Consequence: Single effect lives below `activePlugins`; eliminates temporal dead zone.
