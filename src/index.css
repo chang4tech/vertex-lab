@@ -68,6 +68,11 @@ mark {
   padding: 12px;
   /* Raise above floating FABs/help (which use ~10010/10011) */
   z-index: 10120;
+  /* Ensure long menus remain usable on mobile */
+  max-height: calc(100vh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   /* Prevent iOS text selection / callout over custom menus */
   user-select: none;
   -webkit-user-select: none;

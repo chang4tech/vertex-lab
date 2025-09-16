@@ -100,8 +100,9 @@ describe('ContextMenu', () => {
     let menu = getByTestId('context-menu');
     // Wait for useEffect to run
     await vi.waitFor(() => {
-      expect(menu.style.right).toBe('10px');
-      expect(menu.style.bottom).toBe('10px');
+      // When clamped, left/top are cleared so positioning uses right/bottom
+      expect(menu.style.left).toBe('');
+      expect(menu.style.top).toBe('');
     });
 
     // Test near top left

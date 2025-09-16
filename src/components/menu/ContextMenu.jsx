@@ -40,8 +40,9 @@ export function ContextMenu({ x, y, isOpen, onClose, children }) {
     const bottom = y + menuRect.height > viewportHeight;
 
     if (right || bottom) {
-      menuRef.current.style.right = right ? '10px' : '';
-      menuRef.current.style.bottom = bottom ? '10px' : '';
+      // Respect safe-area when clamping to edges on mobile
+      menuRef.current.style.right = right ? 'calc(10px + env(safe-area-inset-right))' : '';
+      menuRef.current.style.bottom = bottom ? 'calc(10px + env(safe-area-inset-bottom))' : '';
       menuRef.current.style.left = right ? '' : `${x}px`;
       menuRef.current.style.top = bottom ? '' : `${y}px`;
     } else {
