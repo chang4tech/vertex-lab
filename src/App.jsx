@@ -1741,7 +1741,7 @@ function App({ graphId = 'default' }) {
       <MainHeader />
 
       {/* Help trigger button, moved to below header on mobile to avoid overlap */}
-  <div style={{ position: 'fixed', right: 'calc(24px + env(safe-area-inset-right))', top: isMobile ? 'calc(88px + env(safe-area-inset-top))' : 8, zIndex: 10010, pointerEvents: openMenu ? 'none' : 'auto' }}>
+  <div style={{ position: 'fixed', right: 'calc(24px + env(safe-area-inset-right))', top: isMobile ? 'calc(88px + env(safe-area-inset-top))' : 8, zIndex: 10010 }}>
         <div
           className={triggerClass}
           role="button"
