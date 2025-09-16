@@ -67,7 +67,10 @@ const PluginsManager = ({
                           <div style={{ color: '#6b7280' }}>No metadata</div>
                         )}
                         <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                          <button onClick={() => { window.location.hash = `#/plugin/${encodeURIComponent(p.id)}`; }}>Control Hub</button>
+                          <button onClick={() => {
+                            try { sessionStorage.setItem('vertex_plugin_return', window.location.hash || '#/'); } catch {}
+                            window.location.hash = `#/plugin/${encodeURIComponent(p.id)}`;
+                          }}>Control Hub</button>
                         </div>
                       </div>
                     )}
@@ -117,7 +120,10 @@ const PluginsManager = ({
                           <div style={{ color: '#6b7280' }}>No metadata</div>
                         )}
                         <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                          <button onClick={() => { window.location.hash = `#/plugin/${encodeURIComponent(p.id)}`; }}>Control Hub</button>
+                          <button onClick={() => {
+                            try { sessionStorage.setItem('vertex_plugin_return', window.location.hash || '#/'); } catch {}
+                            window.location.hash = `#/plugin/${encodeURIComponent(p.id)}`;
+                          }}>Control Hub</button>
                         </div>
                       </div>
                     )}

@@ -82,7 +82,20 @@ export default function PluginPage({ pluginId }) {
           {plugin.description && <div style={{ color: '#6b7280' }}>{plugin.description}</div>}
         </div>
         <nav style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => { window.location.hash = '#/'; }}>Back</button>
+          <button onClick={() => {
+            try {
+              const ret = sessionStorage.getItem('vertex_plugin_return');
+              if (ret) {
+                sessionStorage.removeItem('vertex_plugin_return');
+                window.location.hash = ret;
+                return;
+              }
+            } catch {}
+            if (window.history.length > 1) {
+              try { window.history.back(); return; } catch {}
+            }
+            window.location.hash = '#/'
+          }}>Back</button>
         </nav>
       </header>
 

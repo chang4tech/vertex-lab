@@ -21,7 +21,10 @@ export function PluginHost({ plugins = [], appApi }) {
             plugin: {
               id: plugin.id,
               log: (message, level = 'info') => appendPluginLog({ pluginId: plugin.id, level, message: String(message) }),
-              openHub: () => { try { window.location.hash = `#/plugin/${encodeURIComponent(plugin.id)}`; } catch {} },
+              openHub: () => {
+                try { sessionStorage.setItem('vertex_plugin_return', window.location.hash || '#/'); } catch {}
+                try { window.location.hash = `#/plugin/${encodeURIComponent(plugin.id)}`; } catch {}
+              },
               // Back-compat shims
               openConfig: () => { try { window.location.hash = `#/plugin/${encodeURIComponent(plugin.id)}`; } catch {} },
               openConsole: () => { try { window.location.hash = `#/plugin/${encodeURIComponent(plugin.id)}`; } catch {} },
