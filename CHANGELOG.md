@@ -37,6 +37,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Changed
 - Tip banner: Converted first‑time plugin enabled banner to `react-intl` (message + buttons) and fixed effect ordering to avoid referencing `activePlugins` before init.
+- Core plugin metadata: Added description/version/author to Node Info so Plugins dialog shows details instead of “No metadata”.
 - App: Command filtering now receives minimal api so predicate `when(api, ctx)` can leverage selection state.
 - App: Command runners now receive `edges` and `setHighlightedNodes` to enable non-destructive highlight interactions.
 - App: Context menu now surfaces plugin commands (node/canvas contexts) collected from enabled plugins.
