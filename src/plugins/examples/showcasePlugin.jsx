@@ -38,7 +38,7 @@ Tips:
         id: 'selectionHud',
         visible: () => true,
         render: (api) => (
-          <div style={{ position: 'fixed', left: 16, bottom: 16, padding: '6px 10px', background: '#111827', color: '#fff', borderRadius: 6, fontSize: 12, boxShadow: '0 2px 6px rgba(0,0,0,0.25)' }}>
+          <div style={{ position: 'fixed', left: 'calc(16px + env(safe-area-inset-left))', bottom: 'calc(16px + env(safe-area-inset-bottom))', padding: '6px 10px', background: '#111827', color: '#fff', borderRadius: 6, fontSize: 12, boxShadow: '0 2px 6px rgba(0,0,0,0.25)' }}>
             Plugins ✓ — Selected: {api?.selectedNodeIds?.length ?? 0}
           </div>
         ),

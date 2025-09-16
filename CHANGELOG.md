@@ -43,6 +43,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Mobile: Quick controls respect safe‑area insets (env()) and maintain 44px targets.
 - Mobile: Node Info panel uses a narrower width on small screens.
 - Mobile: Menu items use touch-friendly spacing (min-height 44px) on coarse pointers/small screens.
+- Mobile: Help trigger re-positioned below header on mobile and given safe-area offsets to prevent overlap; example overlay respects safe-area.
 - Tip banner: Converted first‑time plugin enabled banner to `react-intl` (message + buttons) and fixed effect ordering to avoid referencing `activePlugins` before init.
 - Core plugin metadata: Added description/version/author to Node Info so Plugins dialog shows details instead of “No metadata”.
 - Core plugin metadata: Added version/author for Clipboard Tools, Graph Stats, Selection Tools, Neighbors Highlighter for consistent details in Plugins dialog.
