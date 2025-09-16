@@ -72,7 +72,13 @@ const PluginsManager = ({
                     </div>
                     {expanded[p.id] && (
                       <div style={{ fontSize: 12, color: '#374151', marginTop: 6 }}>
-                        {p.description && <div><strong>Description:</strong> {p.description}</div>}
+                        {p.description && (
+                          <div>
+                            <strong>Description:</strong> {p.descriptionId
+                              ? <FormattedMessage id={p.descriptionId} defaultMessage={p.description} />
+                              : p.description}
+                          </div>
+                        )}
                         {p.version && <div><strong>Version:</strong> {p.version}</div>}
                         {p.author && <div><strong>Author:</strong> {p.author}</div>}
                         {!p.description && !p.version && !p.author && (
@@ -128,7 +134,13 @@ const PluginsManager = ({
                     </div>
                     {expanded[p.id] && (
                       <div style={{ fontSize: 12, color: '#374151', marginTop: 6 }}>
-                        {p.description && <div><strong>Description:</strong> {p.description}</div>}
+                        {p.description && (
+                          <div>
+                            <strong>Description:</strong> {p.descriptionId
+                              ? <FormattedMessage id={p.descriptionId} defaultMessage={p.description} />
+                              : p.description}
+                          </div>
+                        )}
                         {p.version && <div><strong>Version:</strong> {p.version}</div>}
                         {p.author && <div><strong>Author:</strong> {p.author}</div>}
                         {!p.description && !p.version && !p.author && (

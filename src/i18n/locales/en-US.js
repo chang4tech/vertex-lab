@@ -215,6 +215,10 @@ export default {
   'help.feedback.desc': 'Feedback is welcome! A dedicated feedback flow will be added soon. Please file an issue with details.',
   'help.report.desc': 'To report a problem, please include steps to reproduce and environment details. The report form will be available soon.',
   'help.comingSoon': 'More improvements coming soon.',
+  // Example plugin descriptions
+  'plugin.example.hello.desc': 'Example side panel that displays current selection count.',
+  'plugin.example.neighborsTools.desc': 'Example commands to highlight and clear neighbors of a node',
+  'plugin.example.showcase.desc': 'Demonstrates overlays and context commands',
   // Landing
   'landing.subtitle': 'Create a new graph to get started.',
   'landing.newGraph': 'New Graph',

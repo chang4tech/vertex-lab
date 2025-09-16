@@ -4,6 +4,7 @@ export const helloPlugin = {
   id: 'example.hello',
   name: 'Hello Panel',
   description: 'Example side panel that displays current selection count.',
+  descriptionId: 'plugin.example.hello.desc',
   version: '1.0.0',
   author: 'Vertex Lab',
   slots: {

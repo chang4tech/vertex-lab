@@ -215,6 +215,10 @@ export default {
   'help.feedback.desc': '欢迎反馈！专用反馈入口即将上线。目前请提交 Issue 并附详细信息。',
   'help.report.desc': '要报告问题，请附复现步骤和环境信息。报告表单即将提供。',
   'help.comingSoon': '更多改进即将到来。',
+  // 示例插件描述
+  'plugin.example.hello.desc': '示例侧边面板，显示当前选中数量。',
+  'plugin.example.neighborsTools.desc': '示例命令，用于高亮节点的邻居并清除高亮。',
+  'plugin.example.showcase.desc': '演示覆盖层与上下文命令的示例插件',
   // Landing
   'landing.subtitle': '创建一个新图开始使用。',
   'landing.newGraph': '新建图',

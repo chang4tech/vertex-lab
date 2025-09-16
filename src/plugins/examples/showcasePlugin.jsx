@@ -4,6 +4,7 @@ export const showcasePlugin = {
   id: 'example.showcase',
   name: 'Plugin Showcase',
   description: 'Demonstrates overlays and context commands',
+  descriptionId: 'plugin.example.showcase.desc',
   version: '1.0.0',
   author: 'Vertex Lab',
   slots: {
