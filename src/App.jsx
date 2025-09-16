@@ -46,7 +46,16 @@ function MenuBar({
 }) {
   const isMobile = useIsMobile();
   const menuBarRef = useRef(null);
+  const menuRefs = {
+    file: useRef(null),
+    edit: useRef(null),
+    view: useRef(null),
+    library: useRef(null),
+    settings: useRef(null),
+    help: useRef(null),
+  };
   const [openMenu, setOpenMenu] = useState(null); // 'file' | 'edit' | 'view' | 'settings' | null
+  const [alignRight, setAlignRight] = useState({});
   const [showSettings, setShowSettings] = useState(false);
   const [settingsTab, setSettingsTab] = useState('all');
   const [showTagManager, setShowTagManager] = useState(false);
@@ -73,11 +82,31 @@ function MenuBar({
     <div className="menu-dropdown" style={{
       position: 'absolute',
       top: 'calc(100% + 4px)',
-      left: 0,
+      left: alignRight[type] ? 'auto' : 0,
+      right: alignRight[type] ? 0 : 'auto',
       // Ensure above floating FABs/help on mobile
       zIndex: 10140
     }}>{items}</div>
   );
+
+  // Dynamically align dropdowns to the right edge of their trigger if they would overflow the viewport
+  useEffect(() => {
+    if (!openMenu) return;
+    const ref = menuRefs[openMenu]?.current;
+    if (!ref) return;
+    const measure = () => {
+      const dropdown = ref.querySelector('.menu-dropdown');
+      const triggerRect = ref.getBoundingClientRect();
+      const ddRect = dropdown?.getBoundingClientRect();
+      const estimatedWidth = ddRect?.width || 260; // match menu min width
+      const willOverflowRight = triggerRect.left + estimatedWidth + 8 > window.innerWidth;
+      setAlignRight(prev => ({ ...prev, [openMenu]: !!willOverflowRight }));
+    };
+    // Measure after render and on resize
+    const r = requestAnimationFrame(measure);
+    window.addEventListener('resize', measure);
+    return () => { cancelAnimationFrame(r); window.removeEventListener('resize', measure); };
+  }, [openMenu]);
 
   // Build a merged shortcut display from APP_SHORTCUTS by description
   const getShortcut = (description, options = {}) => {
@@ -193,7 +222,7 @@ function MenuBar({
         right: 0
       }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 4 : 8, flexWrap: 'nowrap', overflow: 'visible', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
-        <div style={{ cursor: 'pointer', position: 'relative' }}>
+        <div ref={menuRefs.file} style={{ cursor: 'pointer', position: 'relative' }}>
           <span className="menu-trigger" onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -300,7 +329,7 @@ function MenuBar({
           </>)}
         </div>
         
-        <div style={{ cursor: 'pointer', position: 'relative' }}>
+        <div ref={menuRefs.edit} style={{ cursor: 'pointer', position: 'relative' }}>
           <span className="menu-trigger" onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -376,7 +405,7 @@ function MenuBar({
             </div>
           </>)}
         </div>
-        <div style={{ cursor: 'pointer', position: 'relative' }}>
+        <div ref={menuRefs.view} style={{ cursor: 'pointer', position: 'relative' }}>
           <span className="menu-trigger" onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -467,7 +496,7 @@ function MenuBar({
             </div>
           </>)}
         </div>
-        <div style={{ cursor: 'pointer', position: 'relative' }}>
+        <div ref={menuRefs.library} style={{ cursor: 'pointer', position: 'relative' }}>
           <span className="menu-trigger" onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -550,7 +579,7 @@ function MenuBar({
             ><FormattedMessage id="library.delete" defaultMessage="Delete from Library" /></div>
           </>)}
         </div>
-        <div style={{ cursor: 'pointer', position: 'relative' }}>
+        <div ref={menuRefs.settings} style={{ cursor: 'pointer', position: 'relative' }}>
           <span className="menu-trigger" onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -623,7 +652,7 @@ function MenuBar({
             ><FormattedMessage id="view.chooseTheme" defaultMessage="Choose Theme" /></div>
           </>)}
         </div>
-        <div style={{ cursor: 'pointer', position: 'relative' }}>
+        <div ref={menuRefs.help} style={{ cursor: 'pointer', position: 'relative' }}>
           <span className="menu-trigger" onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
