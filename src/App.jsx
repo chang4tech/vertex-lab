@@ -184,7 +184,8 @@ function MenuBar({
         alignItems: 'center',
         padding: '0 12px',
         height: 36,
-        zIndex: 200,
+        // Raise above floating help/FABs so dropdowns are not covered on mobile
+        zIndex: 10130,
         position: 'fixed',
         top: 44,
         left: 0,

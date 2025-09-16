@@ -43,7 +43,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
  - Docs: Migration guidance consolidated into this changelog and `doc/progress.md`; removed standalone `MIGRATION.md`.
 
 ### Changed
-- Mobile: Dropdown/context menus render above FABs/help (higher z-index for `.menu`/`.menu-dropdown`).
+- Mobile: Dropdown/context menus render above FABs/help (higher z-index for nav and `.menu`/`.menu-dropdown`).
 - Mobile: Minimap uses safe‑area insets (`env(safe-area-inset-*)`) for bottom/right.
 - HTML: Set viewport to `viewport-fit=cover` to enable safe-area on iOS.
 - Mobile: Long‑press movement cancel threshold increased (12 → 20) to avoid accidental menus during slow panning.
