@@ -65,6 +65,13 @@ mark {
   -webkit-touch-callout: none;
 }
 
+.menu *,
+.menu-dropdown * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 /* Individual menu item */
 .menu-item {
   color: var(--menu-text, #333);

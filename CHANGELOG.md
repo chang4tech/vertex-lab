@@ -47,6 +47,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Mobile: Hide Graph ID label on mobile to reduce header crowding.
 - Mobile: Help tooltip now only shows on hover/focus (kept hidden on touch) to avoid covering content.
 - Mobile: Prevent iOS text-selection callout over custom context menus; suppress native context menu inside our menu container.
+ - Mobile: Strengthened menu handling by disabling selection/callout on all menu descendants and preventing default on touchstart/move/end within the menu to block the iOS selection toolbar.
 - Tip banner: Converted first‑time plugin enabled banner to `react-intl` (message + buttons) and fixed effect ordering to avoid referencing `activePlugins` before init.
 - Core plugin metadata: Added description/version/author to Node Info so Plugins dialog shows details instead of “No metadata”.
 - Core plugin metadata: Added version/author for Clipboard Tools, Graph Stats, Selection Tools, Neighbors Highlighter for consistent details in Plugins dialog.
