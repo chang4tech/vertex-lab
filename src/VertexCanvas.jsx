@@ -559,11 +559,21 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
     // Redraw on pan/zoom
     const handleRedraw = () => {
       const ctx = canvas.getContext('2d');
-      
-      // Clear with theme background
+      const cssW = width;
+      const cssH = height;
+      const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1;
+      // Ensure backing store matches DPR-scaled size; keep CSS size via style
+      if (canvas.width !== Math.floor(cssW * dpr) || canvas.height !== Math.floor(cssH * dpr)) {
+        canvas.width = Math.floor(cssW * dpr);
+        canvas.height = Math.floor(cssH * dpr);
+        try { canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px'; } catch {}
+      }
+      // Reset to identity for pixel-space clear, then scale to DPR for drawing in CSS units
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = currentTheme.colors.canvasBackground;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.save();
       ctx.translate(view.current.offsetX, view.current.offsetY);
       ctx.scale(view.current.scale, view.current.scale);
@@ -632,8 +642,8 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
         const vb = {
           x: -view.current.offsetX / view.current.scale,
           y: -view.current.offsetY / view.current.scale,
-          width: canvas.width / view.current.scale,
-          height: canvas.height / view.current.scale,
+          width: (canvas.width / ((typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1)) / view.current.scale,
+          height: (canvas.height / ((typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1)) / view.current.scale,
         };
         onViewBoxChange(vb);
       }
@@ -727,7 +737,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       if (longPressRef.current.timer) {
         const dx = Math.abs(e.clientX - longPressRef.current.startX);
         const dy = Math.abs(e.clientY - longPressRef.current.startY);
-        if (dx + dy > 12) { clearTimeout(longPressRef.current.timer); longPressRef.current.timer = null; }
+        if (dx + dy > 20) { clearTimeout(longPressRef.current.timer); longPressRef.current.timer = null; }
       }
       if (pinchState.current.active && pointers.current.size >= 2) {
         const pts = Array.from(pointers.current.values());

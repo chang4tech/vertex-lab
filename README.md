@@ -15,6 +15,7 @@ A powerful and intuitive diagramming tool built with React and HTML5 Canvas. Cre
   - Smooth pan and zoom
   - Center view on root node
   - Custom zoom controls
+  - High‑DPI rendering for crisp visuals on mobile/retina
   - Space + left click to pan
 
 - 💾 **Data Management**
@@ -146,6 +147,7 @@ react-mindmap-app/
 
 - **App.jsx**: Main application logic, state management, and keyboard handlers
 - **VertexCanvas.jsx**: Canvas rendering, pan/zoom, and node interactions
+  - Mobile: pinch‑to‑zoom, long‑press context menu, high‑DPI scaling
 - **MenuBar**: Application menu and toolbar functionality
 - **HelpPanel**: Keyboard shortcuts and help documentation
 

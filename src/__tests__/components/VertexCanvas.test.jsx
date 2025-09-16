@@ -10,6 +10,7 @@ const mockContext = {
   restore: vi.fn(),
   translate: vi.fn(),
   scale: vi.fn(),
+  setTransform: vi.fn(),
   fillRect: vi.fn(),
   arc: vi.fn(),
   rect: vi.fn(),
@@ -68,6 +69,20 @@ describe('VertexCanvas', () => {
     expect(canvas).toBeInTheDocument();
     expect(canvas).toHaveAttribute('width', '800');
     expect(canvas).toHaveAttribute('height', '600');
+  });
+
+  it('scales backing store for devicePixelRatio on redraw', () => {
+    const prev = Object.getOwnPropertyDescriptor(window, 'devicePixelRatio');
+    Object.defineProperty(window, 'devicePixelRatio', { value: 2, configurable: true });
+    const { container } = renderWithTheme(<VertexCanvas {...mockProps} />);
+    const canvas = container.querySelector('canvas');
+    // Before redraw, attributes reflect logical size
+    expect(canvas.width).toBe(800);
+    // After redraw, DPR scaling updates width/height
+    canvas.dispatchEvent(new Event('redraw'));
+    expect(canvas.width).toBe(1600);
+    expect(canvas.height).toBe(1200);
+    if (prev) Object.defineProperty(window, 'devicePixelRatio', prev);
   });
 
   it('handles node click', () => {

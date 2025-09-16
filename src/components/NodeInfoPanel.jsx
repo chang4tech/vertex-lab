@@ -8,6 +8,7 @@ import {
   NODE_COLOR_INFO,
   PRIORITY_LEVELS
 } from '../utils/nodeUtils';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 const NodeInfoPanel = ({ 
   selectedNodes = [], 
@@ -19,6 +20,8 @@ const NodeInfoPanel = ({
 }) => {
   const { currentTheme } = useTheme();
   const intl = useIntl();
+  const isMobile = useIsMobile();
+  const panelWidth = isMobile ? 280 : 320;
 
   const isMultiSelection = selectedNodes.length > 1;
   const singleNode = selectedNodes.length === 1 ? selectedNodes[0] : null;
@@ -96,7 +99,7 @@ const NodeInfoPanel = ({
       position: 'fixed',
       top: 48, // Below menu bar
       right: 0,
-      width: '320px',
+      width: panelWidth + 'px',
       height: 'calc(100vh - 48px)',
       backgroundColor: currentTheme.colors.panelBackground,
       borderLeft: `1px solid ${currentTheme.colors.panelBorder}`,
