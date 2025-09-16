@@ -16,6 +16,7 @@ A powerful and intuitive diagramming tool built with React and HTML5 Canvas. Cre
   - Center view on root node
   - Custom zoom controls
   - High‑DPI rendering for crisp visuals on mobile/retina
+  - Mobile friendly: safe‑area aware overlays and no iOS long‑press callout
   - Space + left click to pan
 
 - 💾 **Data Management**
@@ -89,6 +90,17 @@ See `doc/PLUGIN_SPEC.md` for the full specification. Migration and progress note
    ```
 
 4. Open http://localhost:5173 in your browser
+
+### Access from other devices (same network)
+
+- Start on LAN: `npm run dev -- --host`
+- Use the Network URL Vite prints (e.g., `http://192.168.1.23:5173`)
+- On your phone (same Wi‑Fi), open that URL in a browser
+- Alternative (prod-like): `npm run build` then `npm run preview -- --host`
+- Optional config: set `server: { host: true, port: 5173 }` in `vite.config.js`
+- Troubleshooting: ensure same Wi‑Fi (not guest), allow Node/Vite through firewall, disable VPNs, and use the IP URL (not `localhost`)
+
+For more details, see `doc/DEV_SERVER.md`.
 
 ## Usage
 

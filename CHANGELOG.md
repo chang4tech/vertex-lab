@@ -7,6 +7,10 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ## Unreleased
 
 ### Added
+- Docs: `doc/DEV_SERVER.md` guiding LAN access (Vite `--host`, preview, IP lookup, firewall/VPN tips).
+- README: “Access from other devices” quick steps.
+- Mobile: Suppress iOS long‑press callout/selection on the canvas (CSS no‑callout + touch `pointerdown` preventDefault).
+- Tests: `VertexCanvas.mobile.test.jsx` validates no‑callout/no‑select styles; ContextMenu touch/contextmenu default suppression.
 - Mobile: High‑DPI (devicePixelRatio) scaling for crisper canvas rendering on retina/mobile.
 - Tests: VertexCanvas DPR scaling test.
 - Tests: Mobile Node Info panel width test.
@@ -39,6 +43,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
  - Docs: Migration guidance consolidated into this changelog and `doc/progress.md`; removed standalone `MIGRATION.md`.
 
 ### Changed
+- Mobile: Dropdown/context menus render above FABs/help (higher z-index for `.menu`/`.menu-dropdown`).
+- Mobile: Minimap uses safe‑area insets (`env(safe-area-inset-*)`) for bottom/right.
+- HTML: Set viewport to `viewport-fit=cover` to enable safe-area on iOS.
 - Mobile: Long‑press movement cancel threshold increased (12 → 20) to avoid accidental menus during slow panning.
 - Mobile: Quick controls respect safe‑area insets (env()) and maintain 44px targets.
 - Mobile: Node Info panel uses a narrower width on small screens.

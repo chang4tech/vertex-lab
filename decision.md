@@ -155,3 +155,33 @@ Decisions
 - Adjust Node Info panel and menus on mobile
   - Rationale: Reduce canvas occlusion and make tapping easier.
   - Change: Narrow panel width on mobile; increase menu item spacing via media query for coarse pointers.
+
+## 2025-09-16: iOS long‑press callout suppression and overlay layering
+
+Context: On iOS, long‑pressing the canvas could trigger the native callout (Search/Define), competing with our custom context menu. Floating FABs/help occasionally overlaid dropdown menus on mobile.
+
+Decisions
+- Suppress iOS callout and selection on the canvas
+  - Approach: Inline canvas styles `-webkit-touch-callout: none`, `-webkit-user-select: none`, `user-select: none`; additionally call `preventDefault()` on touch `pointerdown` before starting long‑press logic.
+  - Rationale: CSS alone can be insufficient on some WebKit builds; combining CSS with early `preventDefault()` is a robust pattern.
+  - Considered: Global `touch-action: none` on body (too invasive), intercepting `contextmenu` only (doesn’t prevent selection toolbar). The chosen approach is scoped and does not block scroll in other areas.
+
+- Respect safe‑area and fix overlay stacking
+  - Changes: Use `env(safe-area-inset-*)` for minimap offsets; raise `.menu/.menu-dropdown` z-index above floating FABs/help.
+  - Rationale: Ensure menus are never obscured and avoid overlap with the iOS home indicator.
+
+- Enable safe-area via viewport
+  - Change: `viewport-fit=cover` in the HTML meta viewport to expose insets on iOS.
+
+Implications
+- Mobile UX feels native: no iOS callout over the canvas, menus stay on top, and overlays avoid the home indicator.
+- Scoped changes minimize risk to desktop UX.
+
+## 2025-09-16: LAN access documentation
+
+Context: Developers need to access the dev server from other devices for mobile testing.
+
+Decision
+- Document LAN usage succinctly in README and provide a detailed `doc/DEV_SERVER.md` including `--host`, preview, IP lookup, and firewall tips.
+  - Rationale: Keep README actionable while moving detailed guidance to docs to avoid clutter.
+  - Considered: Default `server.host=true` in Vite config; left optional and documented to avoid unexpected exposure on untrusted networks by default.

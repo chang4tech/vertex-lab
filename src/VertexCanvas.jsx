@@ -689,6 +689,10 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
     canvas.addEventListener('redraw', handleRedraw);
     // Pointer/touch support
     const onPointerDown = (e) => {
+      // Prevent default on touch to suppress iOS callout
+      if (e.pointerType === 'touch') {
+        try { e.preventDefault(); } catch {}
+      }
       if (!canvas.contains(e.target)) return;
       if (e.pointerType !== 'mouse') {
         canvas.setPointerCapture?.(e.pointerId);
@@ -869,7 +873,11 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
         display: 'block', 
         margin: 0,
         cursor: 'grab',
-        touchAction: 'none'
+        touchAction: 'none',
+        // Prevent iOS long-press callout and selection on canvas
+        WebkitTouchCallout: 'none',
+        WebkitUserSelect: 'none',
+        userSelect: 'none'
       }}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
