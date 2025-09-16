@@ -1814,6 +1814,7 @@ function App({ graphId = 'default' }) {
         appApi={{
           // selection and nodes
           nodes,
+          edges,
           selectedNodeIds,
           selectedNodes: selectedNodeIds.map(id => nodes.find(n => n.id === id)).filter(Boolean),
           // node info panel state/handlers
@@ -1822,6 +1823,7 @@ function App({ graphId = 'default' }) {
           onEditNode: handleEditNodeFromPanel,
           onDeleteNodes: handleDeleteNodesFromPanel,
           onToggleCollapse: handleToggleCollapseFromPanel,
+          onHighlightNodes: handleHighlightNodes,
           setPluginEnabled,
           pluginPrefs,
         }}
@@ -1880,7 +1882,13 @@ function App({ graphId = 'default' }) {
             ))}
             {/* Plugin Commands (node context) */}
             {(() => {
-              const cmdApi = { nodes, selectedNodeIds, selectedNodes: selectedNodeIds.map(id => nodes.find(n => n.id === id)).filter(Boolean) };
+              const cmdApi = {
+                nodes,
+                edges,
+                selectedNodeIds,
+                selectedNodes: selectedNodeIds.map(id => nodes.find(n => n.id === id)).filter(Boolean),
+                setHighlightedNodes: (ids) => handleHighlightNodes(ids),
+              };
               return filterCommandsForContext(pluginCommands, cmdApi, contextMenu.target).map(cmd => (
                 <button key={cmd.id} onClick={() => { closeContextMenu(); try { cmd.run(cmdApi, contextMenu.target); } catch (e) { console.error('Plugin command error:', e); } }}>
                   {cmd.title}
@@ -1901,7 +1909,13 @@ function App({ graphId = 'default' }) {
             <button onClick={() => { closeContextMenu(); canvasRef.current?.resetZoom?.(); }}><FormattedMessage id="view.resetZoom" defaultMessage="Reset Zoom" /></button>
             {/* Plugin Commands (canvas context) */}
             {(() => {
-              const cmdApi = { nodes, selectedNodeIds, selectedNodes: selectedNodeIds.map(id => nodes.find(n => n.id === id)).filter(Boolean) };
+              const cmdApi = {
+                nodes,
+                edges,
+                selectedNodeIds,
+                selectedNodes: selectedNodeIds.map(id => nodes.find(n => n.id === id)).filter(Boolean),
+                setHighlightedNodes: (ids) => handleHighlightNodes(ids),
+              };
               return filterCommandsForContext(pluginCommands, cmdApi, contextMenu.target).map(cmd => (
                 <button key={cmd.id} onClick={() => { closeContextMenu(); try { cmd.run(cmdApi, contextMenu.target); } catch (e) { console.error('Plugin command error:', e); } }}>
                   {cmd.title}

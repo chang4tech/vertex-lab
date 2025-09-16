@@ -1,0 +1,48 @@
+export const neighborsHighlighterPlugin = {
+  id: 'core.neighborsHighlighter',
+  name: 'Neighbors Highlighter',
+  description: 'Commands to highlight neighbors and clear highlights',
+  slots: {
+    commands: [
+      {
+        id: 'neighbors.highlight',
+        title: 'Highlight Neighbors',
+        when: 'node',
+        run: (api, ctx) => {
+          const nodeId = ctx?.nodeId;
+          if (!nodeId) return;
+          const edges = Array.isArray(api?.edges) ? api.edges : [];
+          let neighbors = [];
+          if (edges.length > 0) {
+            for (const e of edges) {
+              if (!e) continue;
+              if (e.source === nodeId) neighbors.push(e.target);
+              else if (e.target === nodeId) neighbors.push(e.source);
+            }
+          } else {
+            // Fallback: infer neighbors via parentId relation
+            const nodes = Array.isArray(api?.nodes) ? api.nodes : [];
+            const node = nodes.find(n => n.id === nodeId);
+            if (node && node.parentId != null) {
+              neighbors.push(node.parentId);
+            }
+            neighbors.push(...nodes.filter(n => n.parentId === nodeId).map(n => n.id));
+          }
+          const unique = Array.from(new Set(neighbors)).filter(Boolean);
+          api?.setHighlightedNodes?.(unique);
+        }
+      },
+      {
+        id: 'neighbors.clear',
+        title: 'Clear Highlights',
+        when: 'canvas',
+        run: (api) => {
+          api?.setHighlightedNodes?.([]);
+        }
+      }
+    ]
+  }
+};
+
+export default neighborsHighlighterPlugin;
+

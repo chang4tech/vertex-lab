@@ -9,6 +9,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Added
 - Core Plugins: Selection Tools panel (quick actions for selection).
 - Core Plugins: Clipboard Tools commands (Copy Selected IDs, Copy Node ID).
+- Core Plugins: Graph Stats panel (nodes, edges, selection).
+- Core Plugins: Neighbors Highlighter commands (Highlight Neighbors, Clear Highlights).
+- Custom Example: Neighbors Tools commands plugin demonstrating highlight workflow.
 - Docs: `doc/PLUGINS_DESIGN.md` outlining core and custom plugin designs for future implementation.
 - Plugins: New slots — `canvasOverlays` (render HUD/UI above canvas) and `commands` (actions surfaced in context menu with context-aware filtering).
 - Plugins: Error isolation via an ErrorBoundary in `PluginHost`; faulty panels render a fallback and no longer crash the app.
@@ -26,6 +29,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Changed
 - App: Command filtering now receives minimal api so predicate `when(api, ctx)` can leverage selection state.
+- App: Command runners now receive `edges` and `setHighlightedNodes` to enable non-destructive highlight interactions.
 - App: Context menu now surfaces plugin commands (node/canvas contexts) collected from enabled plugins.
 - App: Uses `mergePlugins` when loading stored custom plugins and importing at runtime.
 - Docs: `README.md` plugin section calls out error isolation and duplicate handling; `doc/PLUGIN_SPEC.md` updated with Error Isolation and Duplicate IDs sections.

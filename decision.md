@@ -86,4 +86,14 @@ Decisions
 
 - Pass minimal API to command filtering
   - Rationale: Function predicates in `when(api, ctx)` should have access to selection/nodes to enable/disable accurately.
-  - Consequence: Predictable command visibility; still read‑only to avoid exposing mutating actions widely.
+- Consequence: Predictable command visibility; still read‑only to avoid exposing mutating actions widely.
+
+## 2025-09-15: Command runner API additions (edges + setHighlightedNodes)
+
+Context: Enable non-destructive, useful commands (e.g., highlight neighbors) without broadening mutation surface.
+
+Decision
+- Include `edges` and `setHighlightedNodes` in the command runner API
+  - Rationale: Commands often need graph context to compute results and a way to present them; highlighting is reversible and safe.
+  - Alternatives: Add full write APIs; rejected for now to keep safety and simplicity.
+  - Consequence: Plugins can implement helpful visual tools (neighbors, heatmaps later) while keeping data integrity intact.
