@@ -72,6 +72,8 @@ export function ContextMenu({ x, y, isOpen, onClose, children }) {
       className="menu"
       style={menuStyle}
       onMouseDown={handleMouseDown}
+      onContextMenu={(e) => e.preventDefault()}
+      onTouchStart={(e) => e.stopPropagation()}
     >
       {children}
     </div>
