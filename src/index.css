@@ -8,6 +8,22 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Mobile: reduce iOS copy/lookup callout noise by default on the app surface.
+   Re-enable selection explicitly where needed (inputs, dialogs). */
+@media (pointer: coarse), (max-width: 768px) {
+  body {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  input, textarea, select, [contenteditable="true"],
+  .dialog_content, .settings-modal, .menu, .menu-dropdown {
+    -webkit-touch-callout: default;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}
+
 /* Global no-select / no-callout mode (used while custom context menu is open) */
 .no-touch-callout,
 .no-touch-callout * {
@@ -258,6 +274,9 @@ mark {
   cursor: pointer;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
   transition: background-color 150ms ease, box-shadow 180ms ease, transform 120ms ease;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .trigger:hover {
@@ -364,7 +383,7 @@ mark {
 
 /* --- Mobile tweaks --- */
 @media (max-width: 768px) {
-  .minimap {
+.minimap {
     bottom: 12px;
     right: 12px;
     padding: 8px;
@@ -386,6 +405,13 @@ mark {
     padding: 10px 14px;
   }
   .help { top: 72px; }
+}
+
+/* Floating action button (mobile) */
+.fab {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 

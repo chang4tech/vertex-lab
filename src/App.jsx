@@ -1825,9 +1825,9 @@ function App({ graphId = 'default' }) {
       {/* Mobile quick controls: zoom and center */}
       {isMobile && (
         <div style={{ position: 'fixed', right: 'calc(24px + env(safe-area-inset-right))', bottom: 'calc(100px + env(safe-area-inset-bottom))', zIndex: 10011, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <button aria-label="Zoom In" style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: '#2d6cdf', color: '#fff', fontSize: 20 }} onClick={() => canvasRef.current?.zoom?.(1.1)}>＋</button>
-          <button aria-label="Zoom Out" style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: '#2d6cdf', color: '#fff', fontSize: 20 }} onClick={() => canvasRef.current?.zoom?.(0.9)}>－</button>
-          <button aria-label="Center" style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: '#2d6cdf', color: '#fff', fontSize: 16 }} onClick={() => canvasRef.current?.fitToView?.()}>⤢</button>
+          <button className="fab" aria-label="Zoom In" style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: '#2d6cdf', color: '#fff', fontSize: 20 }} onClick={() => canvasRef.current?.zoom?.(1.1)}>＋</button>
+          <button className="fab" aria-label="Zoom Out" style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: '#2d6cdf', color: '#fff', fontSize: 20 }} onClick={() => canvasRef.current?.zoom?.(0.9)}>－</button>
+          <button className="fab" aria-label="Center" style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: '#2d6cdf', color: '#fff', fontSize: 16 }} onClick={() => canvasRef.current?.fitToView?.()}>⤢</button>
         </div>
       )}
 

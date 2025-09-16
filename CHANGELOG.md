@@ -46,8 +46,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Mobile: Dropdown/context menus render above FABs/help (raised inline z-index in nav dropdown + higher z-index for nav and `.menu`/`.menu-dropdown`).
 - Mobile: Minimap uses safe‑area insets (`env(safe-area-inset-*)`) for bottom/right.
 - HTML: Set viewport to `viewport-fit=cover` to enable safe-area on iOS.
- - Menus UX: Add max-height + scrolling with momentum; contain overscroll to avoid page bounce under menus on mobile.
- - Context menu clamp: Use `calc(10px + env(safe-area-inset-*)))` when sticking to screen edges.
+- Menus UX: Add max-height + scrolling with momentum; contain overscroll to avoid page bounce under menus on mobile.
+- Context menu clamp: Use `calc(10px + env(safe-area-inset-*)))` when sticking to screen edges.
+- iOS callout suppression: Broadened guard on mobile (disable selection/callout by default with re‑enable on inputs/dialogs) and added no‑callout to Help trigger + FABs to prevent the system Copy/Look Up sheet when long‑pressing near overlays.
 - Mobile: Long‑press movement cancel threshold increased (12 → 20) to avoid accidental menus during slow panning.
 - Mobile: Quick controls respect safe‑area insets (env()) and maintain 44px targets.
 - Mobile: Node Info panel uses a narrower width on small screens.
