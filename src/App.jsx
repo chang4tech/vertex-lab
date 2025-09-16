@@ -172,7 +172,9 @@ function MenuBar({
             outline: 'none'
           }}
         />
-        <span style={{ fontSize: 12, opacity: 0.6, color: currentTheme.colors.secondaryText }}>ID: {graphId}</span>
+        {!isMobile && (
+          <span style={{ fontSize: 12, opacity: 0.6, color: currentTheme.colors.secondaryText }}>ID: {graphId}</span>
+        )}
       </div>
       <nav ref={menuBarRef} style={{
         width: '100%',

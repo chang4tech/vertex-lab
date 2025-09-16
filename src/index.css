@@ -260,6 +260,8 @@ mark {
 
 .trigger-tooltip {
   visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
   min-width: 80px;
   max-width: 200px;
   background-color: rgba(0,0,0,0.85);
@@ -278,6 +280,12 @@ mark {
   transition: opacity 0.3s;
   white-space: nowrap;
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.trigger:hover .trigger-tooltip,
+.trigger:focus-visible .trigger-tooltip {
+  visibility: visible;
+  opacity: 1;
 }
 
 .trigger:hover .trigger-tooltip {
