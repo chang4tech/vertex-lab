@@ -36,6 +36,8 @@ export default function PluginPage({ pluginId }) {
 
   const configSlot = plugin.slots?.configPage;
   const hasConfig = configSlot && typeof configSlot.render === 'function';
+  const aboutSlot = plugin.slots?.aboutPage;
+  const hasAbout = aboutSlot && typeof aboutSlot.render === 'function';
   const ConfigView = () => {
     if (!hasConfig) {
       return <div style={{ color: '#6b7280' }}>This plugin does not provide a config page.</div>;
@@ -100,6 +102,12 @@ export default function PluginPage({ pluginId }) {
       </header>
 
       <main style={{ marginTop: 16 }}>
+        {hasAbout && (
+          <section style={{ marginBottom: 16 }}>
+            <h3 style={{ margin: '8px 0' }}>How to Use</h3>
+            {aboutSlot.render({})}
+          </section>
+        )}
         <section style={{ marginBottom: 16 }}>
           <h3 style={{ margin: '8px 0' }}>Settings</h3>
           <ConfigView />

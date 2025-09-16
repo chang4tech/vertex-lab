@@ -7,6 +7,17 @@ export const showcasePlugin = {
   version: '1.0.0',
   author: 'Vertex Lab',
   slots: {
+    aboutPage: {
+      render: () => (
+        <div style={{ color: "#374151" }}>
+          <ul style={{ margin: 0, paddingLeft: 18 }}>
+            <li>Shows a selection HUD overlay at the bottom-left.</li>
+            <li>Adds "Plugin: Hello Node" (node context) and "Plugin: Hello Canvas" commands.</li>
+            <li>Use this as a reference for writing your own plugins.</li>
+          </ul>
+        </div>
+      )
+    },
     // A simple overlay that shows selection count
     canvasOverlays: [
       {

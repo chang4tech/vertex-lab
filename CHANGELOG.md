@@ -88,3 +88,5 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## 0.0.0 - Initial
 - Initial project scaffold, canvas rendering, selection, import/export, themes, and core shortcuts.
+
+- Control Hub: Added optional `aboutPage` (How to Use) and implemented guidance for core and example plugins.

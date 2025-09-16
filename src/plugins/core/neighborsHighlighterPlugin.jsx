@@ -1,8 +1,21 @@
+import React from 'react';
+
 export const neighborsHighlighterPlugin = {
   id: 'core.neighborsHighlighter',
   name: 'Neighbors Highlighter',
   description: 'Commands to highlight neighbors and clear highlights',
   slots: {
+    aboutPage: {
+      render: () => (
+        <div style={{ color: '#374151' }}>
+          <ul style={{ margin: 0, paddingLeft: 18 }}>
+            <li>Right-click a node and choose Highlight Neighbors.</li>
+            <li>Right-click the canvas and choose Clear Highlights to reset.</li>
+            <li>Enable 2nd-degree neighbors or include the source node in Settings.</li>
+          </ul>
+        </div>
+      )
+    },
     commands: [
       {
         id: 'neighbors.highlight',
@@ -45,4 +58,3 @@ export const neighborsHighlighterPlugin = {
 };
 
 export default neighborsHighlighterPlugin;
-
