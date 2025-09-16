@@ -52,6 +52,14 @@ export function ContextMenu({ x, y, isOpen, onClose, children }) {
     }
   }, [x, y, isOpen]);
 
+  // While open, disable text selection/callout globally to prevent iOS toolbars
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const cls = 'no-touch-callout';
+    try { document.body.classList.add(cls); } catch {}
+    return () => { try { document.body.classList.remove(cls); } catch {} };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const menuStyle = {

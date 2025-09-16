@@ -8,6 +8,14 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Global no-select / no-callout mode (used while custom context menu is open) */
+.no-touch-callout,
+.no-touch-callout * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
 body.lock-scroll {
   overflow: hidden;
 }
