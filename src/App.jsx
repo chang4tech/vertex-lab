@@ -28,7 +28,7 @@ import { createEnhancedNode } from './utils/nodeUtils';
 import { useIsMobile } from './hooks/useIsMobile';
 
 // --- Menu Bar Component ---
-function MenuBar({
+const MenuBar = React.forwardRef(({
   onExport, onImport, onNew, onUndo, onRedo, onDelete, onAutoLayout, onSearch, onCenter, onZoomIn, onZoomOut, onResetZoom, onShowThemes,
   nodes, setNodes, setUndoStack, setRedoStack, setSelectedNodeId, canvasRef,
   showMinimap, setShowMinimap, showNodeInfoPanel, onToggleNodeInfoPanel,
@@ -43,9 +43,12 @@ function MenuBar({
   customPlugins,
   onImportCustomPlugin,
   onRemoveCustomPlugin,
-}) {
+}, ref) => {
   const isMobile = useIsMobile();
-  const menuBarRef = useRef(null);
+  const localMenuBarRef = useRef(null);
+
+  // Merge refs
+  React.useImperativeHandle(ref, () => localMenuBarRef.current);
   const menuRefs = {
     file: useRef(null),
     edit: useRef(null),
@@ -69,7 +72,7 @@ function MenuBar({
     if (!openMenu) return;
 
     const handleClickOutside = (event) => {
-      if (menuBarRef.current && !menuBarRef.current.contains(event.target)) {
+      if (localMenuBarRef.current && !localMenuBarRef.current.contains(event.target)) {
         setOpenMenu(null);
       }
     };
@@ -206,7 +209,7 @@ function MenuBar({
           <span style={{ fontSize: 12, opacity: 0.6, color: currentTheme.colors.secondaryText }}>ID: {graphId}</span>
         )}
       </div>
-      <nav ref={menuBarRef} style={{
+      <nav ref={localMenuBarRef} style={{
         width: '100%',
         background: currentTheme.colors.menuBackground,
         borderBottom: `1px solid ${currentTheme.colors.menuBorder}`,
@@ -707,7 +710,7 @@ function MenuBar({
     </nav>
     </>
   );
-}
+});
 
 /**
  * React Version of the Vue Mind-Mapping Tool UI
@@ -808,6 +811,8 @@ const MainHeader = () => {
 function App({ graphId = 'default' }) {
   const intl = useIntl();
   const isMobile = useIsMobile();
+  const menuBarRef = useRef(null);
+
 
   // Undo/redo stacks
   const [undoStack, setUndoStack] = useState([]);
@@ -996,7 +1001,7 @@ function App({ graphId = 'default' }) {
       const H = window.innerHeight;
       const sidePadding = 0;
       const rightPanel = showNodeInfoPanel ? 320 : 0;
-      const topNav = 0; // spacer below nav accounts for it
+      const topNav = menuBarRef.current?.offsetHeight || 0;
       const verticalMargin = 0;
       const width = Math.max(isMobile ? 320 : 600, W - sidePadding - rightPanel);
       const height = Math.max(isMobile ? 300 : 400, H - topNav - verticalMargin);
@@ -1190,9 +1195,9 @@ function App({ graphId = 'default' }) {
   // Auto layout handler
   const handleAutoLayout = useCallback(() => {
     console.log('Applying auto layout to', nodes.length, 'nodes');
-    const layoutedNodes = organizeLayout(nodes);
+    const layoutedNodes = organizeLayout(nodes, canvasSize);
     pushUndo(layoutedNodes);
-  }, [nodes, pushUndo]);
+  }, [nodes, pushUndo, canvasSize]);
 
   // Search handlers
   const handleShowSearch = useCallback(() => {
@@ -1702,6 +1707,7 @@ function App({ graphId = 'default' }) {
   return (
     <React.Fragment>
       <MenuBar
+        ref={menuBarRef}
         onExport={handleExport}
         onImport={handleImport}
         nodes={nodes}

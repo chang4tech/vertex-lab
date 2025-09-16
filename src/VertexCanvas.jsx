@@ -255,8 +255,9 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       const cy = (minY + maxY) / 2;
       // Keep current scale; position offsets so that (cx, cy) maps to canvas center
       const s = view.current.scale;
-      view.current.offsetX = canvas.width / 2 - cx * s;
-      view.current.offsetY = canvas.height / 2 - cy * s;
+      view.current.offsetX = width / 2 - cx * s;
+      view.current.offsetY = height / 2 - cy * s;
+      console.log('Center - width:', width, 'height:', height, 'cx:', cx, 'cy:', cy, 'scale:', s, 'offsetX:', view.current.offsetX, 'offsetY:', view.current.offsetY);
       canvas.dispatchEvent(new Event('redraw'));
     },
     zoom: (factor) => {
@@ -283,21 +284,23 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       const basePad = currentTheme.colors.nodeRadius;
       const fracPad = Math.round(0.08 * Math.min(canvas.width, canvas.height));
       const dynamicPad = Math.min(128, Math.max(24, basePad, fracPad));
-      const scaleX = (canvas.width - 2 * dynamicPad) / contentW;
-      const scaleY = (canvas.height - 2 * dynamicPad) / contentH;
+      const scaleX = (width - 2 * dynamicPad) / contentW;
+      const scaleY = (height - 2 * dynamicPad) / contentH;
       // Do not zoom in beyond 1:1 for large screens/content; keep a minimum scale
       const s = Math.max(0.05, Math.min(1, Math.min(scaleX, scaleY)));
       view.current.scale = s;
       // center after scaling
       const cx = (minX + maxX) / 2;
       const cy = (minY + maxY) / 2;
-      view.current.offsetX = canvas.width / 2 - cx * s;
-      view.current.offsetY = canvas.height / 2 - cy * s;
+      view.current.offsetX = width / 2 - cx * s;
+      view.current.offsetY = height / 2 - cy * s;
+      console.log('FitToView - width:', width, 'height:', height, 'minX:', minX, 'maxX:', maxX, 'minY:', minY, 'maxY:', maxY, 'contentW:', contentW, 'contentH:', contentH, 'scaleX:', scaleX, 'scaleY:', scaleY, 'finalScale:', s, 'offsetX:', view.current.offsetX, 'offsetY:', view.current.offsetY);
       canvas.dispatchEvent(new Event('redraw'));
     },
     resetZoom: () => {
       view.current.scale = 1;
       const canvas = canvasRef.current;
+      console.log('ResetZoom - scale:', view.current.scale);
       canvas.dispatchEvent(new Event('redraw'));
     },
     exportAsPNG: () => {
@@ -321,9 +324,9 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       const node = nodes.find(n => n.id === nodeId);
       if (!node) return;
       
-      const canvas = canvasRef.current;
-      view.current.offsetX = canvas.width / 2 - node.x * view.current.scale;
-      view.current.offsetY = canvas.height / 2 - node.y * view.current.scale;
+      view.current.offsetX = width / 2 - node.x * view.current.scale;
+      view.current.offsetY = height / 2 - node.y * view.current.scale;
+      console.log('FocusOnNode - nodeId:', nodeId, 'nodeX:', node.x, 'nodeY:', node.y, 'scale:', view.current.scale, 'offsetX:', view.current.offsetX, 'offsetY:', view.current.offsetY);
       canvas.dispatchEvent(new Event('redraw'));
     },
     setViewport: (viewport) => {
@@ -332,11 +335,12 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       if (viewport.scale) {
         view.current.scale = viewport.scale;
       } else if (viewport.width) {
-        view.current.scale = canvas.width / viewport.width;
+        view.current.scale = width / viewport.width;
       }
       // Convert world to screen offsets
       view.current.offsetX = -viewport.x * view.current.scale;
       view.current.offsetY = -viewport.y * view.current.scale;
+      console.log('SetViewport - viewport:', viewport, 'scale:', view.current.scale, 'offsetX:', view.current.offsetX, 'offsetY:', view.current.offsetY);
       canvas.dispatchEvent(new Event('redraw'));
     }
   }), [nodes]);
@@ -431,8 +435,8 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       const vb = {
         x: -view.current.offsetX / view.current.scale,
         y: -view.current.offsetY / view.current.scale,
-        width: canvas.width / view.current.scale,
-        height: canvas.height / view.current.scale,
+        width: width / view.current.scale,
+        height: height / view.current.scale,
       };
       onViewBoxChange(vb);
     }
@@ -462,13 +466,16 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
     const handleMouseDown = (e) => {
       // Pan with space+drag or middle mouse button
       if (isSpaceDown || e.button === 1) {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1;
         panState.current = {
           panning: true,
-          startX: e.clientX,
-          startY: e.clientY,
+          startX: (e.clientX - rect.left) / dpr, // Convert to CSS pixels
+          startY: (e.clientY - rect.top) / dpr,   // Convert to CSS pixels
           startOffsetX: view.current.offsetX,
           startOffsetY: view.current.offsetY
         };
+        console.log('Pan Start - clientX:', e.clientX, 'clientY:', e.clientY, 'rect.left:', rect.left, 'rect.top:', rect.top, 'dpr:', dpr, 'startX_css:', (e.clientX - rect.left) / dpr, 'startY_css:', (e.clientY - rect.top) / dpr, 'startOffsetX:', view.current.offsetX, 'startOffsetY:', view.current.offsetY);
         return;
       }
       // Shift + drag to start marquee selection
@@ -506,10 +513,16 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       }
       // Pan
       if (panState.current.panning) {
-        const dx = e.clientX - panState.current.startX;
-        const dy = e.clientY - panState.current.startY;
+        const rect = canvas.getBoundingClientRect();
+        const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1;
+        const currentClientX_css = (e.clientX - rect.left) / dpr; // Current mouse X in CSS pixels
+        const currentClientY_css = (e.clientY - rect.top) / dpr;   // Current mouse Y in CSS pixels
+
+        const dx = currentClientX_css - panState.current.startX;
+        const dy = currentClientY_css - panState.current.startY;
         view.current.offsetX = panState.current.startOffsetX + dx;
         view.current.offsetY = panState.current.startOffsetY + dy;
+        console.log('Pan Update - clientX:', e.clientX, 'clientY:', e.clientY, 'currentClientX_css:', currentClientX_css, 'currentClientY_css:', currentClientY_css, 'dx:', dx, 'dy:', dy, 'newOffsetX:', view.current.offsetX, 'newOffsetY:', view.current.offsetY);
         canvas.dispatchEvent(new Event('redraw'));
         return;
       }
@@ -548,12 +561,22 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       e.preventDefault();
       const scaleAmount = e.deltaY < 0 ? 1.1 : 0.9;
       const rect = canvas.getBoundingClientRect();
-      const mx = (e.clientX - rect.left - view.current.offsetX) / view.current.scale;
-      const my = (e.clientY - rect.top - view.current.offsetY) / view.current.scale;
+      const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1;
+
+      // Calculate mouse position in CSS pixels relative to the canvas
+      const mouseCanvasX = (e.clientX - rect.left) / dpr;
+      const mouseCanvasY = (e.clientY - rect.top) / dpr;
+
+      // Calculate world coordinates of the mouse position before scaling
+      const mx = (mouseCanvasX - view.current.offsetX) / view.current.scale;
+      const my = (mouseCanvasY - view.current.offsetY) / view.current.scale;
+
       view.current.scale *= scaleAmount;
-      // Zoom to mouse position
-      view.current.offsetX -= (mx * (scaleAmount - 1)) * view.current.scale;
-      view.current.offsetY -= (my * (scaleAmount - 1)) * view.current.scale;
+
+      // Adjust offsetX and offsetY to zoom around the mouse position
+      view.current.offsetX = mouseCanvasX - mx * view.current.scale;
+      view.current.offsetY = mouseCanvasY - my * view.current.scale;
+      console.log('Wheel - deltaY:', e.deltaY, 'scaleAmount:', scaleAmount, 'mouseCanvasX:', mouseCanvasX, 'mouseCanvasY:', mouseCanvasY, 'mx:', mx, 'my:', my, 'newScale:', view.current.scale, 'newOffsetX:', view.current.offsetX, 'newOffsetY:', view.current.offsetY);
       canvas.dispatchEvent(new Event('redraw'));
     };
     // Redraw on pan/zoom
@@ -642,8 +665,8 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
         const vb = {
           x: -view.current.offsetX / view.current.scale,
           y: -view.current.offsetY / view.current.scale,
-          width: (canvas.width / ((typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1)) / view.current.scale,
-          height: (canvas.height / ((typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1)) / view.current.scale,
+          width: width / view.current.scale,
+          height: height / view.current.scale,
         };
         onViewBoxChange(vb);
       }
@@ -750,15 +773,28 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
         const dist = Math.max(1, Math.hypot(dx, dy));
         const factor = dist / Math.max(1, pinchState.current.startDist);
         const newScale = Math.max(0.05, pinchState.current.startScale * factor);
-        // Scale around midpoint
-        const midX = (pts[0].x + pts[1].x) / 2;
-        const midY = (pts[0].y + pts[1].y) / 2;
+        
+        const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1;
+
+        // Calculate midpoint in device pixels
+        const midX_device = (pts[0].x + pts[1].x) / 2;
+        const midY_device = (pts[0].y + pts[1].y) / 2;
+
+        // Convert midpoint to CSS pixels relative to the canvas
         const rect = canvas.getBoundingClientRect();
-        const worldMidX = (midX - rect.left - view.current.offsetX) / view.current.scale;
-        const worldMidY = (midY - rect.top - view.current.offsetY) / view.current.scale;
+        const midX_css = (midX_device - rect.left) / dpr;
+        const midY_css = (midY_device - rect.top) / dpr;
+
+        // Calculate world coordinates of the midpoint before scaling
+        const worldMidX = (midX_css - view.current.offsetX) / view.current.scale;
+        const worldMidY = (midY_css - view.current.offsetY) / view.current.scale;
+
         view.current.scale = newScale;
-        view.current.offsetX = midX - rect.left - worldMidX * newScale;
-        view.current.offsetY = midY - rect.top - worldMidY * newScale;
+
+        // Adjust offsetX and offsetY to zoom around the midpoint
+        view.current.offsetX = midX_css - worldMidX * newScale;
+        view.current.offsetY = midY_css - worldMidY * newScale;
+
         canvas.dispatchEvent(new Event('redraw'));
       } else if (e.pointerType === 'touch' && pointers.current.size === 1) {
         handleMouseMove(e);

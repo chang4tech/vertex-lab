@@ -44,6 +44,8 @@ describe('layoutUtils', () => {
   });
 
   describe('applyForceDirectedLayout', () => {
+    const canvasDimensions = { width: 800, height: 600 };
+
     it('adjusts node positions to resolve collisions', () => {
       const nodes = [
         { id: 1, label: 'Root', x: 400, y: 300, parentId: null },
@@ -52,7 +54,7 @@ describe('layoutUtils', () => {
       ];
 
       const originalNodes = JSON.parse(JSON.stringify(nodes));
-      const adjustedNodes = applyForceDirectedLayout(nodes, 50);
+      const adjustedNodes = applyForceDirectedLayout(nodes, canvasDimensions, 50);
       
       expect(adjustedNodes).toHaveLength(3);
       
@@ -76,7 +78,7 @@ describe('layoutUtils', () => {
         { id: 2, label: 'Child', x: 500, y: 400, parentId: 1 }
       ];
 
-      const adjustedNodes = applyForceDirectedLayout(nodes, 5);
+      const adjustedNodes = applyForceDirectedLayout(nodes, canvasDimensions, 5);
       
       expect(adjustedNodes).toHaveLength(2);
       
@@ -90,13 +92,15 @@ describe('layoutUtils', () => {
   });
 
   describe('organizeLayout', () => {
+    const canvasDimensions = { width: 800, height: 600 };
+
     it('returns original nodes when no collisions detected', () => {
       const nodes = [
         { id: 1, label: 'Node 1', x: 100, y: 100 },
         { id: 2, label: 'Node 2', x: 300, y: 300 }
       ];
 
-      const organizedNodes = organizeLayout(nodes);
+      const organizedNodes = organizeLayout(nodes, canvasDimensions);
       
       expect(organizedNodes).toEqual(nodes);
     });
@@ -107,7 +111,7 @@ describe('layoutUtils', () => {
         { id: 2, label: 'Child', x: 405, y: 305, parentId: 1 } // Too close
       ];
 
-      const organizedNodes = organizeLayout(nodes);
+      const organizedNodes = organizeLayout(nodes, canvasDimensions);
       
       expect(organizedNodes).toHaveLength(2);
       

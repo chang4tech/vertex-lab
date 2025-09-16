@@ -43,7 +43,7 @@ function estimateTextWidth(text) {
   return Math.max(text.length * 9, 60); // Minimum width for short labels
 }
 
-export function applyForceDirectedLayout(nodes, maxIterations = MAX_ITERATIONS) {
+export function applyForceDirectedLayout(nodes, canvasDimensions, maxIterations = MAX_ITERATIONS) {
   const nodeMap = new Map(nodes.map(node => [node.id, { ...node }]));
   const adjustedNodes = Array.from(nodeMap.values());
   
@@ -184,8 +184,8 @@ export function applyForceDirectedLayout(nodes, maxIterations = MAX_ITERATIONS) 
     // Keep root node relatively stable but allow some movement
     const rootNode = adjustedNodes.find(n => n.parentId === null);
     if (rootNode && iter < maxIterations - 20) {
-      const centerX = 400;
-      const centerY = 300;
+      const centerX = canvasDimensions ? canvasDimensions.width / 2 : 400;
+      const centerY = canvasDimensions ? canvasDimensions.height / 2 : 300;
       const pullStrength = Math.max(0.005, 0.02 - iter * 0.0001);
       
       rootNode.x += (centerX - rootNode.x) * pullStrength;
@@ -224,7 +224,7 @@ export function applyForceDirectedLayout(nodes, maxIterations = MAX_ITERATIONS) 
 }
 
 
-export function organizeLayout(nodes) {
+export function organizeLayout(nodes, canvasDimensions) {
   // First detect if there are any collisions
   const initialCollisions = detectCollisions(nodes);
   
@@ -235,7 +235,7 @@ export function organizeLayout(nodes) {
   console.log(`Detected ${initialCollisions.length} collisions, applying force-directed layout...`);
   
   // Apply force-directed layout to resolve collisions
-  let adjustedNodes = applyForceDirectedLayout(nodes);
+  let adjustedNodes = applyForceDirectedLayout(nodes, canvasDimensions);
   
   // Check if we still have collisions and apply additional passes if needed
   let finalCollisions = detectCollisions(adjustedNodes);
