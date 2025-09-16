@@ -49,7 +49,14 @@ For a detailed list of changes and fixes, see `CHANGELOG.md` at the project root
 
 ## Plugins
 
-Vertex Lab supports plugins that contribute UI panels, canvas overlays, and commands. Manage plugins via Settings → Plugins (enable/disable core plugins and import custom `.js/.mjs` plugins). The host error‑isolates plugin panels, dedupes plugins by id (first occurrence wins), and surfaces plugin commands in the context menu when applicable. See `doc/PLUGIN_SPEC.md` for the full specification. Migration notes are recorded in the Unreleased section of `CHANGELOG.md` and summarized in `doc/progress.md`.
+Vertex Lab supports plugins that contribute UI panels, canvas overlays, and commands. Manage plugins via Settings → Plugins (enable/disable core plugins and import custom `.js/.mjs` plugins). The host error‑isolates plugin panels, dedupes plugins by id (first occurrence wins), and surfaces plugin commands in the context menu when applicable.
+
+- Control Hub: Each plugin has a localized Control Hub with sections for “How to Use”, “Settings”, and a “Console” with Copy/Clear.
+- How to Use: Authors can provide a simple `aboutPage.markdown` string for richer docs; it’s rendered as lightweight Markdown.
+- First‑time tip: When you enable a plugin for the first time, a localized banner appears linking to its Control Hub.
+- Incomplete indicator: Plugins with no visible contributions (no panels, commands, overlays, about, or config) show an “Incomplete” badge in the Plugins dialog.
+
+See `doc/PLUGIN_SPEC.md` for the full specification. Migration and progress notes are summarized in `doc/progress.md` and tracked in `CHANGELOG.md`.
 
 ## Getting Started
 

@@ -17,6 +17,15 @@ const PluginsManager = ({
   const fileInputRef = useRef(null);
   const [expanded, setExpanded] = useState({});
   const [errors, setErrors] = useState(() => getPluginErrors());
+  const isIncomplete = (p) => {
+    const s = p?.slots || {};
+    const hasSidePanels = Array.isArray(s.sidePanels) && s.sidePanels.length > 0;
+    const hasCommands = Array.isArray(s.commands) && s.commands.length > 0;
+    const hasOverlays = Array.isArray(s.canvasOverlays) && s.canvasOverlays.length > 0;
+    const hasAbout = !!s.aboutPage;
+    const hasConfig = !!s.configPage;
+    return !(hasSidePanels || hasCommands || hasOverlays || hasAbout || hasConfig);
+  };
   useEffect(() => {
     const unsub = subscribePluginErrors(() => setErrors(getPluginErrors()));
     return unsub;
@@ -51,6 +60,9 @@ const PluginsManager = ({
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <strong>{p.name || p.id}</strong>
                       <span style={{ fontSize: 12, color: '#6b7280' }}>{pluginPrefs[p.id] ?? true ? '• Enabled' : '• Disabled'}</span>
+                      {isIncomplete(p) && (
+                        <span style={{ fontSize: 12, color: '#b45309' }}>• <FormattedMessage id="plugins.incomplete" defaultMessage="Incomplete" /></span>
+                      )}
                       {getPluginErrorsById(p.id).length > 0 && (
                         <span style={{ fontSize: 12, color: '#b91c1c' }}>• Errors: {getPluginErrorsById(p.id).length}</span>
                       )}
@@ -70,7 +82,7 @@ const PluginsManager = ({
                           <button onClick={() => {
                             try { sessionStorage.setItem('vertex_plugin_return', window.location.hash || '#/'); } catch {}
                             window.location.hash = `#/plugin/${encodeURIComponent(p.id)}`;
-                          }}>Control Hub</button>
+                          }}><FormattedMessage id="plugins.controlHub" defaultMessage="Control Hub" /></button>
                         </div>
                       </div>
                     )}
@@ -104,6 +116,9 @@ const PluginsManager = ({
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <strong>{p.name || p.id}</strong>
                         <span style={{ fontSize: 12, color: '#6b7280' }}>{pluginPrefs[p.id] ?? true ? '• Enabled' : '• Disabled'}</span>
+                        {isIncomplete(p) && (
+                          <span style={{ fontSize: 12, color: '#b45309' }}>• <FormattedMessage id="plugins.incomplete" defaultMessage="Incomplete" /></span>
+                        )}
                         {getPluginErrorsById(p.id).length > 0 && (
                           <span style={{ fontSize: 12, color: '#b91c1c' }}>• Errors: {getPluginErrorsById(p.id).length}</span>
                         )}
@@ -123,7 +138,7 @@ const PluginsManager = ({
                           <button onClick={() => {
                             try { sessionStorage.setItem('vertex_plugin_return', window.location.hash || '#/'); } catch {}
                             window.location.hash = `#/plugin/${encodeURIComponent(p.id)}`;
-                          }}>Control Hub</button>
+                          }}><FormattedMessage id="plugins.controlHub" defaultMessage="Control Hub" /></button>
                         </div>
                       </div>
                     )}

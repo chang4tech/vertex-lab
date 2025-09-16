@@ -6,6 +6,11 @@ export const neighborsHighlighterPlugin = {
   description: 'Commands to highlight neighbors and clear highlights',
   slots: {
     aboutPage: {
+      markdown: `
+* Right-click a node and choose Highlight Neighbors.
+* Right-click the canvas and choose Clear Highlights to reset.
+* Enable 2nd-degree neighbors or include the source node in Settings.
+      `.trim(),
       render: () => (
         <div style={{ color: '#374151' }}>
           <ul style={{ margin: 0, paddingLeft: 18 }}>

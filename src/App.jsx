@@ -896,6 +896,8 @@ function App({ graphId = 'default' }) {
   const [allPlugins, setAllPlugins] = useState(corePlugins);
   // Plugin preferences
   const [pluginPrefs, setPluginPrefs] = useState(() => loadPluginPrefs(corePlugins));
+  const prevPluginPrefsRef = useRef(pluginPrefs);
+  const [pluginTips, setPluginTips] = useState([]);
   useEffect(() => {
     (async () => {
       const loaded = await loadCustomPluginsFromStorage();
@@ -915,6 +917,8 @@ function App({ graphId = 'default' }) {
       return next;
     });
   }, []);
+
+  // (moved below activePlugins) Show a one-time tip when a plugin gets enabled
 
   const importCustomPlugin = useCallback(async (code) => {
     try {
@@ -942,6 +946,8 @@ function App({ graphId = 'default' }) {
       return next;
     });
   }, []);
+
+  // (moved below activePlugins) Show a one-time tip when a plugin gets enabled
 
   // Node info panel state
   const [showNodeInfoPanel, setShowNodeInfoPanel] = useState(() => {
@@ -972,6 +978,24 @@ function App({ graphId = 'default' }) {
   const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, target: null });
   const activePlugins = allPlugins.filter(p => (pluginPrefs[p.id] ?? true));
   const pluginCommands = React.useMemo(() => collectPluginCommands(activePlugins), [activePlugins]);
+
+  // Show a one-time tip when a plugin gets enabled (after activePlugins is defined)
+  useEffect(() => {
+    const prev = prevPluginPrefsRef.current || {};
+    activePlugins.forEach(p => {
+      const was = prev[p.id];
+      const now = pluginPrefs[p.id] ?? true;
+      if (now && !was) {
+        try {
+          const seen = localStorage.getItem('vertex_plugin_seen_' + p.id) === 'true';
+          if (!seen) {
+            setPluginTips(tips => tips.some(t => t.id === p.id) ? tips : [...tips, { id: p.id, name: p.name || p.id }]);
+          }
+        } catch {}
+      }
+    });
+    prevPluginPrefsRef.current = pluginPrefs;
+  }, [pluginPrefs, activePlugins]);
 
   // Save node info panel visibility preference
   useEffect(() => {
@@ -1741,6 +1765,29 @@ function App({ graphId = 'default' }) {
       </div>
 
       <HelpPanel isVisible={isHelpVisible} withPanel={showNodeInfoPanel} />
+
+      {/* Plugin tips */}
+      {pluginTips.length > 0 && (
+        <div style={{ position: 'fixed', top: 12, right: 12, zIndex: 10020, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {pluginTips.map(t => (
+            <div key={t.id} style={{ background: '#111827', color: '#e5e7eb', padding: '10px 12px', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 12 }}>
+                <FormattedMessage id="plugin.hub.tip" defaultMessage="{name} enabled: explore its Control Hub" values={{ name: t.name }} />
+              </span>
+              <button style={{ marginLeft: 'auto' }} onClick={() => {
+                try { localStorage.setItem('vertex_plugin_seen_' + t.id, 'true'); } catch {}
+                window.location.hash = `#/plugin/${encodeURIComponent(t.id)}`;
+                setPluginTips(arr => arr.filter(x => x.id !== t.id));
+              }}><FormattedMessage id="plugin.hub.open" defaultMessage="Open Control Hub" /></button>
+              <button onClick={() => {
+                try { localStorage.setItem('vertex_plugin_seen_' + t.id, 'true'); } catch {}
+                setPluginTips(arr => arr.filter(x => x.id !== t.id));
+              }}><FormattedMessage id="plugin.hub.dismiss" defaultMessage="Dismiss" /></button>
+            </div>
+          ))}
+        </div>
+      )}
+
 
       {/* Mobile quick controls: zoom and center */}
       {isMobile && (

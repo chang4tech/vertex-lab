@@ -6,6 +6,12 @@ export const selectionToolsPlugin = {
   description: 'Quick actions for selected nodes',
   slots: {
     aboutPage: {
+      markdown: `
+* Appears when you select one or more nodes.
+* Use Edit First to open the editor for the first selected node.
+* Toggle Collapse expands/collapses the first selected node.
+* Delete Selected removes all selected nodes.
+      `.trim(),
       render: () => (
         <div style={{ color: '#374151' }}>
           <ul style={{ margin: 0, paddingLeft: 18 }}>

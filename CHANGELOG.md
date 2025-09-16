@@ -7,6 +7,10 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ## Unreleased
 
 ### Added
+- Control Hub i18n: Localized labels for “Control Hub”, “How to Use”, “Settings”, “Console”, “Copy”, “Clear”.
+- Control Hub docs: `aboutPage.markdown` support (rendered as lightweight Markdown when provided).
+- UI: “Incomplete” badge in Plugins dialog for plugins without contributions (no panels/commands/overlays/about/config).
+- i18n: Added `plugins.incomplete` (EN/zh-CN).
 - Router: `#/plugin/:id` route enabling a single Control Hub page per plugin (legacy `#/plugin/:id/(config|console)` tolerated).
 - Plugins Manager: Control Hub button under Details for each plugin.
 - Host API: `api.plugin` helpers (log, openHub) accessible in panels and overlays.
@@ -32,6 +36,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
  - Docs: Migration guidance consolidated into this changelog and `doc/progress.md`; removed standalone `MIGRATION.md`.
 
 ### Changed
+- Tip banner: Converted first‑time plugin enabled banner to `react-intl` (message + buttons) and fixed effect ordering to avoid referencing `activePlugins` before init.
 - App: Command filtering now receives minimal api so predicate `when(api, ctx)` can leverage selection state.
 - App: Command runners now receive `edges` and `setHighlightedNodes` to enable non-destructive highlight interactions.
 - App: Context menu now surfaces plugin commands (node/canvas contexts) collected from enabled plugins.

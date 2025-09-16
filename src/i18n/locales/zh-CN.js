@@ -63,6 +63,19 @@ export default {
   'plugins.none': '尚未导入自定义插件。',
   'plugins.enabled': '已启用',
   'plugins.disabled': '已禁用',
+  'plugins.incomplete': '未完成',
+  // 插件控制中心
+  'plugins.controlHub': '控制中心',
+  'plugin.hub.title': '控制中心',
+  'plugin.hub.back': '返回',
+  'plugin.hub.about': '使用说明',
+  'plugin.hub.settings': '设置',
+  'plugin.hub.console': '控制台',
+  'plugin.hub.copy': '复制',
+  'plugin.hub.clear': '清空',
+  'plugin.hub.tip': '{name} 已启用：前往控制中心了解更多',
+  'plugin.hub.open': '打开控制中心',
+  'plugin.hub.dismiss': '忽略',
 
   // Node labels
   'node.centralTopic': '起始节点',

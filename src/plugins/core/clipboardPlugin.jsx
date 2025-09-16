@@ -6,6 +6,11 @@ export const clipboardPlugin = {
   description: 'Commands to copy selection or node ids',
   slots: {
     aboutPage: {
+      markdown: `
+* Right-click a node to copy its ID.
+* Select nodes and right-click canvas to copy selected IDs.
+* Choose your preferred copy format in Settings.
+      `.trim(),
       render: () => (
         <div style={{ color: '#374151' }}>
           <ul style={{ margin: 0, paddingLeft: 18 }}>

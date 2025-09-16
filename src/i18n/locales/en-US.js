@@ -63,6 +63,19 @@ export default {
   'plugins.none': 'No custom plugins imported yet.',
   'plugins.enabled': 'Enabled',
   'plugins.disabled': 'Disabled',
+  'plugins.incomplete': 'Incomplete',
+  // Plugin Control Hub
+  'plugins.controlHub': 'Control Hub',
+  'plugin.hub.title': 'Control Hub',
+  'plugin.hub.back': 'Back',
+  'plugin.hub.about': 'How to Use',
+  'plugin.hub.settings': 'Settings',
+  'plugin.hub.console': 'Console',
+  'plugin.hub.copy': 'Copy',
+  'plugin.hub.clear': 'Clear',
+  'plugin.hub.tip': '{name} enabled: explore its Control Hub',
+  'plugin.hub.open': 'Open Control Hub',
+  'plugin.hub.dismiss': 'Dismiss',
 
   // Node labels
   'node.centralTopic': 'Start Node',

@@ -6,6 +6,10 @@ export const graphStatsPlugin = {
   description: 'Shows counts for nodes, edges, and selection',
   slots: {
     aboutPage: {
+      markdown: `
+* Always-on panel that summarizes your current graph.
+* Toggle which metrics to show under Settings.
+      `.trim(),
       render: () => (
         <div style={{ color: '#374151' }}>
           <ul style={{ margin: 0, paddingLeft: 18 }}>
