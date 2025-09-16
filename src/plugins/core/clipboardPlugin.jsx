@@ -4,6 +4,8 @@ export const clipboardPlugin = {
   id: 'core.clipboard',
   name: 'Clipboard Tools',
   description: 'Commands to copy selection or node ids',
+  version: '1.0.0',
+  author: 'Vertex Lab Core',
   slots: {
     aboutPage: {
       markdown: `

@@ -4,6 +4,8 @@ export const selectionToolsPlugin = {
   id: 'core.selectionTools',
   name: 'Selection Tools',
   description: 'Quick actions for selected nodes',
+  version: '1.0.0',
+  author: 'Vertex Lab Core',
   slots: {
     aboutPage: {
       markdown: `

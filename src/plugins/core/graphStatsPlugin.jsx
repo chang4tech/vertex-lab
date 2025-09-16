@@ -4,6 +4,8 @@ export const graphStatsPlugin = {
   id: 'core.graphStats',
   name: 'Graph Stats',
   description: 'Shows counts for nodes, edges, and selection',
+  version: '1.0.0',
+  author: 'Vertex Lab Core',
   slots: {
     aboutPage: {
       markdown: `

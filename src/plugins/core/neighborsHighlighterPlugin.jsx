@@ -4,6 +4,8 @@ export const neighborsHighlighterPlugin = {
   id: 'core.neighborsHighlighter',
   name: 'Neighbors Highlighter',
   description: 'Commands to highlight neighbors and clear highlights',
+  version: '1.0.0',
+  author: 'Vertex Lab Core',
   slots: {
     aboutPage: {
       markdown: `
