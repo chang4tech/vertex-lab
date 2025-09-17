@@ -218,6 +218,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
   const pointers = useRef(new Map());
   const pinchState = useRef({ active: false, startDist: 0, startScale: 1 });
   const longPressRef = useRef({ timer: null, startX: 0, startY: 0, fired: false });
+  const hasUserInteracted = useRef(false);
 
   // Compute half extents for a node based on its shape and theme radius
   const getHalfExtents = (node) => {
@@ -238,6 +239,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
   useImperativeHandle(ref, () => ({
     canvasRef,
     center: () => {
+      hasUserInteracted.current = true;
       // Center the graph content within the canvas at current zoom
       const canvas = canvasRef.current;
       const visibleNodes = getVisibleNodes(nodes);
@@ -261,6 +263,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       canvas.dispatchEvent(new Event('redraw'));
     },
     zoom: (factor) => {
+      hasUserInteracted.current = true;
       // Zoom around canvas center so content stays anchored while using menu/FAB
       const canvas = canvasRef.current;
       const prevScale = view.current.scale;
@@ -274,7 +277,11 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       view.current.offsetY = height / 2 - centerWorldY * nextScale;
       canvas.dispatchEvent(new Event('redraw'));
     },
-    fitToView: () => {
+    fitToView: (options = {}) => {
+      const { markInteraction = true } = options;
+      if (markInteraction) {
+        hasUserInteracted.current = true;
+      }
       const canvas = canvasRef.current;
       const visibleNodes = getVisibleNodes(nodes);
       if (!visibleNodes || visibleNodes.length === 0) return;
@@ -307,6 +314,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       canvas.dispatchEvent(new Event('redraw'));
     },
     resetZoom: () => {
+      hasUserInteracted.current = true;
       // Reset to 1x while preserving the current center-of-screen world point
       const canvas = canvasRef.current;
       const prevScale = view.current.scale;
@@ -320,19 +328,94 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
     },
     exportAsPNG: () => {
       const canvas = canvasRef.current;
-      const link = document.createElement('a');
       const now = new Date();
       const pad = n => n.toString().padStart(2, '0');
       const filename = `vertex-lab-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.png`;
-      link.download = filename;
-      link.href = canvas.toDataURL('image/png');
+      const dataUrl = canvas.toDataURL('image/png');
+
+      const link = typeof document !== 'undefined' ? document.createElement('a') : null;
+      const supportsDownload = !!link && 'download' in link;
+
+      let blobUrl;
+
+      if (supportsDownload) {
+        try {
+          if (typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function' && dataUrl.startsWith('data:')) {
+            const [metadata, base64] = dataUrl.split(',');
+            const mimeMatch = metadata.match(/data:(.*?);/);
+            const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
+            const binary = typeof atob === 'function' ? atob(base64) : null;
+            if (binary) {
+              const length = binary.length;
+              const buffer = new Uint8Array(length);
+              for (let i = 0; i < length; i += 1) {
+                buffer[i] = binary.charCodeAt(i);
+              }
+              const blob = new Blob([buffer], { type: mimeType });
+              blobUrl = URL.createObjectURL(blob);
+              link.href = blobUrl;
+            } else {
+              link.href = dataUrl;
+            }
+          } else {
+            link.href = dataUrl;
+          }
+
+          link.download = filename;
+          link.rel = 'noopener';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } catch (err) {
+          console.error('PNG export download failed, falling back to new tab', err);
+          if (blobUrl && typeof URL !== 'undefined' && typeof URL.revokeObjectURL === 'function') {
+            URL.revokeObjectURL(blobUrl);
+          }
+
+          try {
+            const popup = typeof window !== 'undefined' ? window.open(dataUrl, '_blank') : null;
+            if (popup && popup.document) {
+              popup.document.title = filename;
+              popup.document.body.style.margin = '0';
+              const img = popup.document.createElement('img');
+              img.src = dataUrl;
+              img.alt = filename;
+              img.style.display = 'block';
+              img.style.maxWidth = '100%';
+              img.style.height = 'auto';
+              popup.document.body.appendChild(img);
+            } else if (typeof window !== 'undefined') {
+              window.location.href = dataUrl;
+            }
+          } catch (fallbackErr) {
+            console.error('PNG export fallback failed', fallbackErr);
+          }
+          return;
+        } finally {
+          if (blobUrl && typeof URL !== 'undefined' && typeof URL.revokeObjectURL === 'function') {
+            URL.revokeObjectURL(blobUrl);
+          }
+        }
+        return;
+      }
+
       try {
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } catch {
-        // In non-DOM test environments, just invoke click
-        if (typeof link.click === 'function') link.click();
+        const popup = typeof window !== 'undefined' ? window.open(dataUrl, '_blank') : null;
+        if (popup && popup.document) {
+          popup.document.title = filename;
+          popup.document.body.style.margin = '0';
+          const img = popup.document.createElement('img');
+          img.src = dataUrl;
+          img.alt = filename;
+          img.style.display = 'block';
+          img.style.maxWidth = '100%';
+          img.style.height = 'auto';
+          popup.document.body.appendChild(img);
+        } else if (typeof window !== 'undefined') {
+          window.location.href = dataUrl;
+        }
+      } catch (err) {
+        console.error('PNG export fallback failed', err);
       }
     },
     focusOnNode: (nodeId) => {
@@ -357,8 +440,10 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       view.current.offsetY = -viewport.y * view.current.scale;
       console.log('SetViewport - viewport:', viewport, 'scale:', view.current.scale, 'offsetX:', view.current.offsetX, 'offsetY:', view.current.offsetY);
       canvas.dispatchEvent(new Event('redraw'));
-    }
-  }), [nodes]);
+    },
+    hasUserInteracted: () => hasUserInteracted.current,
+    resetInteractionFlag: () => { hasUserInteracted.current = false; }
+  }), [nodes, width, height, currentTheme]);
   // Drag state
   const dragState = useRef({ dragging: false, nodeId: null, offsetX: 0, offsetY: 0 });
   // Pan state
@@ -490,6 +575,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
           startOffsetX: view.current.offsetX,
           startOffsetY: view.current.offsetY
         };
+        hasUserInteracted.current = true;
         console.log('Pan Start - clientX:', e.clientX, 'clientY:', e.clientY, 'rect.left:', rect.left, 'rect.top:', rect.top, 'dpr:', dpr, 'startX_css:', (e.clientX - rect.left) / dpr, 'startY_css:', (e.clientY - rect.top) / dpr, 'startOffsetX:', view.current.offsetX, 'startOffsetY:', view.current.offsetY);
         return;
       }
@@ -535,8 +621,9 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
 
         const dx = currentClientX_css - panState.current.startX;
         const dy = currentClientY_css - panState.current.startY;
-        view.current.offsetX = panState.current.startOffsetX + dx;
-        view.current.offsetY = panState.current.startOffsetY + dy;
+      view.current.offsetX = panState.current.startOffsetX + dx;
+      view.current.offsetY = panState.current.startOffsetY + dy;
+      hasUserInteracted.current = true;
         console.log('Pan Update - clientX:', e.clientX, 'clientY:', e.clientY, 'currentClientX_css:', currentClientX_css, 'currentClientY_css:', currentClientY_css, 'dx:', dx, 'dy:', dy, 'newOffsetX:', view.current.offsetX, 'newOffsetY:', view.current.offsetY);
         canvas.dispatchEvent(new Event('redraw'));
         return;
@@ -591,6 +678,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       // Adjust offsetX and offsetY to zoom around the mouse position
       view.current.offsetX = mouseCanvasX - mx * view.current.scale;
       view.current.offsetY = mouseCanvasY - my * view.current.scale;
+      hasUserInteracted.current = true;
       console.log('Wheel - deltaY:', e.deltaY, 'scaleAmount:', scaleAmount, 'mouseCanvasX:', mouseCanvasX, 'mouseCanvasY:', mouseCanvasY, 'mx:', mx, 'my:', my, 'newScale:', view.current.scale, 'newOffsetX:', view.current.offsetX, 'newOffsetY:', view.current.offsetY);
       canvas.dispatchEvent(new Event('redraw'));
     };
@@ -712,8 +800,10 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       if (typeof e.stopPropagation === 'function') e.stopPropagation();
       if (typeof (onContextMenuRequest) === 'function') {
         onContextMenuRequest({
-          screenX: e.clientX,
-          screenY: e.clientY,
+          screenX: e.screenX,
+          screenY: e.screenY,
+          clientX: e.clientX,
+          clientY: e.clientY,
           worldX: x,
           worldY: y,
           nodeId: clickedNodeId,
@@ -757,7 +847,16 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
             if (dx * dx + dy * dy < nodeRadius * nodeRadius) { clickedNodeId = node.id; break; }
           }
           if (typeof onContextMenuRequest === 'function') {
-            onContextMenuRequest({ screenX: e.clientX, screenY: e.clientY, worldX, worldY, nodeId: clickedNodeId, pointerType: e.pointerType || 'touch' });
+            onContextMenuRequest({
+              screenX: e.screenX,
+              screenY: e.screenY,
+              clientX: e.clientX,
+              clientY: e.clientY,
+              worldX,
+              worldY,
+              nodeId: clickedNodeId,
+              pointerType: e.pointerType || 'touch'
+            });
           }
         }, 500);
       }
@@ -811,6 +910,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
         view.current.offsetX = midX_css - worldMidX * newScale;
         view.current.offsetY = midY_css - worldMidY * newScale;
 
+        hasUserInteracted.current = true;
         canvas.dispatchEvent(new Event('redraw'));
       } else if (e.pointerType === 'touch' && pointers.current.size === 1) {
         handleMouseMove(e);

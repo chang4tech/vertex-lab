@@ -79,13 +79,17 @@ export function ContextMenu({ x, y, isOpen, onClose, children, pointerType = 'mo
   if (!isOpen) return null;
 
   const menuStyle = {
-    position: 'absolute',
+    position: 'fixed',
     left: x,
     top: y,
     zIndex: 1000
   };
 
   const handleMouseDown = (e) => {
+    e.stopPropagation();
+  };
+
+  const handleTouch = (e) => {
     e.stopPropagation();
   };
 
@@ -97,9 +101,9 @@ export function ContextMenu({ x, y, isOpen, onClose, children, pointerType = 'mo
       style={menuStyle}
       onMouseDown={handleMouseDown}
       onContextMenu={(e) => e.preventDefault()}
-      onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); }}
-      onTouchMove={(e) => { e.preventDefault(); e.stopPropagation(); }}
-      onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); }}
+      onTouchStart={handleTouch}
+      onTouchMove={handleTouch}
+      onTouchEnd={handleTouch}
     >
       {children}
     </div>

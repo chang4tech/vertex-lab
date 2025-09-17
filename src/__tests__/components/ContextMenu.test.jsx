@@ -101,6 +101,22 @@ describe('ContextMenu', () => {
     });
   });
 
+  it('allows menu actions to run after a touch-triggered open', () => {
+    const onAction = vi.fn();
+    const { getByRole } = render(
+      <ContextMenu
+        {...mockProps}
+        pointerType="touch"
+        onClose={vi.fn()}
+      >
+        <button onClick={onAction}>Menu Action</button>
+      </ContextMenu>
+    );
+
+    fireEvent.click(getByRole('button', { name: 'Menu Action' }));
+    expect(onAction).toHaveBeenCalledTimes(1);
+  });
+
   it('adjusts position when near window boundaries', async () => {
     // Mock window dimensions
     const originalInnerHeight = window.innerHeight;

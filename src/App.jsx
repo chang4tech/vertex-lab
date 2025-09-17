@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import VertexCanvas from './VertexCanvas.jsx';
 import { Minimap } from './components/panels/Minimap';
@@ -27,6 +27,87 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { updateNode } from './utils/nodeUtils';
 import { createEnhancedNode } from './utils/nodeUtils';
 import { useIsMobile } from './hooks/useIsMobile';
+
+const OVERLAY_LAYOUT_STORAGE_KEY = 'vertex_overlay_layout';
+
+const createEmptyOverlayLayout = () => ({ items: {}, slots: {} });
+
+const loadOverlayLayoutOverrides = () => {
+  if (typeof window === 'undefined') return createEmptyOverlayLayout();
+  try {
+    const raw = window.localStorage.getItem(OVERLAY_LAYOUT_STORAGE_KEY);
+    if (!raw) return createEmptyOverlayLayout();
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return createEmptyOverlayLayout();
+    return {
+      items: parsed.items && typeof parsed.items === 'object' ? parsed.items : {},
+      slots: parsed.slots && typeof parsed.slots === 'object' ? parsed.slots : {},
+    };
+  } catch {
+    return createEmptyOverlayLayout();
+  }
+};
+
+const sanitizeOverlayLayoutPatch = (patch) => {
+  if (!patch || typeof patch !== 'object') return createEmptyOverlayLayout();
+  const result = {};
+  if (patch.items && typeof patch.items === 'object') {
+    result.items = {};
+    Object.entries(patch.items).forEach(([key, value]) => {
+      if (value === null) {
+        result.items[key] = null;
+      } else if (typeof value === 'object') {
+        result.items[key] = { ...value };
+      }
+    });
+  }
+  if (patch.slots && typeof patch.slots === 'object') {
+    result.slots = {};
+    Object.entries(patch.slots).forEach(([key, value]) => {
+      if (value === null) {
+        result.slots[key] = null;
+      } else if (typeof value === 'object') {
+        result.slots[key] = { ...value };
+      }
+    });
+  }
+  return {
+    items: result.items || undefined,
+    slots: result.slots || undefined,
+  };
+};
+
+const mergeOverlayLayout = (prev, patch) => {
+  const next = sanitizeOverlayLayoutPatch(patch);
+  let updated = prev;
+  if (next.items) {
+    updated = {
+      ...updated,
+      items: { ...updated.items },
+    };
+    Object.entries(next.items).forEach(([key, value]) => {
+      if (value === null) {
+        delete updated.items[key];
+      } else {
+        updated.items[key] = { ...(updated.items[key] || {}), ...value };
+      }
+    });
+  }
+  if (next.slots) {
+    if (updated === prev) {
+      updated = { ...updated }; // ensure new object before mutation
+    }
+    updated.slots = { ...updated.slots };
+    Object.entries(next.slots).forEach(([key, value]) => {
+      if (value === null) {
+        delete updated.slots[key];
+      } else {
+        updated.slots[key] = { ...(updated.slots[key] || {}), ...value };
+      }
+    });
+  }
+  return updated;
+};
 
 // --- Menu Bar Component ---
 const MenuBar = React.forwardRef(({
@@ -812,7 +893,10 @@ const MainHeader = () => {
 function App({ graphId = 'default' }) {
   const intl = useIntl();
   const isMobile = useIsMobile();
+  const { currentTheme } = useTheme();
   const menuBarRef = useRef(null);
+  const [overlayLayoutOverrides, setOverlayLayoutOverrides] = useState(() => loadOverlayLayoutOverrides());
+  const [menuBarBottom, setMenuBarBottom] = useState(80);
 
 
   // Undo/redo stacks
@@ -821,6 +905,38 @@ function App({ graphId = 'default' }) {
 
   // Canvas ref for view actions
   const canvasRef = useRef();
+  const initialFitDoneRef = useRef(false);
+  const lastFitSizeRef = useRef({ width: 0, height: 0 });
+  const updateOverlayLayout = useCallback((patch) => {
+    if (!patch) return;
+    setOverlayLayoutOverrides(prev => {
+      const nextPatch = typeof patch === 'function' ? patch(prev) : patch;
+      if (!nextPatch) return prev;
+      const merged = mergeOverlayLayout(prev, nextPatch);
+      return merged;
+    });
+  }, []);
+
+  const resetOverlayLayout = useCallback(() => {
+    setOverlayLayoutOverrides(createEmptyOverlayLayout());
+    if (typeof window !== 'undefined') {
+      try { window.localStorage.removeItem(OVERLAY_LAYOUT_STORAGE_KEY); } catch {}
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      if (
+        (!overlayLayoutOverrides.items || Object.keys(overlayLayoutOverrides.items).length === 0) &&
+        (!overlayLayoutOverrides.slots || Object.keys(overlayLayoutOverrides.slots).length === 0)
+      ) {
+        window.localStorage.removeItem(OVERLAY_LAYOUT_STORAGE_KEY);
+      } else {
+        window.localStorage.setItem(OVERLAY_LAYOUT_STORAGE_KEY, JSON.stringify(overlayLayoutOverrides));
+      }
+    } catch {}
+  }, [overlayLayoutOverrides]);
 
   // Create file input ref
   const fileInputRef = useRef();
@@ -1013,6 +1129,45 @@ function App({ graphId = 'default' }) {
     return () => window.removeEventListener('resize', compute);
   }, [showNodeInfoPanel, isMobile]);
 
+  useEffect(() => {
+    initialFitDoneRef.current = false;
+    lastFitSizeRef.current = { width: 0, height: 0 };
+  }, [graphId]);
+
+  useEffect(() => {
+    if (!Array.isArray(nodes) || nodes.length === 0) return;
+    if (!canvasRef.current?.fitToView) return;
+
+    const hasInteracted = canvasRef.current?.hasUserInteracted?.() ?? false;
+    const size = { width: canvasSize.width, height: canvasSize.height };
+    const lastSize = lastFitSizeRef.current;
+    const sizeChanged = Math.abs(size.width - lastSize.width) > 80 || Math.abs(size.height - lastSize.height) > 80;
+
+    if (initialFitDoneRef.current && (!sizeChanged || hasInteracted)) {
+      return;
+    }
+
+    const runFit = () => {
+      if (!canvasRef.current?.fitToView) return;
+      canvasRef.current.fitToView({ markInteraction: false });
+      initialFitDoneRef.current = true;
+      lastFitSizeRef.current = size;
+      canvasRef.current?.resetInteractionFlag?.();
+    };
+
+    if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+      const raf = window.requestAnimationFrame(runFit);
+      return () => {
+        if (typeof window !== 'undefined' && typeof window.cancelAnimationFrame === 'function') {
+          window.cancelAnimationFrame(raf);
+        }
+      };
+    }
+
+    const timeout = setTimeout(runFit, 16);
+    return () => clearTimeout(timeout);
+  }, [nodes, canvasSize.width, canvasSize.height, graphId]);
+
   // Context menu state
   const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, target: null, pointerType: 'mouse' });
   const activePlugins = allPlugins.filter(p => (pluginPrefs[p.id] ?? true));
@@ -1199,7 +1354,7 @@ function App({ graphId = 'default' }) {
     const layoutedNodes = organizeLayout(nodes, canvasSize);
     pushUndo(layoutedNodes);
     // After layout changes, fit content into view for a clear result
-    setTimeout(() => { canvasRef.current?.fitToView?.(); }, 0);
+    setTimeout(() => { canvasRef.current?.fitToView?.({ markInteraction: false }); canvasRef.current?.resetInteractionFlag?.(); }, 0);
   }, [nodes, pushUndo, canvasSize]);
 
   // Search handlers
@@ -1235,7 +1390,13 @@ function App({ graphId = 'default' }) {
   // Context menu actions
   const closeContextMenu = useCallback(() => setContextMenu(cm => ({ ...cm, open: false })), []);
   const openContextMenu = useCallback((payload) => {
-    setContextMenu({ open: true, x: payload.screenX, y: payload.screenY, target: payload, pointerType: payload.pointerType || 'mouse' });
+    setContextMenu({
+      open: true,
+      x: payload.clientX ?? payload.screenX,
+      y: payload.clientY ?? payload.screenY,
+      target: payload,
+      pointerType: payload.pointerType || 'mouse'
+    });
   }, []);
 
   // Enhanced node creation helper
@@ -1297,12 +1458,18 @@ function App({ graphId = 'default' }) {
     setSelectedNodeId(null);
     localStorage.removeItem(graphKey('nodes'));
     localStorage.removeItem(graphKey('edges'));
-    setTimeout(() => { canvasRef.current?.fitToView?.(); }, 0);
+    setTimeout(() => { canvasRef.current?.fitToView?.({ markInteraction: false }); canvasRef.current?.resetInteractionFlag?.(); }, 0);
   }, [intl]);
 
   // Node info panel handlers
   const handleToggleNodeInfoPanel = useCallback(() => {
     setShowNodeInfoPanel(prev => !prev);
+  }, []);
+
+  const handleMinimapViewportChange = useCallback((newViewport) => {
+    if (canvasRef.current?.setViewport) {
+      canvasRef.current.setViewport(newViewport);
+    }
   }, []);
 
   // Global keyboard shortcuts
@@ -1707,6 +1874,258 @@ function App({ graphId = 'default' }) {
     ));
   }, [nodes, pushUndo]);
 
+  useEffect(() => {
+    const updateMenuMetrics = () => {
+      const nav = menuBarRef.current;
+      if (!nav) return;
+      const offsetTop = nav.offsetTop || 0;
+      const height = nav.offsetHeight || 0;
+      setMenuBarBottom(offsetTop + height);
+    };
+    updateMenuMetrics();
+    window.addEventListener('resize', updateMenuMetrics);
+    return () => window.removeEventListener('resize', updateMenuMetrics);
+  }, [isMobile]);
+
+  const floatingHelpAllowance = isMobile ? 64 : 0;
+  const pluginTipTop = menuBarBottom + 12 + floatingHelpAllowance;
+  const mobileTipWidth = 'min(440px, calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)))';
+  const pluginTipContainerStyle = {
+    position: 'fixed',
+    top: `calc(${pluginTipTop}px + env(safe-area-inset-top))`,
+    zIndex: 10020,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8,
+    ...(isMobile
+      ? {
+          alignItems: 'stretch',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: mobileTipWidth,
+          maxWidth: mobileTipWidth,
+        }
+      : {
+          alignItems: 'flex-end',
+          right: `calc(24px + env(safe-area-inset-right))`,
+          maxWidth: 360,
+        }),
+  };
+
+  const pluginTipCardStyle = {
+    background: '#111827',
+    color: '#e5e7eb',
+    padding: isMobile ? '14px 16px' : '10px 12px',
+    borderRadius: 8,
+    boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+    display: 'flex',
+    flexDirection: isMobile ? 'column' : 'row',
+    alignItems: isMobile ? 'stretch' : 'center',
+    gap: isMobile ? 12 : 8,
+    width: '100%',
+  };
+
+  const pluginTipPrimaryButtonStyle = {
+    background: currentTheme.colors?.primaryButton || '#2563eb',
+    color: currentTheme.colors?.primaryButtonText || '#fff',
+    border: 'none',
+    borderRadius: 9999,
+    padding: '8px 16px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    boxShadow: '0 1px 2px rgba(15,23,42,0.28)',
+    marginLeft: isMobile ? 0 : 'auto',
+    width: isMobile ? '100%' : 'auto',
+  };
+
+  const pluginTipDismissButtonStyle = {
+    ...pluginTipPrimaryButtonStyle,
+    background: 'transparent',
+    color: currentTheme.colors?.primaryButtonText || '#fff',
+    border: `1px solid ${currentTheme.colors?.primaryButtonText ? `${currentTheme.colors.primaryButtonText}55` : 'rgba(255,255,255,0.35)'}`,
+    boxShadow: 'none',
+  };
+
+  const baseOverlayItems = useMemo(() => {
+    const items = {
+      help: { slot: 'top-right', order: isMobile ? 40 : 10 },
+    };
+    if (showMinimap) {
+      items.minimap = { slot: 'bottom-right', order: isMobile ? 30 : 10 };
+    }
+    if (isMobile) {
+      items.controls = { slot: 'bottom-right', order: showMinimap ? 10 : 20 };
+    }
+    return items;
+  }, [isMobile, showMinimap]);
+
+  const overlayItems = useMemo(() => {
+    const merged = { ...baseOverlayItems };
+    const overrides = overlayLayoutOverrides.items || {};
+    Object.entries(overrides).forEach(([key, value]) => {
+      if (value === null) {
+        delete merged[key];
+        return;
+      }
+      if (typeof value !== 'object') return;
+      if (!merged[key] && value.slot == null) {
+        return;
+      }
+      const current = merged[key] ? { ...merged[key] } : {};
+      if (value.slot === null) {
+        delete merged[key];
+        return;
+      }
+      merged[key] = { ...current, ...value };
+    });
+    return merged;
+  }, [baseOverlayItems, overlayLayoutOverrides.items]);
+
+  const topOffsetPx = Math.max(menuBarBottom + (isMobile ? 12 : 8), isMobile ? 96 : 48);
+
+  const baseSlotStyles = useMemo(() => ({
+    'top-right': {
+      className: 'overlay-slot overlay-slot--top-right',
+      style: {
+        top: `calc(${topOffsetPx}px + env(safe-area-inset-top))`,
+        right: `calc(24px + env(safe-area-inset-right))`,
+      },
+    },
+    'bottom-right': {
+      className: 'overlay-slot overlay-slot--bottom-right',
+      style: {
+        bottom: `calc(24px + env(safe-area-inset-bottom))`,
+        right: `calc(16px + env(safe-area-inset-right))`,
+      },
+    },
+    'bottom-left': {
+      className: 'overlay-slot overlay-slot--bottom-left',
+      style: {
+        bottom: `calc(24px + env(safe-area-inset-bottom))`,
+        left: `calc(16px + env(safe-area-inset-left))`,
+      },
+    },
+  }), [topOffsetPx]);
+
+  const slotStyles = useMemo(() => {
+    const merged = { ...baseSlotStyles };
+    const overrides = overlayLayoutOverrides.slots || {};
+    Object.entries(overrides).forEach(([slot, value]) => {
+      if (value === null) {
+        delete merged[slot];
+        return;
+      }
+      if (typeof value !== 'object') return;
+      const base = merged[slot] || { className: 'overlay-slot', style: {} };
+      merged[slot] = {
+        ...base,
+        ...value,
+        className: value.className || base.className || 'overlay-slot',
+        style: { ...base.style, ...(value.style || {}) },
+      };
+      if (value.gap !== undefined && merged[slot].style.gap === undefined) {
+        merged[slot].style.gap = typeof value.gap === 'number' ? `${value.gap}px` : value.gap;
+      }
+    });
+    return merged;
+  }, [baseSlotStyles, overlayLayoutOverrides.slots]);
+
+  const overlayRenderers = useMemo(() => ({
+    help: () => (
+      <div
+        className={triggerClass}
+        role="button"
+        aria-label={isHelpVisible ? 'Hide help' : 'Show help'}
+        aria-pressed={isHelpVisible}
+        tabIndex={0}
+        title={isHelpVisible ? 'Hide help' : 'Show help'}
+        onClick={toggleHelp}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleHelp(); } }}
+      >
+        {isHelpVisible ? (
+          <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M7 7l10 10M17 7l-10 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        ) : (
+          <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 19h0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <path d="M9 8a3 3 0 1 1 6 0c0 2-3 2.5-3 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+          </svg>
+        )}
+        <div className="trigger-tooltip">
+          {isHelpVisible ? '收起' : '帮助'}
+        </div>
+      </div>
+    ),
+    controls: () => (
+      <MobileCanvasControls
+        onZoomIn={() => canvasRef.current?.zoom?.(1.1)}
+        onZoomOut={() => canvasRef.current?.zoom?.(0.9)}
+        onResetZoom={() => canvasRef.current?.resetZoom?.()}
+        onCenter={() => canvasRef.current?.fitToView?.()}
+      />
+    ),
+    minimap: () => (
+      <Minimap
+        nodes={nodes}
+        viewBox={viewBox}
+        visible={showMinimap}
+        onViewportChange={handleMinimapViewportChange}
+      />
+    ),
+  }), [triggerClass, isHelpVisible, toggleHelp, nodes, viewBox, showMinimap, handleMinimapViewportChange]);
+
+  const overlaySlotMap = useMemo(() => {
+    const map = new Map();
+    Object.entries(overlayItems).forEach(([id, config]) => {
+      if (!config || config.hidden) return;
+      const render = overlayRenderers[id];
+      if (!render) return;
+      const slot = config.slot || 'top-right';
+      if (!map.has(slot)) map.set(slot, []);
+      map.get(slot).push({
+        id,
+        order: typeof config.order === 'number' ? config.order : 0,
+        style: config.style,
+        render,
+      });
+    });
+    return map;
+  }, [overlayItems, overlayRenderers]);
+
+  const overlaySlotElements = useMemo(() => {
+    const elements = [];
+    overlaySlotMap.forEach((items, slotName) => {
+      if (!items || items.length === 0) return;
+      const slotConfig = slotStyles[slotName] || { className: 'overlay-slot', style: {} };
+      const style = { ...(slotConfig.style || {}) };
+      const sorted = [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      elements.push(
+        <div key={`overlay-slot-${slotName}`} className={slotConfig.className || 'overlay-slot'} style={style}>
+          {sorted.map(({ id, style: itemStyle, render }) => (
+            <div key={id} className="overlay-slot__item" style={itemStyle}>
+              {typeof render === 'function' ? render() : render}
+            </div>
+          ))}
+        </div>
+      );
+    });
+    return elements;
+  }, [overlaySlotMap, slotStyles]);
+
+  const overlayLayoutSnapshot = useMemo(() => ({
+    items: Object.fromEntries(Object.entries(overlayItems).map(([id, cfg]) => [id, { ...cfg }])),
+    slots: Object.fromEntries(Object.entries(slotStyles).map(([slot, cfg]) => [slot, {
+      ...cfg,
+      style: { ...(cfg.style || {}) },
+    }])),
+    overrides: {
+      items: { ...(overlayLayoutOverrides.items || {}) },
+      slots: { ...(overlayLayoutOverrides.slots || {}) },
+    },
+  }), [overlayItems, slotStyles, overlayLayoutOverrides]);
+
+
   return (
     <React.Fragment>
       <MenuBar
@@ -1778,68 +2197,41 @@ function App({ graphId = 'default' }) {
       <div style={{ height: 80 }} />
       <MainHeader />
 
-      {/* Help trigger button, moved to below header on mobile to avoid overlap */}
-  <div style={{ position: 'fixed', right: 'calc(24px + env(safe-area-inset-right))', top: isMobile ? 'calc(88px + env(safe-area-inset-top))' : 8, zIndex: 10010 }}>
-        <div
-          className={triggerClass}
-          role="button"
-          aria-label={isHelpVisible ? 'Hide help' : 'Show help'}
-          aria-pressed={isHelpVisible}
-          tabIndex={0}
-          title={isHelpVisible ? 'Hide help' : 'Show help'}
-          onClick={toggleHelp}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleHelp(); } }}
-        >
-          {isHelpVisible ? (
-            <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M7 7l10 10M17 7l-10 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          ) : (
-            <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 19h0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              <path d="M9 8a3 3 0 1 1 6 0c0 2-3 2.5-3 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
-            </svg>
-          )}
-          <div className="trigger-tooltip">
-            {isHelpVisible ? '收起' : '帮助'}
-          </div>
-        </div>
-      </div>
-
       <HelpPanel isVisible={isHelpVisible} withPanel={showNodeInfoPanel} />
 
       {/* Plugin tips */}
       {pluginTips.length > 0 && (
-        <div style={{ position: 'fixed', top: 12, right: 12, zIndex: 10020, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={pluginTipContainerStyle}>
           {pluginTips.map(t => (
-            <div key={t.id} style={{ background: '#111827', color: '#e5e7eb', padding: '10px 12px', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 12 }}>
+            <div key={t.id} style={pluginTipCardStyle}>
+              <span style={{ fontSize: 12, lineHeight: 1.4 }}>
                 <FormattedMessage id="plugin.hub.tip" defaultMessage="{name} enabled: explore its Control Hub" values={{ name: t.name }} />
               </span>
-              <button style={{ marginLeft: 'auto' }} onClick={() => {
-                try { localStorage.setItem('vertex_plugin_seen_' + t.id, 'true'); } catch {}
-                window.location.hash = `#/plugin/${encodeURIComponent(t.id)}`;
-                setPluginTips(arr => arr.filter(x => x.id !== t.id));
-              }}><FormattedMessage id="plugin.hub.open" defaultMessage="Open Control Hub" /></button>
-              <button onClick={() => {
-                try { localStorage.setItem('vertex_plugin_seen_' + t.id, 'true'); } catch {}
-                setPluginTips(arr => arr.filter(x => x.id !== t.id));
-              }}><FormattedMessage id="plugin.hub.dismiss" defaultMessage="Dismiss" /></button>
+              <button
+                style={pluginTipPrimaryButtonStyle}
+                onClick={() => {
+                  try { localStorage.setItem('vertex_plugin_seen_' + t.id, 'true'); } catch {}
+                  window.location.hash = `#/plugin/${encodeURIComponent(t.id)}`;
+                  setPluginTips(arr => arr.filter(x => x.id !== t.id));
+                }}
+              >
+                <FormattedMessage id="plugin.hub.open" defaultMessage="Open Control Hub" />
+              </button>
+              <button
+                style={pluginTipDismissButtonStyle}
+                onClick={() => {
+                  try { localStorage.setItem('vertex_plugin_seen_' + t.id, 'true'); } catch {}
+                  setPluginTips(arr => arr.filter(x => x.id !== t.id));
+                }}
+              >
+                <FormattedMessage id="plugin.hub.dismiss" defaultMessage="Dismiss" />
+              </button>
             </div>
           ))}
         </div>
       )}
 
-
-      {/* Mobile quick controls: zoom and center */}
-      {isMobile && (
-        <MobileCanvasControls
-          onZoomIn={() => canvasRef.current?.zoom?.(1.1)}
-          onZoomOut={() => canvasRef.current?.zoom?.(0.9)}
-          onResetZoom={() => canvasRef.current?.resetZoom?.()}
-          onCenter={() => canvasRef.current?.fitToView?.()}
-        />
-      )}
+      {overlaySlotElements}
 
       {/* Diagram canvas */}
       <VertexCanvas
@@ -1858,18 +2250,6 @@ function App({ graphId = 'default' }) {
         onContextMenuRequest={openContextMenu}
         width={canvasSize.width}
         height={canvasSize.height}
-      />
-
-      {/* Minimap */}
-      <Minimap
-        nodes={nodes}
-        viewBox={viewBox}
-        visible={showMinimap}
-        onViewportChange={(newViewport) => {
-          if (canvasRef.current?.setViewport) {
-            canvasRef.current.setViewport(newViewport);
-          }
-        }}
       />
 
       {/* Search */}
@@ -1916,6 +2296,9 @@ function App({ graphId = 'default' }) {
           onHighlightNodes: handleHighlightNodes,
           setPluginEnabled,
           pluginPrefs,
+          overlayLayout: overlayLayoutSnapshot,
+          setOverlayLayout: updateOverlayLayout,
+          resetOverlayLayout,
         }}
       />
 

@@ -273,13 +273,17 @@ describe('VertexCanvas', () => {
     const evt = new MouseEvent('contextmenu', {
       bubbles: true,
       clientX: 400,
-      clientY: 300
+      clientY: 300,
+      screenX: 400,
+      screenY: 300
     });
     canvas.dispatchEvent(evt);
 
     expect(onContextMenuRequest).toHaveBeenCalled();
     const payload = onContextMenuRequest.mock.calls[0][0];
     expect(payload.nodeId).toBe(1);
+    expect(payload.clientX).toBe(400);
+    expect(payload.clientY).toBe(300);
     expect(payload.screenX).toBe(400);
     expect(payload.screenY).toBe(300);
     expect(payload.pointerType).toBe('mouse');
@@ -302,6 +306,8 @@ describe('VertexCanvas', () => {
         pointerId: 1,
         clientX: 400,
         clientY: 300,
+        screenX: 400,
+        screenY: 300,
         bubbles: true
       }));
 
@@ -346,6 +352,25 @@ describe('VertexCanvas', () => {
       
       // Should redraw canvas with new scale
       expect(ref.current.canvasRef.current.getContext('2d').scale).toHaveBeenCalled();
+    });
+
+    it('updates imperative handlers when canvas size changes', () => {
+      const ref = { current: null };
+      const { rerender } = render(
+        <ThemeProvider>
+          <VertexCanvas {...mockProps} ref={ref} width={800} height={600} />
+        </ThemeProvider>
+      );
+
+      const originalCenter = ref.current.center;
+
+      rerender(
+        <ThemeProvider>
+          <VertexCanvas {...mockProps} ref={ref} width={420} height={320} />
+        </ThemeProvider>
+      );
+
+      expect(ref.current.center).not.toBe(originalCenter);
     });
 
     it('exposes exportAsPNG method', () => {
