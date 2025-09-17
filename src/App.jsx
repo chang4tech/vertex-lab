@@ -1014,7 +1014,7 @@ function App({ graphId = 'default' }) {
   }, [showNodeInfoPanel, isMobile]);
 
   // Context menu state
-  const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, target: null });
+  const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, target: null, pointerType: 'mouse' });
   const activePlugins = allPlugins.filter(p => (pluginPrefs[p.id] ?? true));
   const pluginCommands = React.useMemo(() => collectPluginCommands(activePlugins), [activePlugins]);
 
@@ -1235,7 +1235,7 @@ function App({ graphId = 'default' }) {
   // Context menu actions
   const closeContextMenu = useCallback(() => setContextMenu(cm => ({ ...cm, open: false })), []);
   const openContextMenu = useCallback((payload) => {
-    setContextMenu({ open: true, x: payload.screenX, y: payload.screenY, target: payload });
+    setContextMenu({ open: true, x: payload.screenX, y: payload.screenY, target: payload, pointerType: payload.pointerType || 'mouse' });
   }, []);
 
   // Enhanced node creation helper
@@ -1924,6 +1924,7 @@ function App({ graphId = 'default' }) {
         x={contextMenu.x}
         y={contextMenu.y}
         isOpen={contextMenu.open}
+        pointerType={contextMenu.pointerType}
         onClose={closeContextMenu}
       >
         {contextMenu.target?.nodeId ? (

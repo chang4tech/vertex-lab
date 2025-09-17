@@ -282,6 +282,44 @@ describe('VertexCanvas', () => {
     expect(payload.nodeId).toBe(1);
     expect(payload.screenX).toBe(400);
     expect(payload.screenY).toBe(300);
+    expect(payload.pointerType).toBe('mouse');
+  });
+
+  it('fires onContextMenuRequest for touch long-press', () => {
+    vi.useFakeTimers();
+    try {
+      const onContextMenuRequest = vi.fn();
+      const { container } = renderWithTheme(
+        <VertexCanvas
+          {...mockProps}
+          onContextMenuRequest={onContextMenuRequest}
+        />
+      );
+      const canvas = container.querySelector('canvas');
+
+      canvas.dispatchEvent(new PointerEvent('pointerdown', {
+        pointerType: 'touch',
+        pointerId: 1,
+        clientX: 400,
+        clientY: 300,
+        bubbles: true
+      }));
+
+      vi.advanceTimersByTime(600);
+
+      window.dispatchEvent(new PointerEvent('pointerup', {
+        pointerType: 'touch',
+        pointerId: 1,
+        bubbles: true
+      }));
+
+      expect(onContextMenuRequest).toHaveBeenCalled();
+      const payload = onContextMenuRequest.mock.calls[0][0];
+      expect(payload.nodeId).toBe(1);
+      expect(payload.pointerType).toBe('touch');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   describe('Ref methods', () => {

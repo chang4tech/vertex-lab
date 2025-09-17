@@ -1,6 +1,25 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest'
 
+if (typeof global.PointerEvent === 'undefined') {
+  class PointerEventPolyfill extends MouseEvent {
+    constructor(type, params = {}) {
+      super(type, params);
+      this.pointerId = params.pointerId ?? 0;
+      this.pointerType = params.pointerType ?? '';
+      this.isPrimary = params.isPrimary ?? true;
+      this.pressure = params.pressure ?? 0;
+      this.tangentialPressure = params.tangentialPressure ?? 0;
+      this.tiltX = params.tiltX ?? 0;
+      this.tiltY = params.tiltY ?? 0;
+      this.twist = params.twist ?? 0;
+      this.width = params.width ?? 0;
+      this.height = params.height ?? 0;
+    }
+  }
+  global.PointerEvent = PointerEventPolyfill;
+}
+
 // Mock canvas
 const mockCanvas = {
   getContext: () => ({

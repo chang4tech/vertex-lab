@@ -1,11 +1,26 @@
 import React from 'react';
 
-export function ContextMenu({ x, y, isOpen, onClose, children }) {
+export function ContextMenu({ x, y, isOpen, onClose, children, pointerType = 'mouse' }) {
   const menuRef = React.useRef(null);
+  const skipNextMouseDownRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!isOpen) {
+      skipNextMouseDownRef.current = false;
+      return;
+    }
+    skipNextMouseDownRef.current = pointerType !== 'mouse';
+  }, [isOpen, pointerType]);
+
   const handleOutsideClick = React.useCallback((e) => {
     // Skip if the menu is not open
     if (!isOpen) return;
-    
+
+    if (pointerType !== 'mouse' && e.type === 'mousedown' && skipNextMouseDownRef.current) {
+      skipNextMouseDownRef.current = false;
+      return;
+    }
+
     // Skip if the click was inside the menu
     if (menuRef.current && menuRef.current.contains(e.target)) {
       return;
@@ -13,8 +28,8 @@ export function ContextMenu({ x, y, isOpen, onClose, children }) {
 
     // Call onClose for clicks outside
     onClose();
-  }, [isOpen, onClose]);
-  
+  }, [isOpen, onClose, pointerType]);
+
   React.useEffect(() => {
     // Only add listeners when menu is open
     if (!isOpen) return;

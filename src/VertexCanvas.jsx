@@ -716,7 +716,8 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
           screenY: e.clientY,
           worldX: x,
           worldY: y,
-          nodeId: clickedNodeId
+          nodeId: clickedNodeId,
+          pointerType: 'mouse'
         });
       }
     };
@@ -756,7 +757,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
             if (dx * dx + dy * dy < nodeRadius * nodeRadius) { clickedNodeId = node.id; break; }
           }
           if (typeof onContextMenuRequest === 'function') {
-            onContextMenuRequest({ screenX: e.clientX, screenY: e.clientY, worldX, worldY, nodeId: clickedNodeId });
+            onContextMenuRequest({ screenX: e.clientX, screenY: e.clientY, worldX, worldY, nodeId: clickedNodeId, pointerType: e.pointerType || 'touch' });
           }
         }, 500);
       }

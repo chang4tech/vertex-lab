@@ -78,6 +78,29 @@ describe('ContextMenu', () => {
     });
   });
 
+  it('ignores the first synthetic mousedown after a touch-triggered open', async () => {
+    const onClose = vi.fn();
+    render(<ContextMenu {...mockProps} onClose={onClose} pointerType="touch" />);
+
+    document.dispatchEvent(new MouseEvent('mousedown', {
+      bubbles: true,
+      cancelable: true
+    }));
+
+    await vi.waitFor(() => {
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    document.dispatchEvent(new MouseEvent('mousedown', {
+      bubbles: true,
+      cancelable: true
+    }));
+
+    await vi.waitFor(() => {
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it('adjusts position when near window boundaries', async () => {
     // Mock window dimensions
     const originalInnerHeight = window.innerHeight;
