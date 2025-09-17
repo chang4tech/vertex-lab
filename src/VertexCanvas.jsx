@@ -261,8 +261,17 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       canvas.dispatchEvent(new Event('redraw'));
     },
     zoom: (factor) => {
-      view.current.scale *= factor;
+      // Zoom around canvas center so content stays anchored while using menu/FAB
       const canvas = canvasRef.current;
+      const prevScale = view.current.scale;
+      const nextScale = Math.max(0.05, prevScale * factor);
+      // World coords under the canvas center before scaling
+      const centerWorldX = (width / 2 - view.current.offsetX) / prevScale;
+      const centerWorldY = (height / 2 - view.current.offsetY) / prevScale;
+      // Apply new scale and adjust offsets so the same world point remains centered
+      view.current.scale = nextScale;
+      view.current.offsetX = width / 2 - centerWorldX * nextScale;
+      view.current.offsetY = height / 2 - centerWorldY * nextScale;
       canvas.dispatchEvent(new Event('redraw'));
     },
     fitToView: () => {
@@ -298,9 +307,15 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       canvas.dispatchEvent(new Event('redraw'));
     },
     resetZoom: () => {
-      view.current.scale = 1;
+      // Reset to 1x while preserving the current center-of-screen world point
       const canvas = canvasRef.current;
-      console.log('ResetZoom - scale:', view.current.scale);
+      const prevScale = view.current.scale;
+      const centerWorldX = (width / 2 - view.current.offsetX) / prevScale;
+      const centerWorldY = (height / 2 - view.current.offsetY) / prevScale;
+      view.current.scale = 1;
+      view.current.offsetX = width / 2 - centerWorldX * 1;
+      view.current.offsetY = height / 2 - centerWorldY * 1;
+      console.log('ResetZoom - scale:', view.current.scale, 'offsetX:', view.current.offsetX, 'offsetY:', view.current.offsetY);
       canvas.dispatchEvent(new Event('redraw'));
     },
     exportAsPNG: () => {
@@ -803,6 +818,9 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
     const onPointerUpOrCancel = (e) => {
       if (longPressRef.current.timer) { clearTimeout(longPressRef.current.timer); longPressRef.current.timer = null; }
       pointers.current.delete(e.pointerId);
+      try {
+        canvas.releasePointerCapture?.(e.pointerId);
+      } catch {}
       if (pointers.current.size < 2) pinchState.current.active = false;
       if (e.pointerType === 'touch') {
         handleMouseUp(e);

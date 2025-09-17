@@ -11,9 +11,19 @@
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "pretest:e2e": "npm run build",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:mobile": "playwright test --project='Mobile Safari (WebKit)'",
+    "test:e2e:ff": "playwright test --project='Mobile Firefox'",
+    "playwright:install:all": "npx playwright install chromium firefox webkit",
+    "playwright:install:chromium": "npx playwright install chromium",
+    "playwright:install:webkit": "npx playwright install webkit",
+    "playwright:install:mirror": "PLAYWRIGHT_DOWNLOAD_HOST=https://playwright.azureedge.net npx playwright install chromium firefox webkit"
   },
   "dependencies": {
+    "playwright": "^1.55.0",
     "prop-types": "^15.8.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -21,6 +31,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
+    "@playwright/test": "^1.55.0",
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.0.0",
     "@testing-library/user-event": "^14.4.3",

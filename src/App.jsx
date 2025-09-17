@@ -11,6 +11,7 @@ import ThemeSelector from './components/ThemeSelector';
 import NodeEditor from './components/NodeEditor';
 import HelpModal from './components/HelpModal';
 import { HelpPanel } from './components/panels/HelpPanel';
+import { MobileCanvasControls } from './components/mobile/MobileCanvasControls.jsx';
 // Plugin system
 import { PluginHost } from './plugins/PluginHost';
 import { corePlugins } from './plugins';
@@ -1197,6 +1198,8 @@ function App({ graphId = 'default' }) {
     console.log('Applying auto layout to', nodes.length, 'nodes');
     const layoutedNodes = organizeLayout(nodes, canvasSize);
     pushUndo(layoutedNodes);
+    // After layout changes, fit content into view for a clear result
+    setTimeout(() => { canvasRef.current?.fitToView?.(); }, 0);
   }, [nodes, pushUndo, canvasSize]);
 
   // Search handlers
@@ -1830,11 +1833,12 @@ function App({ graphId = 'default' }) {
 
       {/* Mobile quick controls: zoom and center */}
       {isMobile && (
-        <div style={{ position: 'fixed', right: 'calc(24px + env(safe-area-inset-right))', bottom: 'calc(100px + env(safe-area-inset-bottom))', zIndex: 10011, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <button className="fab" aria-label="Zoom In" style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: '#2d6cdf', color: '#fff', fontSize: 20 }} onClick={() => canvasRef.current?.zoom?.(1.1)}>＋</button>
-          <button className="fab" aria-label="Zoom Out" style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: '#2d6cdf', color: '#fff', fontSize: 20 }} onClick={() => canvasRef.current?.zoom?.(0.9)}>－</button>
-          <button className="fab" aria-label="Center" style={{ width: 44, height: 44, borderRadius: 22, border: 'none', background: '#2d6cdf', color: '#fff', fontSize: 16 }} onClick={() => canvasRef.current?.fitToView?.()}>⤢</button>
-        </div>
+        <MobileCanvasControls
+          onZoomIn={() => canvasRef.current?.zoom?.(1.1)}
+          onZoomOut={() => canvasRef.current?.zoom?.(0.9)}
+          onResetZoom={() => canvasRef.current?.resetZoom?.()}
+          onCenter={() => canvasRef.current?.fitToView?.()}
+        />
       )}
 
       {/* Diagram canvas */}

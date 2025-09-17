@@ -163,6 +163,42 @@ react-mindmap-app/
 - **MenuBar**: Application menu and toolbar functionality
 - **HelpPanel**: Keyboard shortcuts and help documentation
 
+## Testing
+
+- Unit/UI (Vitest):
+  - `npm test` – run all tests once
+  - `npm run test:watch` – watch mode
+  - `npm run test:coverage` – coverage report
+  - `npm run test:ui` – Vitest UI
+
+- Mobile E2E (Playwright):
+  - Uses Playwright-downloaded browsers for fidelity (Chromium + WebKit).
+  - One-time installs:
+    - All: `npm run playwright:install:all`
+    - Chromium only: `npm run playwright:install:chromium`
+    - WebKit only (Mobile Safari engine): `npm run playwright:install:webkit`
+  - `npm run test:e2e` – runs across configured mobile profiles (Chromium Pixel 5 + WebKit iPhone 12 + Mobile Firefox).
+  - `npm run test:e2e:ui` – opens Playwright UI.
+  - `npm run test:e2e:mobile` – runs Mobile Safari (WebKit) only.
+  - `npm run test:e2e:ff` – runs Mobile Firefox profile.
+  - Notes: tests live under `src/__tests__/e2e/`; Vite preview server auto-starts via `playwright.config.js` and prebuilds (`pretest:e2e`).
+
+Configurable preview host/port:
+- Change the preview server port/host that Playwright uses without editing files:
+  - `PREVIEW_PORT=5174 npm run test:e2e`
+  - `PREVIEW_HOST=0.0.0.0 PREVIEW_PORT=8080 npm run test:e2e`
+- Reuse an already running preview server instead of starting one:
+  - Terminal 1: `npm run build && npm run preview -- --host 127.0.0.1 --port 5174`
+  - Terminal 2: `SKIP_WEB_SERVER=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:5174 npm run test:e2e`
+
+### Playwright install troubleshooting
+- macOS 12 WebKit warning: Playwright ships a frozen WebKit for macOS 12; tests still run, but update macOS for latest engine.
+- Proxy/localhost issues (ECONNREFUSED 127.0.0.1:443): clear proxy env vars when installing:
+  - `env -u HTTPS_PROXY -u HTTP_PROXY -u ALL_PROXY npx playwright install`
+- Alternate mirror (if your region blocks defaults):
+  - `PLAYWRIGHT_DOWNLOAD_HOST=https://playwright.azureedge.net npx playwright install`
+- CI caching: keep default `PLAYWRIGHT_BROWSERS_PATH=0` to install under project.
+
 ## Contributing
 
 1. Fork the repository
