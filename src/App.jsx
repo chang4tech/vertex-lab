@@ -10,7 +10,6 @@ import Search from './components/Search';
 import ThemeSelector from './components/ThemeSelector';
 import NodeEditor from './components/NodeEditor';
 import HelpModal from './components/HelpModal';
-import { HelpPanel } from './components/panels/HelpPanel';
 import { MobileCanvasControls } from './components/mobile/MobileCanvasControls.jsx';
 // Plugin system
 import { PluginHost } from './plugins/PluginHost';
@@ -896,6 +895,7 @@ function App({ graphId = 'default' }) {
   const { currentTheme } = useTheme();
   const menuBarRef = useRef(null);
   const [overlayLayoutOverrides, setOverlayLayoutOverrides] = useState(() => loadOverlayLayoutOverrides());
+  const [pluginOverlays, setPluginOverlays] = useState([]);
   const [menuBarBottom, setMenuBarBottom] = useState(80);
 
 
@@ -2031,32 +2031,6 @@ function App({ graphId = 'default' }) {
   }, [baseSlotStyles, overlayLayoutOverrides.slots]);
 
   const overlayRenderers = useMemo(() => ({
-    help: () => (
-      <div
-        className={triggerClass}
-        role="button"
-        aria-label={isHelpVisible ? 'Hide help' : 'Show help'}
-        aria-pressed={isHelpVisible}
-        tabIndex={0}
-        title={isHelpVisible ? 'Hide help' : 'Show help'}
-        onClick={toggleHelp}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleHelp(); } }}
-      >
-        {isHelpVisible ? (
-          <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M7 7l10 10M17 7l-10 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        ) : (
-          <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 19h0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            <path d="M9 8a3 3 0 1 1 6 0c0 2-3 2.5-3 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
-          </svg>
-        )}
-        <div className="trigger-tooltip">
-          {isHelpVisible ? '收起' : '帮助'}
-        </div>
-      </div>
-    ),
     controls: () => (
       <MobileCanvasControls
         onZoomIn={() => canvasRef.current?.zoom?.(1.1)}
@@ -2073,45 +2047,72 @@ function App({ graphId = 'default' }) {
         onViewportChange={handleMinimapViewportChange}
       />
     ),
-  }), [triggerClass, isHelpVisible, toggleHelp, nodes, viewBox, showMinimap, handleMinimapViewportChange]);
+  }), [nodes, viewBox, showMinimap, handleMinimapViewportChange]);
 
-  const overlaySlotMap = useMemo(() => {
-    const map = new Map();
+  const combinedOverlayEntries = useMemo(() => {
+    const entries = [];
+
     Object.entries(overlayItems).forEach(([id, config]) => {
       if (!config || config.hidden) return;
       const render = overlayRenderers[id];
       if (!render) return;
-      const slot = config.slot || 'top-right';
-      if (!map.has(slot)) map.set(slot, []);
-      map.get(slot).push({
+      entries.push({
         id,
+        slot: config.slot || 'top-right',
         order: typeof config.order === 'number' ? config.order : 0,
         style: config.style,
-        render,
+        element: render(),
       });
     });
-    return map;
-  }, [overlayItems, overlayRenderers]);
+
+    (pluginOverlays || []).forEach((descriptor) => {
+      if (!descriptor) return;
+      const layoutKey = descriptor.layoutKey || descriptor.key || descriptor.pluginId + ':' + descriptor.overlayId;
+      const layoutConfig = overlayItems[layoutKey] || {};
+      const slot = layoutConfig.slot || descriptor.slot || 'top-right';
+      const order = layoutConfig.order ?? descriptor.order ?? 0;
+      const mergedStyle = {
+        ...(descriptor.style || {}),
+        ...(layoutConfig.style || {}),
+      };
+      entries.push({
+        id: layoutKey,
+        slot,
+        order,
+        style: mergedStyle,
+        element: descriptor.element,
+      });
+    });
+
+    return entries;
+  }, [overlayItems, overlayRenderers, pluginOverlays]);
 
   const overlaySlotElements = useMemo(() => {
+    const map = new Map();
+    combinedOverlayEntries.forEach(({ slot, ...rest }) => {
+      const slotName = slot || 'top-right';
+      if (!map.has(slotName)) map.set(slotName, []);
+      map.get(slotName).push(rest);
+    });
+
     const elements = [];
-    overlaySlotMap.forEach((items, slotName) => {
+    map.forEach((items, slotName) => {
       if (!items || items.length === 0) return;
       const slotConfig = slotStyles[slotName] || { className: 'overlay-slot', style: {} };
       const style = { ...(slotConfig.style || {}) };
       const sorted = [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
       elements.push(
         <div key={`overlay-slot-${slotName}`} className={slotConfig.className || 'overlay-slot'} style={style}>
-          {sorted.map(({ id, style: itemStyle, render }) => (
+          {sorted.map(({ id, style: itemStyle, element }) => (
             <div key={id} className="overlay-slot__item" style={itemStyle}>
-              {typeof render === 'function' ? render() : render}
+              {element}
             </div>
           ))}
         </div>
       );
     });
     return elements;
-  }, [overlaySlotMap, slotStyles]);
+  }, [combinedOverlayEntries, slotStyles]);
 
   const overlayLayoutSnapshot = useMemo(() => ({
     items: Object.fromEntries(Object.entries(overlayItems).map(([id, cfg]) => [id, { ...cfg }])),
@@ -2197,8 +2198,6 @@ function App({ graphId = 'default' }) {
       <div style={{ height: 80 }} />
       <MainHeader />
 
-      <HelpPanel isVisible={isHelpVisible} withPanel={showNodeInfoPanel} />
-
       {/* Plugin tips */}
       {pluginTips.length > 0 && (
         <div style={pluginTipContainerStyle}>
@@ -2281,6 +2280,7 @@ function App({ graphId = 'default' }) {
       {/* Plugins */}
       <PluginHost
         plugins={activePlugins}
+        onOverlaysChange={setPluginOverlays}
         appApi={{
           // selection and nodes
           nodes,
@@ -2299,6 +2299,9 @@ function App({ graphId = 'default' }) {
           overlayLayout: overlayLayoutSnapshot,
           setOverlayLayout: updateOverlayLayout,
           resetOverlayLayout,
+          isHelpVisible,
+          toggleHelp,
+          isMobile,
         }}
       />
 
