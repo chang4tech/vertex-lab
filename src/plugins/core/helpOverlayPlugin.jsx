@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { HelpPanel } from '../../components/panels/HelpPanel';
 
 const HELP_OVERLAY_LAYOUT_KEY = 'help';
@@ -28,9 +29,17 @@ function HelpOverlayContent({ api }) {
 
   const triggerClass = useMemo(() => `trigger ${isHelpVisible ? 'active' : ''}`, [isHelpVisible]);
 
+  const portalTarget = useMemo(() => (typeof document === 'undefined' ? null : document.body), []);
+
+  const panelPortal = useMemo(() => (
+    portalTarget
+      ? createPortal(<HelpPanel isVisible={isHelpVisible} withPanel={withPanel} />, portalTarget)
+      : null
+  ), [portalTarget, isHelpVisible, withPanel]);
+
   return (
     <React.Fragment>
-      <HelpPanel isVisible={isHelpVisible} withPanel={withPanel} />
+      {panelPortal}
       <div
         className={triggerClass}
         role="button"
@@ -56,9 +65,7 @@ function HelpOverlayContent({ api }) {
             <path d="M9 8a3 3 0 1 1 6 0c0 2-3 2.5-3 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
           </svg>
         )}
-        <div className="trigger-tooltip">
-          {isHelpVisible ? '收起' : '帮助'}
-        </div>
+        <div className="trigger-tooltip">{isHelpVisible ? '收起' : '帮助'}</div>
       </div>
     </React.Fragment>
   );
