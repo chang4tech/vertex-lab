@@ -12,10 +12,10 @@ const renderWithProviders = (ui) => render(
 );
 
 describe('PluginPage about section', () => {
-  it('shows How to Use for selection tools', () => {
+  it('shows How to Use for selection tools', async () => {
     window.location.hash = '#/plugin/core.selectionTools';
     renderWithProviders(<PluginPage pluginId="core.selectionTools" />);
-    expect(screen.getByText(/How to Use/i)).toBeInTheDocument();
+    expect(await screen.findByText(/How to Use/i)).toBeInTheDocument();
     expect(screen.getByText(/Appears when you select/)).toBeInTheDocument();
   });
 });

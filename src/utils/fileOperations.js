@@ -13,7 +13,10 @@ export function exportToJSON(nodes) {
   a.download = filename;
   try {
     document.body.appendChild(a);
-    a.click();
+    const allowClick = typeof navigator === 'undefined' || !/jsdom/i.test(navigator.userAgent || '');
+    if (allowClick && typeof a.click === 'function') {
+      a.click();
+    }
     setTimeout(() => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
@@ -22,7 +25,8 @@ export function exportToJSON(nodes) {
     // In test environments where a isn't a real Node, append a harmless placeholder node
     const placeholder = document.createTextNode('');
     document.body.appendChild(placeholder);
-    if (typeof a.click === 'function') a.click();
+    const allowClick = typeof navigator === 'undefined' || !/jsdom/i.test(navigator.userAgent || '');
+    if (allowClick && typeof a.click === 'function') a.click();
     document.body.removeChild(placeholder);
     URL.revokeObjectURL(url);
   }

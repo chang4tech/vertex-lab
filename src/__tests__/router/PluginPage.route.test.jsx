@@ -4,11 +4,11 @@ import { SimpleRouter } from '../../router/SimpleRouter.jsx';
 import { render, screen } from '@testing-library/react';
 
 describe('Plugin route', () => {
-  it('renders Plugin Not Found for unknown plugin id', () => {
+  it('renders Plugin Not Found for unknown plugin id', async () => {
     const originalHash = window.location.hash;
     window.location.hash = '#/plugin/does.not.exist';
     render(<SimpleRouter />);
-    expect(screen.getByText(/Plugin Not Found/)).toBeInTheDocument();
+    expect(await screen.findByText(/Plugin Not Found/)).toBeInTheDocument();
     window.location.hash = originalHash;
   });
 });

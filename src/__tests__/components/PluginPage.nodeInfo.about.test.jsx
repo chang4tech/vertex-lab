@@ -12,10 +12,10 @@ const renderWithProviders = (ui) => render(
 );
 
 describe('PluginPage about section (Node Info)', () => {
-  it('shows How to Use for Node Info plugin', () => {
+  it('shows How to Use for Node Info plugin', async () => {
     window.location.hash = '#/plugin/core.nodeInfo';
     renderWithProviders(<PluginPage pluginId="core.nodeInfo" />);
+    expect(await screen.findByRole('heading', { name: /Node Info Panel/i })).toBeInTheDocument();
     expect(screen.getAllByText(/How to Use/i).length).toBeGreaterThan(0);
-    expect(screen.getByRole('heading', { name: /Node Info Panel/i })).toBeInTheDocument();
   });
 });

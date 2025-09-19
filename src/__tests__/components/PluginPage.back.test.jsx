@@ -12,13 +12,13 @@ const renderWithProviders = (ui) => render(
 );
 
 describe('PluginPage Back behavior', () => {
-  it('navigates back to previous hash when stored', () => {
+  it('navigates back to previous hash when stored', async () => {
     const originalHash = window.location.hash;
     const previous = '#/g/test-graph-1234';
     try { sessionStorage.setItem('vertex_plugin_return', previous); } catch {}
     window.location.hash = '#/plugin/core.graphStats';
     renderWithProviders(<PluginPage pluginId="core.graphStats" />);
-    fireEvent.click(screen.getByText(/Back/i));
+    fireEvent.click(await screen.findByText(/Back/i));
     expect(window.location.hash).toBe(previous);
     window.location.hash = originalHash;
   });
