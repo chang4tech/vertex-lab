@@ -1230,7 +1230,10 @@ function App({ graphId = 'default' }) {
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0, target: null, pointerType: 'mouse' });
-  const activePlugins = allPlugins.filter(p => (pluginPrefs[p.id] ?? true));
+  const activePlugins = useMemo(
+    () => allPlugins.filter(p => (pluginPrefs[p.id] ?? true)),
+    [allPlugins, pluginPrefs]
+  );
   const pluginCommands = React.useMemo(() => collectPluginCommands(activePlugins), [activePlugins]);
 
   // Show a one-time tip when a plugin gets enabled (after activePlugins is defined)
@@ -1526,6 +1529,10 @@ function App({ graphId = 'default' }) {
     setShowNodeInfoPanel(prev => !prev);
   }, []);
 
+  const hideNodeInfoPanel = useCallback(() => {
+    setShowNodeInfoPanel(false);
+  }, []);
+
   const handleMinimapViewportChange = useCallback((newViewport) => {
     if (canvasRef.current?.setViewport) {
       canvasRef.current.setViewport(newViewport);
@@ -1683,11 +1690,15 @@ function App({ graphId = 'default' }) {
   }, []);
 
   // Toggles the help panel and saves the state
-  const toggleHelp = () => {
-    const newVisibility = !isHelpVisible;
-    setIsHelpVisible(newVisibility);
-    window.localStorage.setItem('xmindHelpTriggerState', newVisibility ? '1' : '0');
-  };
+  const toggleHelp = useCallback(() => {
+    setIsHelpVisible(prev => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem('xmindHelpTriggerState', next ? '1' : '0');
+      } catch {}
+      return next;
+    });
+  }, []);
 
   const triggerClass = `trigger ${isHelpVisible ? 'active' : ''}`;
 
@@ -2186,6 +2197,45 @@ function App({ graphId = 'default' }) {
     },
   }), [overlayItems, slotStyles, overlayLayoutOverrides]);
 
+  const pluginAppApi = useMemo(() => ({
+    nodes,
+    edges,
+    selectedNodeIds,
+    selectedNodes: selectedNodeIds.map(id => nodes.find(n => n.id === id)).filter(Boolean),
+    showNodeInfoPanel,
+    hideNodeInfoPanel,
+    onEditNode: handleEditNodeFromPanel,
+    onDeleteNodes: handleDeleteNodesFromPanel,
+    onToggleCollapse: handleToggleCollapseFromPanel,
+    onHighlightNodes: handleHighlightNodes,
+    setPluginEnabled,
+    pluginPrefs,
+    overlayLayout: overlayLayoutSnapshot,
+    setOverlayLayout: updateOverlayLayout,
+    resetOverlayLayout,
+    isHelpVisible,
+    toggleHelp,
+    isMobile,
+  }), [
+    nodes,
+    edges,
+    selectedNodeIds,
+    showNodeInfoPanel,
+    hideNodeInfoPanel,
+    handleEditNodeFromPanel,
+    handleDeleteNodesFromPanel,
+    handleToggleCollapseFromPanel,
+    handleHighlightNodes,
+    setPluginEnabled,
+    pluginPrefs,
+    overlayLayoutSnapshot,
+    updateOverlayLayout,
+    resetOverlayLayout,
+    isHelpVisible,
+    toggleHelp,
+    isMobile,
+  ]);
+
 
   return (
     <React.Fragment>
@@ -2341,28 +2391,7 @@ function App({ graphId = 'default' }) {
       <PluginHost
         plugins={activePlugins}
         onOverlaysChange={setPluginOverlays}
-        appApi={{
-          // selection and nodes
-          nodes,
-          edges,
-          selectedNodeIds,
-          selectedNodes: selectedNodeIds.map(id => nodes.find(n => n.id === id)).filter(Boolean),
-          // node info panel state/handlers
-          showNodeInfoPanel,
-          hideNodeInfoPanel: () => setShowNodeInfoPanel(false),
-          onEditNode: handleEditNodeFromPanel,
-          onDeleteNodes: handleDeleteNodesFromPanel,
-          onToggleCollapse: handleToggleCollapseFromPanel,
-          onHighlightNodes: handleHighlightNodes,
-          setPluginEnabled,
-          pluginPrefs,
-          overlayLayout: overlayLayoutSnapshot,
-          setOverlayLayout: updateOverlayLayout,
-          resetOverlayLayout,
-          isHelpVisible,
-          toggleHelp,
-          isMobile,
-        }}
+        appApi={pluginAppApi}
       />
 
       {/* Context Menu */}
