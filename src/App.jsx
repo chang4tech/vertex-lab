@@ -149,6 +149,44 @@ const MenuBar = React.forwardRef(({
   const [helpModal, setHelpModal] = useState({ open: false, titleId: null, messageId: null });
   const [graphIdCopied, setGraphIdCopied] = useState(false);
 
+  useEffect(() => {
+    if (!graphIdCopied) return undefined;
+    const timeout = setTimeout(() => setGraphIdCopied(false), 2200);
+    return () => clearTimeout(timeout);
+  }, [graphIdCopied]);
+
+  const handleCopyGraphId = useCallback(() => {
+    const text = graphId ?? '';
+    const fallbackCopy = () => {
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        return true;
+      } catch (fallbackError) {
+        console.error('Graph ID copy fallback failed', fallbackError);
+        return false;
+      }
+    };
+
+    const attempt = navigator?.clipboard?.writeText
+      ? navigator.clipboard.writeText(text).then(() => true).catch((err) => {
+          console.warn('Clipboard API copy failed, falling back', err);
+          return fallbackCopy();
+        })
+      : Promise.resolve(fallbackCopy());
+
+    attempt.then((success) => {
+      if (success) setGraphIdCopied(true);
+    });
+  }, [graphId]);
+
   // Close menu when clicking outside
   useEffect(() => {
     if (!openMenu) return;
@@ -2419,40 +2457,3 @@ function App({ graphId = 'default' }) {
 }
 
 export default App;
-  useEffect(() => {
-    if (!graphIdCopied) return undefined;
-    const timeout = setTimeout(() => setGraphIdCopied(false), 2200);
-    return () => clearTimeout(timeout);
-  }, [graphIdCopied]);
-
-  const handleCopyGraphId = useCallback(() => {
-    const text = graphId ?? '';
-    const fallbackCopy = () => {
-      try {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.setAttribute('readonly', '');
-        textarea.style.position = 'absolute';
-        textarea.style.left = '-9999px';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        return true;
-      } catch (fallbackError) {
-        console.error('Graph ID copy fallback failed', fallbackError);
-        return false;
-      }
-    };
-
-    const attempt = navigator?.clipboard?.writeText
-      ? navigator.clipboard.writeText(text).then(() => true).catch((err) => {
-          console.warn('Clipboard API copy failed, falling back', err);
-          return fallbackCopy();
-        })
-      : Promise.resolve(fallbackCopy());
-
-    attempt.then((success) => {
-      if (success) setGraphIdCopied(true);
-    });
-  }, [graphId]);
