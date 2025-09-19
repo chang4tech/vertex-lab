@@ -104,6 +104,7 @@ export function createNode(id, label, x, y, parentId = null, options = {}) {
     x,
     y,
     parentId,
+    level: options.level ?? 0,
     // Enhanced properties
     color: options.color || NODE_COLORS.DEFAULT,
     shape: options.shape || NODE_SHAPES.CIRCLE,
@@ -128,6 +129,7 @@ export function createEnhancedNode(nodeData) {
     x: nodeData.x,
     y: nodeData.y,
     parentId: nodeData.parentId,
+    level: nodeData.level ?? 0,
     // Enhanced properties with defaults
     color: nodeData.color || NODE_COLORS.DEFAULT,
     shape: nodeData.shape || NODE_SHAPES.CIRCLE,
@@ -258,38 +260,25 @@ export function filterNodesByTag(nodes, tagId) {
 
 // Get child nodes (for collapsing functionality)
 export function getChildNodes(nodes, parentId) {
-  return nodes.filter(node => node.parentId === parentId);
+  const parent = nodes.find(node => node.id === parentId);
+  if (!parent) return [];
+  const parentLevel = parent.level ?? 0;
+  const targetLevel = parentLevel + 1;
+  return nodes.filter(node => (node.level ?? 0) === targetLevel);
 }
 
 // Get all descendant nodes (recursive)
 export function getDescendantNodes(nodes, parentId) {
-  const descendants = [];
-  const children = getChildNodes(nodes, parentId);
-  
-  children.forEach(child => {
-    descendants.push(child);
-    descendants.push(...getDescendantNodes(nodes, child.id));
-  });
-  
-  return descendants;
+  const parent = nodes.find(node => node.id === parentId);
+  if (!parent) return [];
+  const parentLevel = parent.level ?? 0;
+  return nodes.filter(node => (node.level ?? 0) > parentLevel);
 }
 
 // Check if node should be visible (considering collapsed parents)
 export function isNodeVisible(nodes, node) {
-  if (!node.parentId) {
-    return true; // Root nodes are always visible
-  }
-  
-  const parent = nodes.find(n => n.id === node.parentId);
-  if (!parent) {
-    return true; // Orphaned nodes are visible
-  }
-  
-  if (parent.isCollapsed) {
-    return false; // Hidden by collapsed parent
-  }
-  
-  return isNodeVisible(nodes, parent); // Check recursively
+  const nodeLevel = node.level ?? 0;
+  return !nodes.some(n => n?.isCollapsed && (n.level ?? 0) < nodeLevel);
 }
 
 // Get visible nodes (filtering out collapsed children)

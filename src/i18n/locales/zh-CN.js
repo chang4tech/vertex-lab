@@ -160,7 +160,7 @@ export default {
   'nodeInfo.shape': '形状',
   'nodeInfo.color': '颜色',
   'nodeInfo.fontSize': '字体大小',
-  'nodeInfo.parent': '父节点ID',
+  'nodeInfo.level': '级别',
   'nodeInfo.notes': '备注',
   'nodeInfo.timestamps': '时间戳',
   'nodeInfo.created': '创建时间',

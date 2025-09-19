@@ -79,10 +79,10 @@ describe('nodeUtils', () => {
   describe('getVisibleNodes', () => {
     it('should return all nodes when none are collapsed', () => {
       const nodes = [
-        createEnhancedNode({ id: 1, label: 'Root', x: 0, y: 0, parentId: null }),
-        createEnhancedNode({ id: 2, label: 'Child 1', x: 100, y: 100, parentId: 1 }),
-        createEnhancedNode({ id: 3, label: 'Child 2', x: 200, y: 200, parentId: 1 }),
-        createEnhancedNode({ id: 4, label: 'Grandchild', x: 300, y: 300, parentId: 2 })
+        createEnhancedNode({ id: 1, label: 'Root', x: 0, y: 0, level: 0 }),
+        createEnhancedNode({ id: 2, label: 'Child 1', x: 100, y: 100, level: 1 }),
+        createEnhancedNode({ id: 3, label: 'Child 2', x: 200, y: 200, level: 1 }),
+        createEnhancedNode({ id: 4, label: 'Grandchild', x: 300, y: 300, level: 2 })
       ];
 
       const visibleNodes = getVisibleNodes(nodes);
@@ -91,24 +91,23 @@ describe('nodeUtils', () => {
 
     it('should hide children of collapsed nodes', () => {
       const nodes = [
-        createEnhancedNode({ id: 1, label: 'Root', x: 0, y: 0, parentId: null }),
-        createEnhancedNode({ id: 2, label: 'Child 1', x: 100, y: 100, parentId: 1, isCollapsed: true }),
-        createEnhancedNode({ id: 3, label: 'Child 2', x: 200, y: 200, parentId: 1 }),
-        createEnhancedNode({ id: 4, label: 'Grandchild', x: 300, y: 300, parentId: 2 })
+        createEnhancedNode({ id: 1, label: 'Root', x: 0, y: 0, level: 0 }),
+        createEnhancedNode({ id: 2, label: 'Level 1', x: 100, y: 100, level: 1, isCollapsed: true }),
+        createEnhancedNode({ id: 3, label: 'Peer Level 1', x: 200, y: 200, level: 1 }),
+        createEnhancedNode({ id: 4, label: 'Level 2', x: 300, y: 300, level: 2 })
       ];
 
       const visibleNodes = getVisibleNodes(nodes);
-      expect(visibleNodes).toHaveLength(3);
-      expect(visibleNodes.find(n => n.id === 4)).toBeUndefined();
+      expect(visibleNodes.map(n => n.id).sort()).toEqual([1,2,3]);
     });
   });
 
   describe('hierarchy helpers', () => {
     it('getChildNodes and getDescendantNodes return expected sets', () => {
-      const root = createEnhancedNode({ id: 1, label: 'root', x: 0, y: 0, parentId: null });
-      const c1 = createEnhancedNode({ id: 2, label: 'c1', x: 10, y: 10, parentId: 1 });
-      const c2 = createEnhancedNode({ id: 3, label: 'c2', x: 20, y: 20, parentId: 1 });
-      const g1 = createEnhancedNode({ id: 4, label: 'g1', x: 30, y: 30, parentId: 2 });
+      const root = createEnhancedNode({ id: 1, label: 'root', x: 0, y: 0, level: 0 });
+      const c1 = createEnhancedNode({ id: 2, label: 'c1', x: 10, y: 10, level: 1 });
+      const c2 = createEnhancedNode({ id: 3, label: 'c2', x: 20, y: 20, level: 1 });
+      const g1 = createEnhancedNode({ id: 4, label: 'g1', x: 30, y: 30, level: 2 });
       const nodes = [root, c1, c2, g1];
 
       const { getChildNodes, getDescendantNodes } = require('../../utils/nodeUtils');
@@ -133,9 +132,9 @@ describe('nodeUtils', () => {
 
     it('isNodeVisible returns false for descendants of collapsed nodes', () => {
       const nodes = [
-        createEnhancedNode({ id: 1, label: 'root', x: 0, y: 0, parentId: null, isCollapsed: true }),
-        createEnhancedNode({ id: 2, label: 'child', x: 10, y: 10, parentId: 1 }),
-        createEnhancedNode({ id: 3, label: 'sibling', x: 20, y: 20, parentId: null })
+        createEnhancedNode({ id: 1, label: 'root', x: 0, y: 0, level: 0, isCollapsed: true }),
+        createEnhancedNode({ id: 2, label: 'child', x: 10, y: 10, level: 1 }),
+        createEnhancedNode({ id: 3, label: 'sibling', x: 20, y: 20, level: 0 })
       ];
       expect(isNodeVisible(nodes, nodes[0])).toBe(true);
       expect(isNodeVisible(nodes, nodes[1])).toBe(false);

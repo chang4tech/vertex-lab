@@ -160,7 +160,7 @@ export default {
   'nodeInfo.shape': 'Shape',
   'nodeInfo.color': 'Color',
   'nodeInfo.fontSize': 'Font Size',
-  'nodeInfo.parent': 'Parent ID',
+  'nodeInfo.level': 'Level',
   'nodeInfo.notes': 'Notes',
   'nodeInfo.timestamps': 'Timestamps',
   'nodeInfo.created': 'Created',

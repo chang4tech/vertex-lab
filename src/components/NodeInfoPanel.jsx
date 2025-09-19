@@ -400,12 +400,10 @@ const NodeInfoPanel = ({
                   </div>
                 )}
 
-                {singleNode.parentId && (
-                  <div style={{ marginBottom: '4px' }}>
-                    <strong><FormattedMessage id="nodeInfo.parent" defaultMessage="Parent ID" />:</strong>
-                    {` ${singleNode.parentId}`}
-                  </div>
-                )}
+                <div style={{ marginBottom: '4px' }}>
+                  <strong><FormattedMessage id="nodeInfo.level" defaultMessage="Level" />:</strong>
+                  {` ${singleNode.level ?? 0}`}
+                </div>
               </div>
             </div>
 

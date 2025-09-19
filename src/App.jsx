@@ -1073,11 +1073,11 @@ function App({ graphId = 'default' }) {
     }
     // Default initial state if no saved state exists
     return [
-      createEnhancedNode({ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, parentId: null }),
-      createEnhancedNode({ id: 2, label: `${intl.formatMessage({ id: 'node.branch' })} 1`, x: 250, y: 200, parentId: 1 }),
-      createEnhancedNode({ id: 3, label: `${intl.formatMessage({ id: 'node.branch' })} 2`, x: 550, y: 200, parentId: 1 }),
-      createEnhancedNode({ id: 4, label: `${intl.formatMessage({ id: 'node.branch' })} 3`, x: 250, y: 400, parentId: 1 }),
-      createEnhancedNode({ id: 5, label: `${intl.formatMessage({ id: 'node.branch' })} 4`, x: 550, y: 400, parentId: 1 }),
+      createEnhancedNode({ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, level: 0, parentId: null }),
+      createEnhancedNode({ id: 2, label: `${intl.formatMessage({ id: 'node.branch' })} 1`, x: 250, y: 200, level: 1, parentId: null }),
+      createEnhancedNode({ id: 3, label: `${intl.formatMessage({ id: 'node.branch' })} 2`, x: 550, y: 200, level: 1, parentId: null }),
+      createEnhancedNode({ id: 4, label: `${intl.formatMessage({ id: 'node.branch' })} 3`, x: 250, y: 400, level: 1, parentId: null }),
+      createEnhancedNode({ id: 5, label: `${intl.formatMessage({ id: 'node.branch' })} 4`, x: 550, y: 400, level: 1, parentId: null }),
     ];
   });
   const [selectedNodeIds, setSelectedNodeIds] = useState([]);
@@ -1096,17 +1096,7 @@ function App({ graphId = 'default' }) {
       if (savedNodes) {
         const parsedNodes = JSON.parse(savedNodes);
         if (Array.isArray(parsedNodes)) {
-          // lightweight derivation to avoid import; simple inline
-          const seen = new Set();
-          const result = [];
-          parsedNodes.forEach(n => {
-            if (n.parentId != null) {
-              const a = n.parentId; const b = n.id;
-              const key = a <= b ? `${a}-${b}` : `${b}-${a}`;
-              if (!seen.has(key)) { seen.add(key); result.push({ source: a, target: b, directed: false }); }
-            }
-          });
-          return result;
+          return [];
         }
       }
     } catch {}
