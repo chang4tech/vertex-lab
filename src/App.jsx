@@ -1967,6 +1967,13 @@ function App({ graphId = 'default' }) {
     }
   }, [edges, nodes, pushUndo, shiftPairIndex, shiftPairSelKey]);
 
+  const updateNodesFromPlugin = useCallback((updater) => {
+    const draft = nodes.map(node => ({ ...node }));
+    const next = typeof updater === 'function' ? updater(draft) : updater;
+    if (!Array.isArray(next)) return;
+    pushUndo(next);
+  }, [nodes, pushUndo]);
+
   // Hook-based common keyboard shortcuts to avoid drift with menus/help
   useKeyboardShortcuts({
     onNew: handleNewDiagram,
@@ -2280,6 +2287,7 @@ function App({ graphId = 'default' }) {
       if (a == null || b == null) return;
       handleToggleConnections([a, b], options);
     },
+    updateNodes: updateNodesFromPlugin,
     showNodeInfoPanel,
     hideNodeInfoPanel,
     onEditNode: handleEditNodeFromPanel,
@@ -2300,6 +2308,7 @@ function App({ graphId = 'default' }) {
     selectedNodeIds,
     selectNodes,
     handleToggleConnections,
+    updateNodesFromPlugin,
     showNodeInfoPanel,
     hideNodeInfoPanel,
     handleEditNodeFromPanel,
@@ -2532,6 +2541,7 @@ function App({ graphId = 'default' }) {
                   if (a == null || b == null) return;
                   handleToggleConnections([a, b], options);
                 },
+                updateNodes: updateNodesFromPlugin,
               };
               return filterCommandsForContext(pluginCommands, cmdApi, contextMenu.target).map(cmd => (
                 <button key={cmd.id} onClick={() => { closeContextMenu(); try { cmd.run(cmdApi, contextMenu.target); } catch (e) { console.error('Plugin command error:', e); } }}>
@@ -2565,6 +2575,7 @@ function App({ graphId = 'default' }) {
                   if (a == null || b == null) return;
                   handleToggleConnections([a, b], options);
                 },
+                updateNodes: updateNodesFromPlugin,
               };
               return filterCommandsForContext(pluginCommands, cmdApi, contextMenu.target).map(cmd => (
                 <button key={cmd.id} onClick={() => { closeContextMenu(); try { cmd.run(cmdApi, contextMenu.target); } catch (e) { console.error('Plugin command error:', e); } }}>
