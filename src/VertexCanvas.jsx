@@ -464,7 +464,10 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       view.current.offsetX = width / 2 - node.x * view.current.scale;
       view.current.offsetY = height / 2 - node.y * view.current.scale;
       debugLog('FocusOnNode - nodeId:', nodeId, 'nodeX:', node.x, 'nodeY:', node.y, 'scale:', view.current.scale, 'offsetX:', view.current.offsetX, 'offsetY:', view.current.offsetY);
-      canvas.dispatchEvent(new Event('redraw'));
+      const canvasEl = canvasRef.current;
+      if (canvasEl) {
+        canvasEl.dispatchEvent(new Event('redraw'));
+      }
     },
     setViewport: (viewport) => {
       const canvas = canvasRef.current;

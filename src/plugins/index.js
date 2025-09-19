@@ -4,6 +4,8 @@ import { clipboardPlugin } from './core/clipboardPlugin.jsx';
 import { graphStatsPlugin } from './core/graphStatsPlugin.jsx';
 import { neighborsHighlighterPlugin } from './core/neighborsHighlighterPlugin.jsx';
 import { helpOverlayPlugin } from './core/helpOverlayPlugin.jsx';
+import { randomNodeSelectorPlugin } from './core/randomNodeSelectorPlugin.jsx';
+import { connectNodesByIdPlugin } from './core/connectNodesByIdPlugin.jsx';
 import { showcasePlugin } from './examples/showcasePlugin.jsx';
 
 export const corePlugins = [
@@ -13,5 +15,7 @@ export const corePlugins = [
   selectionToolsPlugin,
   clipboardPlugin,
   neighborsHighlighterPlugin,
+  randomNodeSelectorPlugin,
+  connectNodesByIdPlugin,
   showcasePlugin,
 ];

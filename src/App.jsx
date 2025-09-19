@@ -1778,9 +1778,27 @@ function App({ graphId = 'default' }) {
   // Node click handler (backward compatibility)
   const handleNodeClick = (nodeId) => {
     console.log('Node clicked:', { nodeId, currentSelected: selectedNodeId });
-    setSelectedNodeId(nodeId);
-    setSelectedNodeIds([nodeId]);
+    selectNodes([nodeId]);
   };
+
+  const selectNodes = useCallback((ids = [], options = {}) => {
+    const list = Array.isArray(ids) ? ids.filter((id) => id !== undefined && id !== null) : [];
+    if (list.length === 0) {
+      setSelectedNodeIds([]);
+      setSelectedNodeId(null);
+      return;
+    }
+
+    const unique = Array.from(new Set(list));
+    setSelectedNodeIds(unique);
+    setSelectedNodeId(unique[0] ?? null);
+    setShowNodeEditor(false);
+    setEditingNodeId(null);
+
+    if (options.center && unique[0] != null && canvasRef.current?.focusOnNode) {
+      canvasRef.current.focusOnNode(unique[0]);
+    }
+  }, [canvasRef, setEditingNodeId, setSelectedNodeId, setSelectedNodeIds, setShowNodeEditor]);
 
   // Node double-click handler for editing
   const handleNodeDoubleClick = (nodeId) => {
@@ -1818,6 +1836,137 @@ function App({ graphId = 'default' }) {
     setEditingNodeId(null);
   }, [nodes, pushUndo]);
 
+  const handleToggleConnections = useCallback((ids, options = {}) => {
+    if (!Array.isArray(ids) || ids.length < 2) return;
+    const isShift = options.shift === true;
+
+    const isAncestor = (maybeAncestorId, nodeId) => {
+      let current = nodes.find(n => n.id === nodeId);
+      const visited = new Set();
+      while (current && current.parentId != null) {
+        if (visited.has(current.id)) break;
+        visited.add(current.id);
+        if (current.parentId === maybeAncestorId) return true;
+        current = nodes.find(n => n.id === current.parentId);
+      }
+      return false;
+    };
+
+    if (Array.isArray(edges)) {
+      let newEdges = edges.length > 0 ? [...edges] : (() => {
+        const seen = new Set();
+        const result = [];
+        nodes.forEach(n => {
+          if (n.parentId != null) {
+            const a = n.parentId; const b = n.id;
+            const key = a <= b ? `${a}-${b}` : `${b}-${a}`;
+            if (!seen.has(key)) { seen.add(key); result.push({ source: a, target: b, directed: false }); }
+          }
+        });
+        return result;
+      })();
+
+      const pairKey = (a, b) => a <= b ? `${a}-${b}` : `${b}-${a}`;
+      const pairs = [];
+      for (let i = 0; i < ids.length; i++) {
+        for (let j = i + 1; j < ids.length; j++) {
+          pairs.push([ids[i], ids[j]]);
+        }
+      }
+      const hasPair = (a, b) => newEdges.some(e => pairKey(e.source, e.target) === pairKey(a, b) && !e.directed);
+
+      if (isShift) {
+        const sortedIds = [...ids].sort((a, b) => a - b);
+        const selectionKey = sortedIds.join('-');
+        const m = pairs.length;
+        if (m > 0) {
+          let idx = shiftPairIndex;
+          const total = 1 << m;
+          if (selectionKey !== shiftPairSelKey || idx >= total) {
+            idx = 0;
+            setShiftPairSelKey(selectionKey);
+          }
+          const next = (idx + 1) % total;
+          const gray = next ^ (next >> 1);
+          const desired = new Set();
+          for (let bit = 0; bit < m; bit++) {
+            if ((gray >> bit) & 1) {
+              const [a, b] = pairs[bit];
+              desired.add(pairKey(a, b));
+            }
+          }
+          newEdges = newEdges.filter(e => {
+            const key = pairKey(e.source, e.target);
+            const internal = pairs.some(([a, b]) => key === pairKey(a, b));
+            if (!internal) return true;
+            if (e.directed) return true;
+            return desired.has(key);
+          });
+          desired.forEach(key => {
+            const exists = newEdges.some(e => pairKey(e.source, e.target) === key && !e.directed);
+            if (!exists) {
+              const [aStr, bStr] = key.split('-');
+              const a = parseInt(aStr, 10); const b = parseInt(bStr, 10);
+              newEdges.push({ source: a, target: b, directed: false });
+            }
+          });
+          setShiftPairIndex(next);
+        }
+      } else {
+        const allPresent = pairs.length > 0 && pairs.every(([a, b]) => hasPair(a, b));
+        if (allPresent) {
+          const removeSet = new Set(pairs.map(([a, b]) => pairKey(a, b)));
+          newEdges = newEdges.filter(e => {
+            const key = pairKey(e.source, e.target);
+            return !removeSet.has(key) || !!e.directed;
+          });
+        } else {
+          pairs.forEach(([a, b]) => {
+            if (!hasPair(a, b)) newEdges.push({ source: a, target: b, directed: false });
+          });
+        }
+      }
+      setEdges(newEdges);
+      return;
+    }
+
+    const idSet = new Set(ids);
+    if (isShift) {
+      const anchorId = ids[0];
+      const others = ids.slice(1);
+      const target = others.find(oid => {
+        const node = nodes.find(n => n.id === oid);
+        if (!node) return false;
+        if (node.parentId && !idSet.has(node.parentId)) return false;
+        return node.parentId !== anchorId;
+      });
+      if (target != null) {
+        const updated = nodes.map(n => n.id === target ? { ...n, parentId: anchorId } : n);
+        pushUndo(updated);
+      }
+    } else {
+      const anchorId = ids[0];
+      const others = ids.slice(1);
+      const anyConnected = others.some(oid => {
+        const node = nodes.find(n => n.id === oid);
+        return node && node.parentId === anchorId;
+      });
+      if (anyConnected) {
+        const updated = nodes.map(n => (idSet.has(n.id) && n.parentId === anchorId) ? { ...n, parentId: null } : n);
+        pushUndo(updated);
+      } else {
+        const updated = nodes.map(n => {
+          if (!others.includes(n.id)) return n;
+          if (n.id === anchorId) return n;
+          if (isAncestor(n.id, anchorId)) return n;
+          if (n.parentId != null && !idSet.has(n.parentId)) return n;
+          return { ...n, parentId: anchorId };
+        });
+        pushUndo(updated);
+      }
+    }
+  }, [edges, nodes, pushUndo, shiftPairIndex, shiftPairSelKey]);
+
   // Hook-based common keyboard shortcuts to avoid drift with menus/help
   useKeyboardShortcuts({
     onNew: handleNewDiagram,
@@ -1835,150 +1984,7 @@ function App({ graphId = 'default' }) {
     onZoomOut: () => canvasRef.current?.zoom?.(0.9),
     onResetZoom: () => canvasRef.current?.resetZoom?.(),
     onToggleMinimap: () => setShowMinimap(v => !v),
-    onToggleConnections: (ids, options = {}) => {
-      if (!Array.isArray(ids) || ids.length < 2) return;
-      const isShift = options.shift === true;
-
-      // Helper: check ancestor to avoid cycles
-      const isAncestor = (maybeAncestorId, nodeId) => {
-        let current = nodes.find(n => n.id === nodeId);
-        const visited = new Set();
-        while (current && current.parentId != null) {
-          if (visited.has(current.id)) break;
-          visited.add(current.id);
-          if (current.parentId === maybeAncestorId) return true;
-          current = nodes.find(n => n.id === current.parentId);
-        }
-        return false;
-      };
-
-      // If edges state is present, operate on all pairs within selection
-      if (Array.isArray(edges)) {
-        // Seed from existing edges; if empty, derive from legacy parentId once
-        let newEdges = edges.length > 0 ? [...edges] : (() => {
-          const seen = new Set();
-          const result = [];
-          nodes.forEach(n => {
-            if (n.parentId != null) {
-              const a = n.parentId; const b = n.id;
-              const key = a <= b ? `${a}-${b}` : `${b}-${a}`;
-              if (!seen.has(key)) { seen.add(key); result.push({ source: a, target: b, directed: false }); }
-            }
-          });
-          return result;
-        })();
-
-        // Build all unordered pairs among selection
-        const pairKey = (a, b) => a <= b ? `${a}-${b}` : `${b}-${a}`;
-        const pairs = [];
-        for (let i = 0; i < ids.length; i++) {
-          for (let j = i + 1; j < ids.length; j++) {
-            pairs.push([ids[i], ids[j]]);
-          }
-        }
-        const hasPair = (a, b) => newEdges.some(e => pairKey(e.source, e.target) === pairKey(a, b) && !e.directed);
-
-        if (isShift) {
-          // Gray-code traversal: flip exactly one pair per press, enumerate all 2^m combinations
-          const sortedIds = [...ids].sort((a, b) => a - b);
-          const selectionKey = sortedIds.join('-');
-          const m = pairs.length;
-          if (m > 0) {
-            let idx = shiftPairIndex;
-            // Reset index when selection changes or index overflows
-            const total = 1 << m;
-            if (selectionKey !== shiftPairSelKey || idx >= total) {
-              idx = 0;
-              setShiftPairSelKey(selectionKey);
-            }
-            const next = (idx + 1) % total;
-            const gray = next ^ (next >> 1);
-            // Build desired set from gray code bits
-            const desired = new Set();
-            for (let bit = 0; bit < m; bit++) {
-              if ((gray >> bit) & 1) {
-                const [a, b] = pairs[bit];
-                desired.add(pairKey(a, b));
-              }
-            }
-            // Remove internal undirected edges not in desired; keep directed
-            newEdges = newEdges.filter(e => {
-              const key = pairKey(e.source, e.target);
-              const internal = pairs.some(([a, b]) => key === pairKey(a, b));
-              if (!internal) return true; // external edge stays
-              if (e.directed) return true; // keep directed for future
-              return desired.has(key);
-            });
-            // Add missing desired internal edges
-            desired.forEach(key => {
-              const exists = newEdges.some(e => pairKey(e.source, e.target) === key && !e.directed);
-              if (!exists) {
-                const [aStr, bStr] = key.split('-');
-                const a = parseInt(aStr, 10); const b = parseInt(bStr, 10);
-                newEdges.push({ source: a, target: b, directed: false });
-              }
-            });
-            setShiftPairIndex(next);
-          }
-        } else {
-          // Toggle all pairs: if any missing, connect all missing; else disconnect all
-          const allPresent = pairs.length > 0 && pairs.every(([a, b]) => hasPair(a, b));
-          if (allPresent) {
-            const removeSet = new Set(pairs.map(([a, b]) => pairKey(a, b)));
-            newEdges = newEdges.filter(e => {
-              const key = pairKey(e.source, e.target);
-              return !removeSet.has(key) || !!e.directed;
-            });
-          } else {
-            pairs.forEach(([a, b]) => {
-              if (!hasPair(a, b)) newEdges.push({ source: a, target: b, directed: false });
-            });
-          }
-        }
-        setEdges(newEdges);
-        return;
-      }
-
-      // Legacy fallback: parentId tree rewire only inside selection
-      // Legacy fallback: use parentId approximation
-      const idSet = new Set(ids);
-      if (isShift) {
-        // Progressive connect: attach one missing child to first as parent
-        const anchorId = ids[0];
-        const others = ids.slice(1);
-        const target = others.find(oid => {
-          const node = nodes.find(n => n.id === oid);
-          if (!node) return false;
-          if (node.parentId && !idSet.has(node.parentId)) return false; // don't break external
-          return node.parentId !== anchorId; // missing edge
-        });
-        if (target != null) {
-          const updated = nodes.map(n => n.id === target ? { ...n, parentId: anchorId } : n);
-          pushUndo(updated);
-        }
-      } else {
-        // Toggle: if any other has parent==anchor => disconnect all internal, else connect all missing to anchor
-        const anchorId = ids[0];
-        const others = ids.slice(1);
-        const anyConnected = others.some(oid => {
-          const node = nodes.find(n => n.id === oid);
-          return node && node.parentId === anchorId;
-        });
-        if (anyConnected) {
-          const updated = nodes.map(n => (idSet.has(n.id) && n.parentId === anchorId) ? { ...n, parentId: null } : n);
-          pushUndo(updated);
-        } else {
-          const updated = nodes.map(n => {
-            if (!others.includes(n.id)) return n;
-            if (n.id === anchorId) return n;
-            if (isAncestor(n.id, anchorId)) return n;
-            if (n.parentId != null && !idSet.has(n.parentId)) return n;
-            return { ...n, parentId: anchorId };
-          });
-          pushUndo(updated);
-        }
-      }
-    }
+    onToggleConnections: handleToggleConnections
   });
 
   const handleEditNodeFromPanel = useCallback((nodeId) => {
@@ -2268,6 +2274,12 @@ function App({ graphId = 'default' }) {
     edges,
     selectedNodeIds,
     selectedNodes: selectedNodeIds.map(id => nodes.find(n => n.id === id)).filter(Boolean),
+    selectNodes,
+    selectNode: (id, options = {}) => selectNodes(id == null ? [] : [id], options),
+    toggleConnection: (a, b, options = {}) => {
+      if (a == null || b == null) return;
+      handleToggleConnections([a, b], options);
+    },
     showNodeInfoPanel,
     hideNodeInfoPanel,
     onEditNode: handleEditNodeFromPanel,
@@ -2286,6 +2298,8 @@ function App({ graphId = 'default' }) {
     nodes,
     edges,
     selectedNodeIds,
+    selectNodes,
+    handleToggleConnections,
     showNodeInfoPanel,
     hideNodeInfoPanel,
     handleEditNodeFromPanel,
@@ -2512,6 +2526,12 @@ function App({ graphId = 'default' }) {
                 selectedNodeIds,
                 selectedNodes: selectedNodeIds.map(id => nodes.find(n => n.id === id)).filter(Boolean),
                 setHighlightedNodes: (ids) => handleHighlightNodes(ids),
+                selectNodes,
+                selectNode: (id, options = {}) => selectNodes(id == null ? [] : [id], options),
+                toggleConnection: (a, b, options = {}) => {
+                  if (a == null || b == null) return;
+                  handleToggleConnections([a, b], options);
+                },
               };
               return filterCommandsForContext(pluginCommands, cmdApi, contextMenu.target).map(cmd => (
                 <button key={cmd.id} onClick={() => { closeContextMenu(); try { cmd.run(cmdApi, contextMenu.target); } catch (e) { console.error('Plugin command error:', e); } }}>
@@ -2539,6 +2559,12 @@ function App({ graphId = 'default' }) {
                 selectedNodeIds,
                 selectedNodes: selectedNodeIds.map(id => nodes.find(n => n.id === id)).filter(Boolean),
                 setHighlightedNodes: (ids) => handleHighlightNodes(ids),
+                selectNodes,
+                selectNode: (id, options = {}) => selectNodes(id == null ? [] : [id], options),
+                toggleConnection: (a, b, options = {}) => {
+                  if (a == null || b == null) return;
+                  handleToggleConnections([a, b], options);
+                },
               };
               return filterCommandsForContext(pluginCommands, cmdApi, contextMenu.target).map(cmd => (
                 <button key={cmd.id} onClick={() => { closeContextMenu(); try { cmd.run(cmdApi, contextMenu.target); } catch (e) { console.error('Plugin command error:', e); } }}>
