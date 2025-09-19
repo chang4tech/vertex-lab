@@ -1,14 +1,50 @@
 import React, { useRef, useEffect } from 'react';
 import { useTheme } from './contexts/ThemeContext';
-import { 
-  getNodeDisplayText, 
-  getNodeBorderColor, 
+import {
+  getNodeDisplayText,
+  getNodeBorderColor,
   getNodeTextColor,
   getThemeNodeColor,
-  NODE_SHAPES, 
+  NODE_SHAPES,
   getVisibleNodes,
   upgradeNode
 } from './utils/nodeUtils';
+
+function getImportMetaEnv() {
+  try {
+    return import.meta.env || {};
+  } catch (err) {
+    return {};
+  }
+}
+
+function getProcessEnv() {
+  if (typeof process !== 'undefined' && process.env) {
+    return process.env;
+  }
+  return {};
+}
+
+const importEnv = getImportMetaEnv();
+const processEnv = getProcessEnv();
+
+const debugLoggingEnabled = (() => {
+  const explicitFlag = importEnv.VITE_VERTEX_CANVAS_DEBUG ?? processEnv.VITE_VERTEX_CANVAS_DEBUG;
+  if (explicitFlag === 'true') return true;
+  if (explicitFlag === 'false') return false;
+
+  if (processEnv.NODE_ENV === 'test' || importEnv.MODE === 'test') {
+    return false;
+  }
+
+  return Boolean(importEnv.DEV || processEnv.NODE_ENV === 'development');
+})();
+
+const debugLog = (...args) => {
+  if (debugLoggingEnabled) {
+    console.log(...args);
+  }
+};
 
 /**
  * VertexCanvas - a simple diagramming canvas using HTML5 Canvas.
@@ -259,7 +295,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       const s = view.current.scale;
       view.current.offsetX = width / 2 - cx * s;
       view.current.offsetY = height / 2 - cy * s;
-      console.log('Center - width:', width, 'height:', height, 'cx:', cx, 'cy:', cy, 'scale:', s, 'offsetX:', view.current.offsetX, 'offsetY:', view.current.offsetY);
+      debugLog('Center - width:', width, 'height:', height, 'cx:', cx, 'cy:', cy, 'scale:', s, 'offsetX:', view.current.offsetX, 'offsetY:', view.current.offsetY);
       canvas.dispatchEvent(new Event('redraw'));
     },
     zoom: (factor) => {
@@ -310,7 +346,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       const cy = (minY + maxY) / 2;
       view.current.offsetX = width / 2 - cx * s;
       view.current.offsetY = height / 2 - cy * s;
-      console.log('FitToView - width:', width, 'height:', height, 'minX:', minX, 'maxX:', maxX, 'minY:', minY, 'maxY:', maxY, 'contentW:', contentW, 'contentH:', contentH, 'scaleX:', scaleX, 'scaleY:', scaleY, 'finalScale:', s, 'offsetX:', view.current.offsetX, 'offsetY:', view.current.offsetY);
+      debugLog('FitToView - width:', width, 'height:', height, 'minX:', minX, 'maxX:', maxX, 'minY:', minY, 'maxY:', maxY, 'contentW:', contentW, 'contentH:', contentH, 'scaleX:', scaleX, 'scaleY:', scaleY, 'finalScale:', s, 'offsetX:', view.current.offsetX, 'offsetY:', view.current.offsetY);
       canvas.dispatchEvent(new Event('redraw'));
     },
     resetZoom: () => {
@@ -323,7 +359,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       view.current.scale = 1;
       view.current.offsetX = width / 2 - centerWorldX * 1;
       view.current.offsetY = height / 2 - centerWorldY * 1;
-      console.log('ResetZoom - scale:', view.current.scale, 'offsetX:', view.current.offsetX, 'offsetY:', view.current.offsetY);
+      debugLog('ResetZoom - scale:', view.current.scale, 'offsetX:', view.current.offsetX, 'offsetY:', view.current.offsetY);
       canvas.dispatchEvent(new Event('redraw'));
     },
     exportAsPNG: () => {
@@ -364,7 +400,10 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
           link.download = filename;
           link.rel = 'noopener';
           document.body.appendChild(link);
-          link.click();
+          const allowClick = typeof navigator === 'undefined' || !/jsdom/i.test(navigator.userAgent || '');
+          if (allowClick && typeof link.click === 'function') {
+            link.click();
+          }
           document.body.removeChild(link);
         } catch (err) {
           console.error('PNG export download failed, falling back to new tab', err);
@@ -424,7 +463,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       
       view.current.offsetX = width / 2 - node.x * view.current.scale;
       view.current.offsetY = height / 2 - node.y * view.current.scale;
-      console.log('FocusOnNode - nodeId:', nodeId, 'nodeX:', node.x, 'nodeY:', node.y, 'scale:', view.current.scale, 'offsetX:', view.current.offsetX, 'offsetY:', view.current.offsetY);
+      debugLog('FocusOnNode - nodeId:', nodeId, 'nodeX:', node.x, 'nodeY:', node.y, 'scale:', view.current.scale, 'offsetX:', view.current.offsetX, 'offsetY:', view.current.offsetY);
       canvas.dispatchEvent(new Event('redraw'));
     },
     setViewport: (viewport) => {
@@ -438,7 +477,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       // Convert world to screen offsets
       view.current.offsetX = -viewport.x * view.current.scale;
       view.current.offsetY = -viewport.y * view.current.scale;
-      console.log('SetViewport - viewport:', viewport, 'scale:', view.current.scale, 'offsetX:', view.current.offsetX, 'offsetY:', view.current.offsetY);
+      debugLog('SetViewport - viewport:', viewport, 'scale:', view.current.scale, 'offsetX:', view.current.offsetX, 'offsetY:', view.current.offsetY);
       canvas.dispatchEvent(new Event('redraw'));
     },
     hasUserInteracted: () => hasUserInteracted.current,
@@ -576,7 +615,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
           startOffsetY: view.current.offsetY
         };
         hasUserInteracted.current = true;
-        console.log('Pan Start - clientX:', e.clientX, 'clientY:', e.clientY, 'rect.left:', rect.left, 'rect.top:', rect.top, 'dpr:', dpr, 'startX_css:', (e.clientX - rect.left) / dpr, 'startY_css:', (e.clientY - rect.top) / dpr, 'startOffsetX:', view.current.offsetX, 'startOffsetY:', view.current.offsetY);
+        debugLog('Pan Start - clientX:', e.clientX, 'clientY:', e.clientY, 'rect.left:', rect.left, 'rect.top:', rect.top, 'dpr:', dpr, 'startX_css:', (e.clientX - rect.left) / dpr, 'startY_css:', (e.clientY - rect.top) / dpr, 'startOffsetX:', view.current.offsetX, 'startOffsetY:', view.current.offsetY);
         return;
       }
       // Shift + drag to start marquee selection
@@ -624,7 +663,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       view.current.offsetX = panState.current.startOffsetX + dx;
       view.current.offsetY = panState.current.startOffsetY + dy;
       hasUserInteracted.current = true;
-        console.log('Pan Update - clientX:', e.clientX, 'clientY:', e.clientY, 'currentClientX_css:', currentClientX_css, 'currentClientY_css:', currentClientY_css, 'dx:', dx, 'dy:', dy, 'newOffsetX:', view.current.offsetX, 'newOffsetY:', view.current.offsetY);
+        debugLog('Pan Update - clientX:', e.clientX, 'clientY:', e.clientY, 'currentClientX_css:', currentClientX_css, 'currentClientY_css:', currentClientY_css, 'dx:', dx, 'dy:', dy, 'newOffsetX:', view.current.offsetX, 'newOffsetY:', view.current.offsetY);
         canvas.dispatchEvent(new Event('redraw'));
         return;
       }
@@ -679,7 +718,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       view.current.offsetX = mouseCanvasX - mx * view.current.scale;
       view.current.offsetY = mouseCanvasY - my * view.current.scale;
       hasUserInteracted.current = true;
-      console.log('Wheel - deltaY:', e.deltaY, 'scaleAmount:', scaleAmount, 'mouseCanvasX:', mouseCanvasX, 'mouseCanvasY:', mouseCanvasY, 'mx:', mx, 'my:', my, 'newScale:', view.current.scale, 'newOffsetX:', view.current.offsetX, 'newOffsetY:', view.current.offsetY);
+      debugLog('Wheel - deltaY:', e.deltaY, 'scaleAmount:', scaleAmount, 'mouseCanvasX:', mouseCanvasX, 'mouseCanvasY:', mouseCanvasY, 'mx:', mx, 'my:', my, 'newScale:', view.current.scale, 'newOffsetX:', view.current.offsetX, 'newOffsetY:', view.current.offsetY);
       canvas.dispatchEvent(new Event('redraw'));
     };
     // Redraw on pan/zoom
