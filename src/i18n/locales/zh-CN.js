@@ -9,6 +9,10 @@ export default {
 
   // File menu
   'file.new': '新建',
+  'file.makeCopy': '创建副本',
+  'file.makeCopyError': '创建副本失败，请检查浏览器存储权限后重试。',
+  'file.versionHistory': '版本历史',
+  'file.versionHistoryUnavailable': '版本历史尚未提供。',
   'file.import': '导入 JSON',
   'file.export': '导出 JSON',
   'file.exportPng': '导出 PNG',

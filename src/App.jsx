@@ -110,7 +110,7 @@ const mergeOverlayLayout = (prev, patch) => {
 
 // --- Menu Bar Component ---
 const MenuBar = React.forwardRef(({
-  onExport, onImport, onNew, onUndo, onRedo, onDelete, onAutoLayout, onSearch, onCenter, onZoomIn, onZoomOut, onResetZoom, onShowThemes,
+  onExport, onImport, onNew, onMakeCopy, onShowVersionHistory, onUndo, onRedo, onDelete, onAutoLayout, onSearch, onCenter, onZoomIn, onZoomOut, onResetZoom, onShowThemes,
   nodes, setNodes, setUndoStack, setRedoStack, setSelectedNodeId, canvasRef,
   showMinimap, setShowMinimap, showNodeInfoPanel, onToggleNodeInfoPanel,
   onToggleHelp, isHelpVisible,
@@ -386,6 +386,31 @@ const MenuBar = React.forwardRef(({
             >
               <FormattedMessage id="file.new" defaultMessage="New" />
               <span className="menu-shortcut">{getShortcut('New Diagram')}</span>
+            </div>
+            <div
+              className="menu-item"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Make a copy clicked');
+                onMakeCopy();
+                setOpenMenu(null);
+              }}
+            >
+              <FormattedMessage id="file.makeCopy" defaultMessage="Make a Copy" />
+              <span className="menu-shortcut">{getShortcut('Make a Copy')}</span>
+            </div>
+            <div
+              className="menu-item"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Version history clicked');
+                onShowVersionHistory();
+                setOpenMenu(null);
+              }}
+            >
+              <FormattedMessage id="file.versionHistory" defaultMessage="Version History" />
             </div>
             <div className="menu-separator" />
             <div
@@ -1524,6 +1549,46 @@ function App({ graphId = 'default' }) {
     setTimeout(() => { canvasRef.current?.fitToView?.({ markInteraction: false }); canvasRef.current?.resetInteractionFlag?.(); }, 0);
   }, [intl]);
 
+  const handleMakeCopy = useCallback(() => {
+    if (typeof window === 'undefined') {
+      console.warn('Make Copy is only available in the browser');
+      return;
+    }
+
+    const createId = () => (
+      (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+        ? crypto.randomUUID()
+        : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+    );
+
+    const newGraphId = createId();
+    const storage = window.localStorage;
+
+    try {
+      storage.setItem(`vertex_graph_${newGraphId}_nodes`, JSON.stringify(nodes));
+      storage.setItem(`vertex_graph_${newGraphId}_edges`, JSON.stringify(Array.isArray(edges) ? edges : []));
+      storage.setItem(`vertex_graph_${newGraphId}_title`, graphTitle ?? '');
+    } catch (error) {
+      console.error('Failed to make a copy of the graph', error);
+      const message = intl.formatMessage({
+        id: 'file.makeCopyError',
+        defaultMessage: 'Failed to make a copy. Please check browser storage permissions and try again.'
+      });
+      alert(message);
+      return;
+    }
+
+    window.location.hash = `#/g/${newGraphId}`;
+  }, [nodes, edges, graphTitle, intl]);
+
+  const handleShowVersionHistory = useCallback(() => {
+    const message = intl.formatMessage({
+      id: 'file.versionHistoryUnavailable',
+      defaultMessage: 'Version history is not available yet.'
+    });
+    alert(message);
+  }, [intl]);
+
   // Node info panel handlers
   const handleToggleNodeInfoPanel = useCallback(() => {
     setShowNodeInfoPanel(prev => !prev);
@@ -1756,6 +1821,7 @@ function App({ graphId = 'default' }) {
   // Hook-based common keyboard shortcuts to avoid drift with menus/help
   useKeyboardShortcuts({
     onNew: handleNewDiagram,
+    onMakeCopy: handleMakeCopy,
     onImport: handleImportRequest,
     onExport: handleExport,
     onExportPNG: () => canvasRef.current?.exportAsPNG?.(),
@@ -2250,6 +2316,8 @@ function App({ graphId = 'default' }) {
         setSelectedNodeId={setSelectedNodeId}
         canvasRef={canvasRef}
         onNew={handleNewDiagram}
+        onMakeCopy={handleMakeCopy}
+        onShowVersionHistory={handleShowVersionHistory}
         onExportPNG={() => alert('Export as PNG not implemented yet.')}
         onUndo={handleUndo}
         onRedo={handleRedo}

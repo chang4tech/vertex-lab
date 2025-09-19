@@ -9,6 +9,10 @@ export default {
 
   // File menu
   'file.new': 'New',
+  'file.makeCopy': 'Make a Copy',
+  'file.makeCopyError': 'Failed to make a copy. Please check browser storage permissions and try again.',
+  'file.versionHistory': 'Version History',
+  'file.versionHistoryUnavailable': 'Version history is not available yet.',
   'file.import': 'Import JSON',
   'file.export': 'Export JSON',
   'file.exportPng': 'Export PNG',

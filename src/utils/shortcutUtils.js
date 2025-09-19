@@ -29,6 +29,8 @@ export const APP_SHORTCUTS = [
   // File
   { key: 'n', modifiers: ['cmd', 'alt'], description: 'New Diagram' },
   { key: 'n', modifiers: ['ctrl', 'alt'], description: 'New Diagram' },
+  { key: 'n', modifiers: ['cmd', 'alt', 'shift'], description: 'Make a Copy' },
+  { key: 'n', modifiers: ['ctrl', 'alt', 'shift'], description: 'Make a Copy' },
   { key: 's', modifiers: ['cmd'], description: 'Export JSON' },
   { key: 's', modifiers: ['ctrl'], description: 'Export JSON' },
   { key: 'p', modifiers: ['cmd', 'alt'], description: 'Export PNG' },

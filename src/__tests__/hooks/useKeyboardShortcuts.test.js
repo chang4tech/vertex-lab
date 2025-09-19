@@ -7,6 +7,7 @@ import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 describe('useKeyboardShortcuts', () => {
   const mockHandlers = {
     onNew: vi.fn(),
+    onMakeCopy: vi.fn(),
     onImport: vi.fn(),
     onExport: vi.fn(),
     onExportPNG: vi.fn(),
@@ -34,6 +35,22 @@ describe('useKeyboardShortcuts', () => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', metaKey: true, altKey: true, bubbles: true }));
     });
     expect(mockHandlers.onNew).toHaveBeenCalledTimes(1);
+    expect(mockHandlers.onMakeCopy).not.toHaveBeenCalled();
+  });
+
+  it('handles Make Copy shortcut (Cmd/Ctrl + Alt + Shift + N)', () => {
+    renderHook(() => useKeyboardShortcuts(mockHandlers));
+
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', metaKey: true, altKey: true, shiftKey: true, bubbles: true }));
+    });
+    expect(mockHandlers.onMakeCopy).toHaveBeenCalledTimes(1);
+    expect(mockHandlers.onNew).not.toHaveBeenCalled();
+
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', ctrlKey: true, altKey: true, shiftKey: true, bubbles: true }));
+    });
+    expect(mockHandlers.onMakeCopy).toHaveBeenCalledTimes(2);
   });
 
   it('handles Import shortcut (Cmd/Ctrl + Alt + O)', () => {

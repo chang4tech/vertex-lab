@@ -5,6 +5,8 @@ import { FileMenu } from '../../components/menu/FileMenu';
 describe('FileMenu', () => {
   const mockProps = {
     onNew: vi.fn(),
+    onMakeCopy: vi.fn(),
+    onShowVersionHistory: vi.fn(),
     onImport: vi.fn(),
     onExport: vi.fn(),
     onExportPNG: vi.fn(),
@@ -19,6 +21,8 @@ describe('FileMenu', () => {
   it('renders all menu items when open', () => {
     render(<FileMenu {...mockProps} />);
     expect(screen.getByText('New')).toBeInTheDocument();
+    expect(screen.getByText('Make a Copy')).toBeInTheDocument();
+    expect(screen.getByText('Version History')).toBeInTheDocument();
     expect(screen.getByText('Export JSON')).toBeInTheDocument();
     expect(screen.getByText('Export PNG')).toBeInTheDocument();
     expect(screen.getByText('Import JSON')).toBeInTheDocument();
@@ -37,16 +41,24 @@ describe('FileMenu', () => {
     expect(mockProps.onNew).toHaveBeenCalledTimes(1);
     expect(mockProps.onClose).toHaveBeenCalledTimes(1);
 
+    fireEvent.click(screen.getByText('Make a Copy'));
+    expect(mockProps.onMakeCopy).toHaveBeenCalledTimes(1);
+    expect(mockProps.onClose).toHaveBeenCalledTimes(2);
+
+    fireEvent.click(screen.getByText('Version History'));
+    expect(mockProps.onShowVersionHistory).toHaveBeenCalledTimes(1);
+    expect(mockProps.onClose).toHaveBeenCalledTimes(3);
+
     fireEvent.click(screen.getByText('Export JSON'));
     expect(mockProps.onExport).toHaveBeenCalledTimes(1);
-    expect(mockProps.onClose).toHaveBeenCalledTimes(2);
+    expect(mockProps.onClose).toHaveBeenCalledTimes(4);
 
     fireEvent.click(screen.getByText('Export PNG'));
     expect(mockProps.onExportPNG).toHaveBeenCalledTimes(1);
-    expect(mockProps.onClose).toHaveBeenCalledTimes(3);
+    expect(mockProps.onClose).toHaveBeenCalledTimes(5);
 
     fireEvent.click(screen.getByText('Import JSON'));
     expect(mockProps.onImport).toHaveBeenCalledTimes(1);
-    expect(mockProps.onClose).toHaveBeenCalledTimes(4);
+    expect(mockProps.onClose).toHaveBeenCalledTimes(6);
   });
 });

@@ -10,6 +10,7 @@ const isLetter = (e, letter) => {
 
 export function useKeyboardShortcuts({
   onNew,
+  onMakeCopy,
   onImport,
   onExport,
   onExportPNG,
@@ -38,7 +39,11 @@ export function useKeyboardShortcuts({
     if (isCommandKey && e.altKey) {
       if (isLetter(e, 'n')) {
         e.preventDefault();
-        onNew?.();
+        if (e.shiftKey && onMakeCopy) {
+          onMakeCopy();
+        } else {
+          onNew?.();
+        }
         return;
       }
       if (isLetter(e, 'o')) {
@@ -202,6 +207,7 @@ export function useKeyboardShortcuts({
     }
   }, [
     onNew,
+    onMakeCopy,
     onImport,
     onExport,
     onExportPNG,

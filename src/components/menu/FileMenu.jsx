@@ -1,7 +1,7 @@
 import React from 'react';
 import { formatShortcut } from '../../utils/shortcutUtils';
 
-export function FileMenu({ onNew, onImport, onExport, onExportPNG, isOpen, onClose }) {
+export function FileMenu({ onNew, onMakeCopy, onShowVersionHistory, onImport, onExport, onExportPNG, isOpen, onClose }) {
   if (!isOpen) return null;
   const menuStyle = {
     position: 'absolute',
@@ -26,6 +26,13 @@ export function FileMenu({ onNew, onImport, onExport, onExportPNG, isOpen, onClo
       <div className="menu-item" onClick={handleClick(onNew)}>
         <span>New</span>
         <span className="menu-shortcut">{key('n', [mod])}</span>
+      </div>
+      <div className="menu-item" onClick={handleClick(onMakeCopy)}>
+        <span>Make a Copy</span>
+        <span className="menu-shortcut">{key('n', [mod, 'alt', 'shift'])}</span>
+      </div>
+      <div className="menu-item" onClick={handleClick(onShowVersionHistory)}>
+        <span>Version History</span>
       </div>
       <div className="menu-item" onClick={handleClick(onExport)}>
         <span>Export JSON</span>
