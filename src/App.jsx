@@ -147,6 +147,7 @@ const MenuBar = React.forwardRef(({
   const intl = useIntl();
   const { currentTheme, toggleTheme } = useTheme();
   const [helpModal, setHelpModal] = useState({ open: false, titleId: null, messageId: null });
+  const [graphIdCopied, setGraphIdCopied] = useState(false);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -287,7 +288,28 @@ const MenuBar = React.forwardRef(({
           }}
         />
         {!isMobile && (
-          <span style={{ fontSize: 12, opacity: 0.6, color: currentTheme.colors.secondaryText }}>ID: {graphId}</span>
+          <button
+            type="button"
+            onClick={handleCopyGraphId}
+            style={{
+              fontSize: 12,
+              color: currentTheme.colors.secondaryText,
+              opacity: graphIdCopied ? 0.95 : 0.6,
+              background: graphIdCopied ? `${currentTheme.colors.primaryButton}1a` : 'transparent',
+              border: graphIdCopied ? `1px solid ${currentTheme.colors.primaryButton}` : '1px solid transparent',
+              borderRadius: 999,
+              padding: '2px 10px',
+              cursor: 'pointer',
+              transition: 'background 120ms ease, border-color 120ms ease, opacity 120ms ease',
+            }}
+            title={graphIdCopied
+              ? intl.formatMessage({ id: 'graphId.copied', defaultMessage: 'Graph ID copied to clipboard' })
+              : intl.formatMessage({ id: 'graphId.copy', defaultMessage: 'Copy graph ID to clipboard' })}
+          >
+            {graphIdCopied
+              ? intl.formatMessage({ id: 'graphId.copiedShort', defaultMessage: 'ID copied' })
+              : intl.formatMessage({ id: 'graphId.label', defaultMessage: 'ID: {id}' }, { id: graphId })}
+          </button>
         )}
       </div>
       <nav ref={localMenuBarRef} style={{
@@ -2397,3 +2419,40 @@ function App({ graphId = 'default' }) {
 }
 
 export default App;
+  useEffect(() => {
+    if (!graphIdCopied) return undefined;
+    const timeout = setTimeout(() => setGraphIdCopied(false), 2200);
+    return () => clearTimeout(timeout);
+  }, [graphIdCopied]);
+
+  const handleCopyGraphId = useCallback(() => {
+    const text = graphId ?? '';
+    const fallbackCopy = () => {
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        return true;
+      } catch (fallbackError) {
+        console.error('Graph ID copy fallback failed', fallbackError);
+        return false;
+      }
+    };
+
+    const attempt = navigator?.clipboard?.writeText
+      ? navigator.clipboard.writeText(text).then(() => true).catch((err) => {
+          console.warn('Clipboard API copy failed, falling back', err);
+          return fallbackCopy();
+        })
+      : Promise.resolve(fallbackCopy());
+
+    attempt.then((success) => {
+      if (success) setGraphIdCopied(true);
+    });
+  }, [graphId]);
