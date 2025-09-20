@@ -51,6 +51,7 @@ Tips:
             onEditNode={api.onEditNode}
             onDeleteNodes={api.onDeleteNodes}
             onToggleCollapse={api.onToggleCollapse}
+            topOffset={api.menuBarBottom}
           />
         )
       }

@@ -16,7 +16,8 @@ const NodeInfoPanel = ({
   onClose, 
   onEditNode,
   onDeleteNodes,
-  onToggleCollapse 
+  onToggleCollapse,
+  topOffset = 80
 }) => {
   const { currentTheme } = useTheme();
   const intl = useIntl();
@@ -94,13 +95,17 @@ const NodeInfoPanel = ({
     return colorInfo ? colorInfo[1].name : color;
   };
 
+  const safeTop = typeof topOffset === 'number' && Number.isFinite(topOffset) ? topOffset : 80;
+  const topStyle = `calc(${safeTop}px + env(safe-area-inset-top, 0px))`;
+  const heightStyle = `calc(100vh - ${safeTop}px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))`;
+
   return (
     <div style={{
       position: 'fixed',
-      top: 48, // Below menu bar
+      top: topStyle,
       right: 0,
       width: panelWidth + 'px',
-      height: 'calc(100vh - 48px)',
+      height: heightStyle,
       backgroundColor: currentTheme.colors.panelBackground,
       borderLeft: `1px solid ${currentTheme.colors.panelBorder}`,
       borderBottom: `1px solid ${currentTheme.colors.panelBorder}`,

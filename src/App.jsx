@@ -2348,6 +2348,7 @@ function App({ graphId = 'default' }) {
     isHelpVisible,
     toggleHelp,
     isMobile,
+    menuBarBottom,
   }), [
     nodes,
     edges,
@@ -2370,6 +2371,7 @@ function App({ graphId = 'default' }) {
     isHelpVisible,
     toggleHelp,
     isMobile,
+    menuBarBottom,
   ]);
 
 
