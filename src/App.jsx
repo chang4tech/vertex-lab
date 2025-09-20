@@ -1800,12 +1800,6 @@ function App({ graphId = 'default' }) {
     setSelectedNodeId(nodeIds.length === 1 ? nodeIds[0] : null);
   }, []);
 
-  // Node click handler (backward compatibility)
-  const handleNodeClick = (nodeId) => {
-    console.log('Node clicked:', { nodeId, currentSelected: selectedNodeId });
-    selectNodes([nodeId]);
-  };
-
   const selectNodes = useCallback((ids = [], options = {}) => {
     const list = Array.isArray(ids) ? ids.filter((id) => id !== undefined && id !== null) : [];
     if (list.length === 0) {
@@ -1824,6 +1818,12 @@ function App({ graphId = 'default' }) {
       canvasRef.current.focusOnNode(unique[0]);
     }
   }, [canvasRef, setEditingNodeId, setSelectedNodeId, setSelectedNodeIds, setShowNodeEditor]);
+
+  // Node click handler (backward compatibility)
+  const handleNodeClick = (nodeId) => {
+    console.log('Node clicked:', { nodeId, currentSelected: selectedNodeId });
+    selectNodes([nodeId]);
+  };
 
   // Node double-click handler for editing
   const handleNodeDoubleClick = (nodeId) => {
