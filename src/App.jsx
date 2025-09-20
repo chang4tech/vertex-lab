@@ -1627,6 +1627,16 @@ function App({ graphId = 'default' }) {
     }
   }, []);
 
+  const handleDeleteNode = useCallback((nodeId) => {
+    const idsToDelete = [nodeId];
+    pushUndo(nodes.filter(n => !idsToDelete.includes(n.id)));
+    setEdges(prev => Array.isArray(prev) ? prev.filter(e => !idsToDelete.includes(e.source) && !idsToDelete.includes(e.target)) : prev);
+    setSelectedNodeIds([]);
+    setSelectedNodeId(null);
+    setShowNodeEditor(false);
+    setEditingNodeId(null);
+  }, [nodes, pushUndo]);
+
   // Global keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -1833,16 +1843,6 @@ function App({ graphId = 'default' }) {
     pushUndo(nodes.map(node => 
       node.id === nodeId ? updateNode(node, nodeData) : node
     ));
-    setShowNodeEditor(false);
-    setEditingNodeId(null);
-  }, [nodes, pushUndo]);
-
-  const handleDeleteNode = useCallback((nodeId) => {
-    const idsToDelete = [nodeId];
-    pushUndo(nodes.filter(n => !idsToDelete.includes(n.id)));
-    setEdges(prev => Array.isArray(prev) ? prev.filter(e => !idsToDelete.includes(e.source) && !idsToDelete.includes(e.target)) : prev);
-    setSelectedNodeIds([]);
-    setSelectedNodeId(null);
     setShowNodeEditor(false);
     setEditingNodeId(null);
   }, [nodes, pushUndo]);
