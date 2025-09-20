@@ -26,6 +26,7 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { updateNode } from './utils/nodeUtils';
 import { createEnhancedNode } from './utils/nodeUtils';
 import { addUndirectedEdge } from './utils/edgeUtils';
+import { findNextConnectedNode } from './utils/navigationUtils';
 import { useIsMobile } from './hooks/useIsMobile';
 
 const OVERLAY_LAYOUT_STORAGE_KEY = 'vertex_overlay_layout';
@@ -1119,6 +1120,11 @@ function App({ graphId = 'default' }) {
   // Search state
   const [showSearch, setShowSearch] = useState(false);
   const [highlightedNodeIds, setHighlightedNodeIds] = useState([]);
+  const altNavigationStateRef = useRef({
+    active: false,
+    previewId: null,
+    previousHighlight: [],
+  });
 
   // Theme state
   const [showThemes, setShowThemes] = useState(false);
@@ -1656,14 +1662,65 @@ function App({ graphId = 'default' }) {
     }
   }, [canvasRef, setEditingNodeId, setSelectedNodeId, setSelectedNodeIds, setShowNodeEditor]);
 
+  const previewAltNavigation = useCallback((direction) => {
+    const state = altNavigationStateRef.current;
+    const referenceId = state.previewId ?? selectedNodeId;
+    if (referenceId == null) return;
+
+    const nextNode = findNextConnectedNode({ nodes, edges, referenceId, direction });
+    if (!nextNode) return;
+
+    if (!state.active) {
+      state.active = true;
+      state.previousHighlight = Array.isArray(highlightedNodeIds) ? [...highlightedNodeIds] : [];
+    }
+
+    state.previewId = nextNode.id;
+    setHighlightedNodeIds([nextNode.id]);
+    if (canvasRef.current?.focusOnNode) {
+      canvasRef.current.focusOnNode(nextNode.id);
+    }
+  }, [selectedNodeId, nodes, edges, highlightedNodeIds, canvasRef, setHighlightedNodeIds]);
+
+  const finalizeAltNavigation = useCallback((commitSelection) => {
+    const state = altNavigationStateRef.current;
+    if (!state.active) return;
+
+    const previewId = state.previewId;
+    const previousHighlight = state.previousHighlight;
+
+    altNavigationStateRef.current = {
+      active: false,
+      previewId: null,
+      previousHighlight: [],
+    };
+
+    setHighlightedNodeIds(Array.isArray(previousHighlight) ? [...previousHighlight] : []);
+
+    if (commitSelection && previewId != null) {
+      selectNodes([previewId]);
+    }
+  }, [selectNodes, setHighlightedNodeIds]);
+
   // Global keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
       const isCommandKey = e.metaKey || e.ctrlKey;
-      
+      const isAltArrow = e.altKey && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key);
+
       if (e.code === 'Space') {
         // Prevent spacebar from scrolling
         e.preventDefault();
+      }
+
+      if (isAltArrow && !isCommandKey) {
+        e.preventDefault();
+        previewAltNavigation(e.key);
+        return;
+      }
+
+      if (e.key === 'Escape' && altNavigationStateRef.current.active) {
+        finalizeAltNavigation(false);
       }
 
       if (e.code === 'Escape') {
@@ -1789,7 +1846,28 @@ function App({ graphId = 'default' }) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canvasRef, fileInputRef, handleUndo, handleRedo, handleExport, handleAutoLayout, handleShowSearch, handleToggleNodeInfoPanel, selectedNodeId, nodes, pushUndo, intl, createNewNode, findNonOverlappingPosition, handleDeleteNode, maxLevel, selectNodes, setEdges]);
+  }, [canvasRef, fileInputRef, handleUndo, handleRedo, handleExport, handleAutoLayout, handleShowSearch, handleToggleNodeInfoPanel, selectedNodeId, nodes, pushUndo, intl, createNewNode, findNonOverlappingPosition, handleDeleteNode, maxLevel, selectNodes, setEdges, previewAltNavigation, finalizeAltNavigation]);
+
+  useEffect(() => {
+    const handleKeyUp = (e) => {
+      if (!altNavigationStateRef.current.active) return;
+      const isArrow = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key);
+      if (e.key === 'Alt' || (isArrow && !e.altKey)) {
+        const shouldCommit = e.key === 'Alt' || !e.altKey;
+        finalizeAltNavigation(shouldCommit);
+      }
+    };
+
+    window.addEventListener('keyup', handleKeyUp);
+    return () => window.removeEventListener('keyup', handleKeyUp);
+  }, [finalizeAltNavigation]);
+
+  useEffect(() => {
+    if (!altNavigationStateRef.current.active) return;
+    if (selectedNodeId == null) {
+      finalizeAltNavigation(false);
+    }
+  }, [selectedNodeId, finalizeAltNavigation]);
 
   // Load help panel state from localStorage on initial render
   useEffect(() => {
