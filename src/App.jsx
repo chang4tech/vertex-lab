@@ -1637,6 +1637,25 @@ function App({ graphId = 'default' }) {
     setEditingNodeId(null);
   }, [nodes, pushUndo]);
 
+  const selectNodes = useCallback((ids = [], options = {}) => {
+    const list = Array.isArray(ids) ? ids.filter((id) => id !== undefined && id !== null) : [];
+    if (list.length === 0) {
+      setSelectedNodeIds([]);
+      setSelectedNodeId(null);
+      return;
+    }
+
+    const unique = Array.from(new Set(list));
+    setSelectedNodeIds(unique);
+    setSelectedNodeId(unique[0] ?? null);
+    setShowNodeEditor(false);
+    setEditingNodeId(null);
+
+    if (options.center && unique[0] != null && canvasRef.current?.focusOnNode) {
+      canvasRef.current.focusOnNode(unique[0]);
+    }
+  }, [canvasRef, setEditingNodeId, setSelectedNodeId, setSelectedNodeIds, setShowNodeEditor]);
+
   // Global keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -1799,25 +1818,6 @@ function App({ graphId = 'default' }) {
     // Update single selection for backward compatibility
     setSelectedNodeId(nodeIds.length === 1 ? nodeIds[0] : null);
   }, []);
-
-  const selectNodes = useCallback((ids = [], options = {}) => {
-    const list = Array.isArray(ids) ? ids.filter((id) => id !== undefined && id !== null) : [];
-    if (list.length === 0) {
-      setSelectedNodeIds([]);
-      setSelectedNodeId(null);
-      return;
-    }
-
-    const unique = Array.from(new Set(list));
-    setSelectedNodeIds(unique);
-    setSelectedNodeId(unique[0] ?? null);
-    setShowNodeEditor(false);
-    setEditingNodeId(null);
-
-    if (options.center && unique[0] != null && canvasRef.current?.focusOnNode) {
-      canvasRef.current.focusOnNode(unique[0]);
-    }
-  }, [canvasRef, setEditingNodeId, setSelectedNodeId, setSelectedNodeIds, setShowNodeEditor]);
 
   // Node click handler (backward compatibility)
   const handleNodeClick = (nodeId) => {
