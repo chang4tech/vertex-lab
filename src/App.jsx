@@ -1774,7 +1774,6 @@ function App({ graphId = 'default' }) {
           const newNode = createNewNode(positionAnchor, { x, y }, { level: targetLevel });
           pushUndo([...nodes, newNode]);
           setEdges(prev => addUndirectedEdge(Array.isArray(prev) ? prev : [], anchor.id, newNode.id));
-          selectNodes([newNode.id]);
         } else if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
           e.preventDefault();
           const newLabel = window.prompt(intl.formatMessage({ id: 'node.enterName' }), nodes.find(n => n.id === selectedNodeId)?.label || '');
