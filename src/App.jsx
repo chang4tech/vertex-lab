@@ -1518,7 +1518,7 @@ function App({ graphId = 'default' }) {
     const clampedLevel = Math.max(0, Math.min(maxLevel, desiredLevel));
     return createEnhancedNode({
       id: nextId,
-      label: intl.formatMessage({ id: 'node.newNode' }) + String(nextId),
+      label: intl.formatMessage({ id: 'node.newNode' }) + ' ' + String(nextId),
       x: position.x,
       y: position.y,
       level: clampedLevel,
@@ -1543,7 +1543,7 @@ function App({ graphId = 'default' }) {
         const candidateLevel = Math.max(0, Math.min(maxLevel, levelOverride ?? (anchor?.level ?? -1) + 1));
         const candidate = {
           id: tempId,
-          label: intl.formatMessage({ id: 'node.newNode' }) + String(tempId),
+          label: intl.formatMessage({ id: 'node.newNode' }) + ' ' + String(tempId),
           x: pos.x,
           y: pos.y,
           level: candidateLevel
