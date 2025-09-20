@@ -1518,13 +1518,13 @@ function App({ graphId = 'default' }) {
     const clampedLevel = Math.max(0, Math.min(maxLevel, desiredLevel));
     return createEnhancedNode({
       id: nextId,
-      label: String(nextId),
+      label: intl.formatMessage({ id: 'node.newNode' }) + String(nextId),
       x: position.x,
       y: position.y,
       level: clampedLevel,
       parentId: null
     });
-  }, [nodes, maxLevel]);
+  }, [nodes, intl, maxLevel]);
 
   // Compute a non-overlapping position for a new node near an anchor
   const findNonOverlappingPosition = useCallback((anchor, allNodes, levelOverride) => {
@@ -1543,7 +1543,7 @@ function App({ graphId = 'default' }) {
         const candidateLevel = Math.max(0, Math.min(maxLevel, levelOverride ?? (anchor?.level ?? -1) + 1));
         const candidate = {
           id: tempId,
-          label: String(tempId),
+          label: intl.formatMessage({ id: 'node.newNode' }) + String(tempId),
           x: pos.x,
           y: pos.y,
           level: candidateLevel
@@ -1560,7 +1560,7 @@ function App({ graphId = 'default' }) {
       }
     }
     return best.pos;
-  }, [maxLevel]);
+  }, [intl, maxLevel]);
 
   // Save nodes to localStorage whenever they change
   useEffect(() => {
