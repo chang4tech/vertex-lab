@@ -1848,9 +1848,8 @@ function App({ graphId = 'default' }) {
           } else {
             targetLevel = Math.min(maxLevel, anchorLevel + 1);
           }
-          const positionAnchor = nodes.find(n => (n.level ?? 0) === targetLevel) || anchor;
-          const { x, y } = findNonOverlappingPosition(positionAnchor, nodes, targetLevel);
-          const newNode = createNewNode(positionAnchor, { x, y }, { level: targetLevel });
+          const { x, y } = findNonOverlappingPosition(anchor, nodes, targetLevel);
+          const newNode = createNewNode(anchor, { x, y }, { level: targetLevel });
           pushUndo([...nodes, newNode]);
           setEdges(prev => addUndirectedEdge(Array.isArray(prev) ? prev : [], anchor.id, newNode.id));
         } else if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
