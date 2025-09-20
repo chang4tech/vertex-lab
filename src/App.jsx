@@ -26,12 +26,22 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { updateNode } from './utils/nodeUtils';
 import { createEnhancedNode } from './utils/nodeUtils';
 import { addUndirectedEdge } from './utils/edgeUtils';
-import { findNextConnectedNode } from './utils/navigationUtils';
+import { getConnectedNavigationCandidates } from './utils/navigationUtils';
 import { useIsMobile } from './hooks/useIsMobile';
 
 const OVERLAY_LAYOUT_STORAGE_KEY = 'vertex_overlay_layout';
 
 const createEmptyOverlayLayout = () => ({ items: {}, slots: {} });
+
+const createAltNavigationState = () => ({
+  active: false,
+  anchorId: null,
+  direction: null,
+  candidates: [],
+  index: -1,
+  previewId: null,
+  previousHighlight: [],
+});
 
 const loadOverlayLayoutOverrides = () => {
   if (typeof window === 'undefined') return createEmptyOverlayLayout();
@@ -1120,11 +1130,7 @@ function App({ graphId = 'default' }) {
   // Search state
   const [showSearch, setShowSearch] = useState(false);
   const [highlightedNodeIds, setHighlightedNodeIds] = useState([]);
-  const altNavigationStateRef = useRef({
-    active: false,
-    previewId: null,
-    previousHighlight: [],
-  });
+  const altNavigationStateRef = useRef(createAltNavigationState());
 
   // Theme state
   const [showThemes, setShowThemes] = useState(false);
@@ -1663,22 +1669,42 @@ function App({ graphId = 'default' }) {
   }, [canvasRef, setEditingNodeId, setSelectedNodeId, setSelectedNodeIds, setShowNodeEditor]);
 
   const previewAltNavigation = useCallback((direction) => {
+    const anchorId = selectedNodeId;
+    if (anchorId == null) return;
+
     const state = altNavigationStateRef.current;
-    const referenceId = state.previewId ?? selectedNodeId;
-    if (referenceId == null) return;
+    const sameSession = state.active && state.anchorId === anchorId;
+    const directionChanged = state.direction !== direction;
 
-    const nextNode = findNextConnectedNode({ nodes, edges, referenceId, direction });
-    if (!nextNode) return;
+    if (!sameSession || directionChanged) {
+      const candidates = getConnectedNavigationCandidates({ nodes, edges, anchorId, direction });
+      if (!Array.isArray(candidates) || candidates.length === 0) {
+        return;
+      }
 
-    if (!state.active) {
+      if (!sameSession) {
+        state.previousHighlight = Array.isArray(highlightedNodeIds) ? [...highlightedNodeIds] : [];
+      }
+
       state.active = true;
-      state.previousHighlight = Array.isArray(highlightedNodeIds) ? [...highlightedNodeIds] : [];
+      state.anchorId = anchorId;
+      state.direction = direction;
+      state.candidates = candidates;
+      state.index = 0;
+    } else {
+      if (!Array.isArray(state.candidates) || state.candidates.length === 0) {
+        return;
+      }
+      state.index = (state.index + 1) % state.candidates.length;
     }
 
-    state.previewId = nextNode.id;
-    setHighlightedNodeIds([nextNode.id]);
+    const previewNode = state.candidates[state.index];
+    if (!previewNode) return;
+
+    state.previewId = previewNode.id;
+    setHighlightedNodeIds([previewNode.id]);
     if (canvasRef.current?.focusOnNode) {
-      canvasRef.current.focusOnNode(nextNode.id);
+      canvasRef.current.focusOnNode(previewNode.id);
     }
   }, [selectedNodeId, nodes, edges, highlightedNodeIds, canvasRef, setHighlightedNodeIds]);
 
@@ -1689,11 +1715,7 @@ function App({ graphId = 'default' }) {
     const previewId = state.previewId;
     const previousHighlight = state.previousHighlight;
 
-    altNavigationStateRef.current = {
-      active: false,
-      previewId: null,
-      previousHighlight: [],
-    };
+    altNavigationStateRef.current = createAltNavigationState();
 
     setHighlightedNodeIds(Array.isArray(previousHighlight) ? [...previousHighlight] : []);
 
@@ -1863,8 +1885,9 @@ function App({ graphId = 'default' }) {
   }, [finalizeAltNavigation]);
 
   useEffect(() => {
-    if (!altNavigationStateRef.current.active) return;
-    if (selectedNodeId == null) {
+    const state = altNavigationStateRef.current;
+    if (!state.active) return;
+    if (selectedNodeId == null || selectedNodeId !== state.anchorId) {
       finalizeAltNavigation(false);
     }
   }, [selectedNodeId, finalizeAltNavigation]);

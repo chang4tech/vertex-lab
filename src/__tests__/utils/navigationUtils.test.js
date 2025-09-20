@@ -1,19 +1,23 @@
 import { describe, it, expect } from 'vitest';
-import { findNextConnectedNode } from '../../utils/navigationUtils.js';
+import { findNextConnectedNode, getConnectedNavigationCandidates } from '../../utils/navigationUtils.js';
 
 const sampleGraph = () => {
   const nodes = [
     { id: 1, level: 1, x: 0, y: 0 },
     { id: 2, level: 1, x: -120, y: 0 },
     { id: 3, level: 1, x: 140, y: 0 },
+    { id: 7, level: 1, x: 260, y: 0 },
+    { id: 8, level: 1, x: -260, y: 0 },
     { id: 4, level: 0, x: 0, y: -160 },
     { id: 5, level: 2, x: 60, y: 160 },
-    { id: 6, level: 2, x: 200, y: 140 },
+    { id: 6, level: 3, x: 200, y: 140 },
   ];
 
   const edges = [
     { source: 1, target: 2, directed: false },
     { source: 1, target: 3, directed: false },
+    { source: 1, target: 7, directed: false },
+    { source: 1, target: 8, directed: false },
     { source: 1, target: 4, directed: false },
     { source: 1, target: 5, directed: false },
     { source: 5, target: 6, directed: false },
@@ -55,9 +59,9 @@ describe('navigationUtils.findNextConnectedNode', () => {
 
   it('uses the current preview as the next reference point', () => {
     const { nodes, edges } = sampleGraph();
-    const first = findNextConnectedNode({ nodes, edges, referenceId: 5, direction: 'ArrowRight' });
+    const first = findNextConnectedNode({ nodes, edges, referenceId: 5, direction: 'ArrowDown' });
     expect(first?.id).toBe(6);
-    const second = findNextConnectedNode({ nodes, edges, referenceId: 6, direction: 'ArrowLeft' });
+    const second = findNextConnectedNode({ nodes, edges, referenceId: 6, direction: 'ArrowUp' });
     expect(second?.id).toBe(5);
   });
 
@@ -71,5 +75,29 @@ describe('navigationUtils.findNextConnectedNode', () => {
     const { nodes, edges } = sampleGraph();
     const target = findNextConnectedNode({ nodes, edges, referenceId: '1', direction: 'ArrowRight' });
     expect(target?.id).toBe(3);
+  });
+
+  it('returns ordered candidates for ArrowRight cycling', () => {
+    const { nodes, edges } = sampleGraph();
+    const candidates = getConnectedNavigationCandidates({ nodes, edges, anchorId: 1, direction: 'ArrowRight' });
+    expect(candidates.map(n => n.id)).toEqual([3, 7, 2, 8]);
+  });
+
+  it('returns ordered candidates for ArrowLeft cycling', () => {
+    const { nodes, edges } = sampleGraph();
+    const candidates = getConnectedNavigationCandidates({ nodes, edges, anchorId: 1, direction: 'ArrowLeft' });
+    expect(candidates.map(n => n.id)).toEqual([2, 8, 3, 7]);
+  });
+
+  it('returns ordered candidates for ArrowDown cycling', () => {
+    const { nodes, edges } = sampleGraph();
+    const candidates = getConnectedNavigationCandidates({ nodes, edges, anchorId: 1, direction: 'ArrowDown' });
+    expect(candidates.map(n => n.id)).toEqual([5]);
+  });
+
+  it('orders deeper nodes relative to their anchor', () => {
+    const { nodes, edges } = sampleGraph();
+    const candidates = getConnectedNavigationCandidates({ nodes, edges, anchorId: 5, direction: 'ArrowDown' });
+    expect(candidates.map(n => n.id)).toEqual([6]);
   });
 });

@@ -39,27 +39,38 @@ const distance = (a, b) => {
   return Math.hypot(dx, dy);
 };
 
-const chooseHorizontalNeighbor = (reference, neighbors, direction) => {
-  if (!reference) return null;
+const sortByXAsc = (list) => [...list].sort((a, b) => (a.x ?? 0) - (b.x ?? 0));
+const sortByXDesc = (list) => [...list].sort((a, b) => (b.x ?? 0) - (a.x ?? 0));
+
+const orderHorizontalCandidates = (reference, neighbors, direction) => {
+  if (!reference) return [];
 
   const refLevel = reference.level ?? 0;
   const sameLevel = neighbors.filter(node => (node.level ?? 0) === refLevel);
-  if (sameLevel.length === 0) return null;
+  if (sameLevel.length === 0) return [];
 
-  const sorted = [...sameLevel].sort((a, b) => (a.x ?? 0) - (b.x ?? 0));
   const refX = reference.x ?? DEFAULT_COORD.x;
+  const left = sameLevel.filter(node => (node.x ?? 0) < refX);
+  const sameX = sameLevel.filter(node => (node.x ?? 0) === refX);
+  const right = sameLevel.filter(node => (node.x ?? 0) > refX);
 
   if (direction === 'ArrowRight') {
-    const candidates = sorted.filter(node => (node.x ?? 0) > refX);
-    return candidates[0] ?? sorted[0];
+    return [
+      ...sortByXAsc(right),
+      ...sameX,
+      ...sortByXDesc(left),
+    ];
   }
 
-  const candidates = sorted.filter(node => (node.x ?? 0) < refX);
-  return candidates.length > 0 ? candidates[candidates.length - 1] : sorted[sorted.length - 1];
+  return [
+    ...sortByXDesc(left),
+    ...sameX,
+    ...sortByXAsc(right),
+  ];
 };
 
-const chooseVerticalNeighbor = (reference, neighbors, direction) => {
-  if (!reference) return null;
+const orderVerticalCandidates = (reference, neighbors, direction) => {
+  if (!reference) return [];
 
   const refLevel = reference.level ?? 0;
   const isDown = direction === 'ArrowDown';
@@ -69,9 +80,9 @@ const chooseVerticalNeighbor = (reference, neighbors, direction) => {
     return isDown ? level > refLevel : level < refLevel;
   });
 
-  if (filtered.length === 0) return null;
+  if (filtered.length === 0) return [];
 
-  const sorted = [...filtered].sort((a, b) => {
+  return filtered.sort((a, b) => {
     const levelA = a.level ?? 0;
     const levelB = b.level ?? 0;
     const diffA = Math.abs(levelA - refLevel);
@@ -79,42 +90,43 @@ const chooseVerticalNeighbor = (reference, neighbors, direction) => {
     if (diffA !== diffB) return diffA - diffB;
     return distance(reference, a) - distance(reference, b);
   });
-
-  return sorted[0];
 };
 
-/**
- * Finds the next connected node for Alt+Arrow navigation.
- *
- * @param {Object} params
- * @param {Array} params.nodes - Current list of nodes
- * @param {Array} params.edges - Current list of edges
- * @param {number|null} params.referenceId - Node id to navigate from
- * @param {string} params.direction - Arrow key identifier (ArrowLeft/ArrowRight/ArrowUp/ArrowDown)
- * @returns {Object|null} - The node object to focus next or null if none
- */
-export const findNextConnectedNode = ({ nodes, edges, referenceId, direction }) => {
-  if (referenceId == null) return null;
-  const reference = getNodeById(nodes, referenceId);
-  if (!reference) return null;
+export const getConnectedNavigationCandidates = ({ nodes, edges, anchorId, direction }) => {
+  if (anchorId == null) return [];
+  const reference = getNodeById(nodes, anchorId);
+  if (!reference) return [];
 
-  const neighbors = collectNeighborNodes(nodes, edges, referenceId);
-  if (neighbors.length === 0) return null;
+  const neighbors = collectNeighborNodes(nodes, edges, anchorId);
+  if (neighbors.length === 0) return [];
 
   switch (direction) {
     case 'ArrowLeft':
     case 'ArrowRight':
-      return chooseHorizontalNeighbor(reference, neighbors, direction);
+      return orderHorizontalCandidates(reference, neighbors, direction);
     case 'ArrowUp':
     case 'ArrowDown':
-      return chooseVerticalNeighbor(reference, neighbors, direction);
+      return orderVerticalCandidates(reference, neighbors, direction);
     default:
-      return null;
+      return [];
   }
+};
+
+/**
+ * Finds the next connected node for Alt+Arrow navigation.
+ */
+export const findNextConnectedNode = ({ nodes, edges, referenceId, direction }) => {
+  const [next] = getConnectedNavigationCandidates({
+    nodes,
+    edges,
+    anchorId: referenceId,
+    direction,
+  });
+  return next ?? null;
 };
 
 export const __private__ = {
   collectNeighborNodes,
-  chooseHorizontalNeighbor,
-  chooseVerticalNeighbor,
+  orderHorizontalCandidates,
+  orderVerticalCandidates,
 };
