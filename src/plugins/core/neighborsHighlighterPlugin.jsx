@@ -40,13 +40,15 @@ export const neighborsHighlighterPlugin = {
               else if (e.target === nodeId) neighbors.push(e.source);
             }
           } else {
-            // Fallback: infer neighbors via parentId relation
+            // Fallback: infer neighbors via level proximity
             const nodes = Array.isArray(api?.nodes) ? api.nodes : [];
             const node = nodes.find(n => n.id === nodeId);
-            if (node && node.parentId != null) {
-              neighbors.push(node.parentId);
+            if (node) {
+              const level = node.level ?? 0;
+              neighbors.push(...nodes
+                .filter(n => n.id !== nodeId && Math.abs((n.level ?? 0) - level) <= 1)
+                .map(n => n.id));
             }
-            neighbors.push(...nodes.filter(n => n.parentId === nodeId).map(n => n.id));
           }
           const unique = Array.from(new Set(neighbors)).filter(Boolean);
           api?.setHighlightedNodes?.(unique);

@@ -37,7 +37,7 @@ describe('NodeInfoPanel', () => {
     label: 'Test Node 1',
     x: 100,
     y: 200,
-    parentId: null,
+    level: 0,
     tags: ['important', 'urgent'],
     notes: 'Test notes'
   });
@@ -47,7 +47,7 @@ describe('NodeInfoPanel', () => {
     label: 'Test Node 2',
     x: 300,
     y: 400,
-    parentId: 1,
+    level: 1,
     isCollapsed: true
   });
 
@@ -81,6 +81,7 @@ describe('NodeInfoPanel', () => {
     expect(screen.getByText('Test Node 1')).toBeInTheDocument();
     expect(screen.getByText(/Position/i)).toBeInTheDocument();
     expect(screen.getByText('(100, 200)')).toBeInTheDocument();
+    expect(screen.getByText(/Level/i)).toBeInTheDocument();
     expect(screen.getByText('Test notes')).toBeInTheDocument();
   });
 

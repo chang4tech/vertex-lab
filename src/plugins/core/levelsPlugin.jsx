@@ -10,16 +10,16 @@ export const levelsPlugin = {
     aboutPage: {
       markdown: `
 * Assign a numeric level to a node from the context menu.
-* Remove legacy parent/child links and rely on level metadata instead.
+* Clear legacy hierarchy links so the graph relies solely on levels.
       `.trim(),
       render: () => (
         <div style={{ color: '#374151' }}>
           <p style={{ marginTop: 0 }}>
-            Use levels to organize your graph hierarchically without relying on parent-child pointers.
+            Use levels to organize your graph without relying on parent/child metadata.
           </p>
           <ul style={{ margin: 0, paddingLeft: 18 }}>
             <li>Assign levels to nodes via the node context menu command.</li>
-            <li>Clear legacy parent links to keep the graph level based only.</li>
+            <li>Clear legacy hierarchy links to keep the graph purely level-based.</li>
           </ul>
         </div>
       )
@@ -51,12 +51,15 @@ export const levelsPlugin = {
             return;
           }
 
+          const maxLevel = Number.isFinite(api.maxLevel) ? api.maxLevel : 99;
+          const clampedLevel = Math.max(0, Math.min(maxLevel, Math.round(level)));
+
           if (typeof api.updateNodes === 'function') {
             api.updateNodes((draft) => draft.map((node) => (
               node.id === sourceId
                 ? {
                     ...node,
-                    level,
+                    level: clampedLevel,
                     parentId: null,
                   }
                 : node
@@ -69,7 +72,7 @@ export const levelsPlugin = {
       },
       {
         id: 'core.levels.clearParents',
-        title: 'Remove Parent Links',
+        title: 'Clear Legacy Links',
         when: (api) => Array.isArray(api?.nodes) && api.nodes.some(node => node?.parentId != null),
         run: (api) => {
           if (typeof api.updateNodes !== 'function') {

@@ -4,10 +4,11 @@ import { FormattedMessage } from 'react-intl';
 import { APP_SHORTCUTS, findShortcutConflicts, formatShortcut } from '../utils/shortcutUtils';
 import '../styles/Settings.css';
 
-const Settings = ({ onClose, initialTab = 'all' }) => {
+const Settings = ({ onClose, initialTab = 'all', maxLevel, onMaxLevelChange }) => {
   const [shortcuts, setShortcuts] = useState([]);
   const [conflicts, setConflicts] = useState([]);
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [levelInput, setLevelInput] = useState(() => String(maxLevel ?? 99));
 
   useEffect(() => {
     // Build a merged list from APP_SHORTCUTS, combining Cmd/Ctrl variants
@@ -57,6 +58,19 @@ const Settings = ({ onClose, initialTab = 'all' }) => {
     }
   };
 
+  useEffect(() => {
+    setLevelInput(String(maxLevel ?? 99));
+  }, [maxLevel]);
+
+  const handleLevelInput = (event) => {
+    const value = event.target.value;
+    setLevelInput(value);
+    const parsed = parseInt(value, 10);
+    if (Number.isFinite(parsed) && parsed >= 0) {
+      onMaxLevelChange?.(Math.min(parsed, 999));
+    }
+  };
+
   return (
     <div className="settings-overlay" onClick={handleOverlayClick}>
       <div className="settings-modal">
@@ -85,6 +99,23 @@ const Settings = ({ onClose, initialTab = 'all' }) => {
         <div className="settings-content">
           {activeTab === 'all' && (
             <div className="shortcuts-list">
+              <div style={{ marginBottom: 16 }}>
+                <h3 style={{ marginBottom: 8 }}><FormattedMessage id="settings.general" defaultMessage="General" /></h3>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
+                  <span><FormattedMessage id="settings.maxLevel" defaultMessage="Maximum Level" /></span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="999"
+                    value={levelInput}
+                    onChange={handleLevelInput}
+                    style={{ width: 120, padding: '6px 8px' }}
+                  />
+                  <span style={{ fontSize: 12, color: '#6b7280' }}>
+                    <FormattedMessage id="settings.maxLevelHint" defaultMessage="Highest level allowed when creating nodes (default 99)." />
+                  </span>
+                </label>
+              </div>
               <h3><FormattedMessage id="settings.shortcuts" defaultMessage="Keyboard Shortcuts" /></h3>
               {shortcuts.map((s, i) => (
                 <div key={`${s.desc}-${i}`} className="shortcut-group" style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
@@ -136,7 +167,10 @@ const Settings = ({ onClose, initialTab = 'all' }) => {
 };
 
 Settings.propTypes = {
-  onClose: PropTypes.func.isRequired
+  onClose: PropTypes.func.isRequired,
+  initialTab: PropTypes.string,
+  maxLevel: PropTypes.number,
+  onMaxLevelChange: PropTypes.func
 };
 
 export default Settings;

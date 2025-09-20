@@ -25,6 +25,7 @@ import { APP_SHORTCUTS, formatShortcut } from './utils/shortcutUtils';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { updateNode } from './utils/nodeUtils';
 import { createEnhancedNode } from './utils/nodeUtils';
+import { addUndirectedEdge } from './utils/edgeUtils';
 import { useIsMobile } from './hooks/useIsMobile';
 
 const OVERLAY_LAYOUT_STORAGE_KEY = 'vertex_overlay_layout';
@@ -124,6 +125,8 @@ const MenuBar = React.forwardRef(({
   customPlugins,
   onImportCustomPlugin,
   onRemoveCustomPlugin,
+  maxLevel,
+  onChangeMaxLevel,
 }, ref) => {
   const isMobile = useIsMobile();
   const localMenuBarRef = useRef(null);
@@ -273,6 +276,8 @@ const MenuBar = React.forwardRef(({
           pluginPrefs={pluginPrefs}
           onTogglePlugin={onTogglePlugin}
           initialTab={settingsTab}
+          maxLevel={maxLevel}
+          onMaxLevelChange={onChangeMaxLevel}
         />
       )}
       {showTagManager && <TagManager onClose={() => setShowTagManager(false)} />}
@@ -1073,11 +1078,11 @@ function App({ graphId = 'default' }) {
     }
     // Default initial state if no saved state exists
     return [
-      createEnhancedNode({ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, level: 0, parentId: null }),
-      createEnhancedNode({ id: 2, label: `${intl.formatMessage({ id: 'node.branch' })} 1`, x: 250, y: 200, level: 1, parentId: null }),
-      createEnhancedNode({ id: 3, label: `${intl.formatMessage({ id: 'node.branch' })} 2`, x: 550, y: 200, level: 1, parentId: null }),
-      createEnhancedNode({ id: 4, label: `${intl.formatMessage({ id: 'node.branch' })} 3`, x: 250, y: 400, level: 1, parentId: null }),
-      createEnhancedNode({ id: 5, label: `${intl.formatMessage({ id: 'node.branch' })} 4`, x: 550, y: 400, level: 1, parentId: null }),
+      createEnhancedNode({ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, level: 0 }),
+      createEnhancedNode({ id: 2, label: `${intl.formatMessage({ id: 'node.branch' })} 1`, x: 250, y: 200, level: 1 }),
+      createEnhancedNode({ id: 3, label: `${intl.formatMessage({ id: 'node.branch' })} 2`, x: 550, y: 200, level: 1 }),
+      createEnhancedNode({ id: 4, label: `${intl.formatMessage({ id: 'node.branch' })} 3`, x: 250, y: 400, level: 1 }),
+      createEnhancedNode({ id: 5, label: `${intl.formatMessage({ id: 'node.branch' })} 4`, x: 550, y: 400, level: 1 }),
     ];
   });
   const [selectedNodeIds, setSelectedNodeIds] = useState([]);
@@ -1331,23 +1336,27 @@ function App({ graphId = 'default' }) {
     if (Array.isArray(importedNodes) &&
         importedNodes.every(n => n.id && typeof n.x === 'number' && typeof n.y === 'number' && typeof n.label === 'string')) {
       console.log('Importing valid diagram data:', importedNodes.length, 'nodes');
-      const upgraded = importedNodes.map(node => createEnhancedNode({ ...node }));
+      const nodeMap = new Map(importedNodes.map(n => [n.id, n]));
+      const levelCache = new Map();
+      const computeLevel = (node) => {
+        if (!node) return 0;
+        if (node.level != null) return Number(node.level) || 0;
+        if (levelCache.has(node.id)) return levelCache.get(node.id);
+        if (node.parentId == null) {
+          levelCache.set(node.id, 0);
+          return 0;
+        }
+        const parent = nodeMap.get(node.parentId);
+        const level = computeLevel(parent) + 1;
+        levelCache.set(node.id, level);
+        return level;
+      };
+      const upgraded = importedNodes.map(node => {
+        const level = computeLevel(node);
+        return createEnhancedNode({ ...node, level, parentId: null });
+      });
       setNodes(upgraded);
-      if (Array.isArray(importedEdges)) {
-        setEdges(importedEdges);
-      } else {
-        // Derive edges from parentId for legacy import
-        const seen = new Set();
-        const result = [];
-        importedNodes.forEach(n => {
-          if (n.parentId != null) {
-            const a = n.parentId; const b = n.id;
-            const key = a <= b ? `${a}-${b}` : `${b}-${a}`;
-            if (!seen.has(key)) { seen.add(key); result.push({ source: a, target: b, directed: false }); }
-          }
-        });
-        setEdges(result);
-      }
+      setEdges(Array.isArray(importedEdges) ? importedEdges : []);
       setUndoStack([]);
       setRedoStack([]);
       setSelectedNodeId(null);
@@ -1477,35 +1486,59 @@ function App({ graphId = 'default' }) {
     });
   }, []);
 
+  const [maxLevel, setMaxLevel] = useState(() => {
+    if (typeof window === 'undefined') return 99;
+    const saved = window.localStorage.getItem('vertex_max_level');
+    const parsed = parseInt(saved, 10);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 99;
+  });
+
+  useEffect(() => {
+    try { window.localStorage.setItem('vertex_max_level', String(maxLevel)); } catch {}
+  }, [maxLevel]);
+
   // Enhanced node creation helper
-  const createNewNode = useCallback((parentId, position) => {
+  const createNewNode = useCallback((anchorNode, position, options = {}) => {
     const maxId = Math.max(...nodes.map(n => n.id), 0);
+    const baseLevel = anchorNode?.level ?? -1;
+    const desiredLevel = options.level != null ? options.level : baseLevel + 1;
+    const clampedLevel = Math.max(0, Math.min(maxLevel, desiredLevel));
     return createEnhancedNode({
       id: maxId + 1,
       label: intl.formatMessage({ id: 'node.newNode' }),
       x: position.x,
       y: position.y,
-      parentId
+      level: clampedLevel,
+      parentId: null
     });
-  }, [nodes, intl]);
+  }, [nodes, intl, maxLevel]);
 
-  // Compute a non-overlapping position for a new child around its parent
-  const findNonOverlappingChildPosition = useCallback((parent, allNodes) => {
+  // Compute a non-overlapping position for a new node near an anchor
+  const findNonOverlappingPosition = useCallback((anchor, allNodes, levelOverride) => {
     const tempId = -1;
     const radii = [140, 180, 220, 260];
     const tries = 16;
-    let best = { pos: { x: parent.x + 140, y: parent.y }, score: Infinity };
+    let best = { pos: { x: (anchor?.x ?? 0) + 140, y: anchor?.y ?? 0 }, score: Infinity };
 
     for (const r of radii) {
       for (let i = 0; i < tries; i++) {
         const angle = (2 * Math.PI / tries) * i;
-        const pos = { x: parent.x + Math.cos(angle) * r, y: parent.y + Math.sin(angle) * r };
-        const candidate = { id: tempId, label: intl.formatMessage({ id: 'node.newNode' }), x: pos.x, y: pos.y, parentId: parent.id };
+        const pos = {
+          x: (anchor?.x ?? 0) + Math.cos(angle) * r,
+          y: (anchor?.y ?? 0) + Math.sin(angle) * r
+        };
+        const candidateLevel = Math.max(0, Math.min(maxLevel, levelOverride ?? (anchor?.level ?? -1) + 1));
+        const candidate = {
+          id: tempId,
+          label: intl.formatMessage({ id: 'node.newNode' }),
+          x: pos.x,
+          y: pos.y,
+          level: candidateLevel
+        };
         const collisions = detectCollisions([...allNodes, candidate]);
-        // Count overlap involving candidate
         const involving = collisions.filter(c => c.nodeA === tempId || c.nodeB === tempId);
         if (involving.length === 0) {
-          return pos; // perfect spot
+          return pos;
         }
         const overlapSum = involving.reduce((s, c) => s + (c.overlap || 0), 0);
         if (overlapSum < best.score) {
@@ -1514,7 +1547,7 @@ function App({ graphId = 'default' }) {
       }
     }
     return best.pos;
-  }, [intl]);
+  }, [intl, maxLevel]);
 
   // Save nodes to localStorage whenever they change
   useEffect(() => {
@@ -1528,7 +1561,7 @@ function App({ graphId = 'default' }) {
 
   // Create a new diagram initializer used by menu and keyboard
   const handleNewDiagram = useCallback(() => {
-    const initialNodes = [createEnhancedNode({ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, parentId: null })];
+    const initialNodes = [createEnhancedNode({ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, level: 0 })];
     setNodes([...initialNodes]);
     setEdges([]);
     setUndoStack([]);
@@ -1614,7 +1647,7 @@ function App({ graphId = 'default' }) {
             if (e.shiftKey) {
               e.preventDefault();
               console.log('New diagram');
-              const initialNodes = [createEnhancedNode({ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, parentId: null })];
+              const initialNodes = [createEnhancedNode({ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, level: 0 })];
               setNodes([...initialNodes]);
               setUndoStack([]);
               setRedoStack([]);
@@ -1695,23 +1728,24 @@ function App({ graphId = 'default' }) {
       } else if (selectedNodeId) {
         // Node-specific shortcuts that require a selected node
         if (e.key === 'Tab') {
+          const anchor = nodes.find(n => n.id === selectedNodeId);
+          if (!anchor) return;
           e.preventDefault();
-          const parent = nodes.find(n => n.id === selectedNodeId);
-          if (!parent) return;
-          const { x, y } = findNonOverlappingChildPosition(parent, nodes);
-          const childId = Math.max(...nodes.map(n => n.id), 0) + 1;
-          // Update nodes via undo stack
-          const useEdges = Array.isArray(edges) && edges.length > 0;
-          const newNode = createNewNode(useEdges ? null : parent.id, { x, y });
+          const anchorLevel = anchor.level ?? 0;
+          let targetLevel;
+          if (e.altKey) {
+            targetLevel = anchorLevel;
+          } else if (e.shiftKey) {
+            targetLevel = Math.max(0, anchorLevel - 1);
+          } else {
+            targetLevel = Math.min(maxLevel, anchorLevel + 1);
+          }
+          const positionAnchor = nodes.find(n => (n.level ?? 0) === targetLevel) || anchor;
+          const { x, y } = findNonOverlappingPosition(positionAnchor, nodes, targetLevel);
+          const newNode = createNewNode(positionAnchor, { x, y }, { level: targetLevel });
           pushUndo([...nodes, newNode]);
-          // If using explicit edges, add one for the new child
-          setEdges(prev => {
-            if (!Array.isArray(prev) || prev.length === 0) return prev;
-            const key = (a,b) => a <= b ? `${a}-${b}` : `${b}-${a}`;
-            const exists = prev.some(e => key(e.source, e.target) === key(parent.id, childId) && !e.directed);
-            if (exists) return prev;
-            return [...prev, { source: parent.id, target: childId, directed: false }];
-          });
+          setEdges(prev => addUndirectedEdge(Array.isArray(prev) ? prev : [], anchor.id, newNode.id));
+          selectNodes([newNode.id]);
         } else if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
           e.preventDefault();
           const newLabel = window.prompt(intl.formatMessage({ id: 'node.enterName' }), nodes.find(n => n.id === selectedNodeId)?.label || '');
@@ -1720,23 +1754,14 @@ function App({ graphId = 'default' }) {
           }
         } else if (e.key === 'Delete' || e.key === 'Backspace') {
           e.preventDefault();
-          pushUndo((nodes => {
-            const collectIds = (id, acc) => {
-              acc.push(id);
-              nodes.filter(n => n.parentId === id).forEach(n => collectIds(n.id, acc));
-              return acc;
-            };
-            const idsToDelete = collectIds(selectedNodeId, []);
-            return nodes.filter(n => !idsToDelete.includes(n.id));
-          })(nodes));
-          setSelectedNodeId(null);
+          handleDeleteNode(selectedNodeId);
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canvasRef, fileInputRef, handleUndo, handleRedo, handleExport, handleAutoLayout, handleShowSearch, handleToggleNodeInfoPanel, selectedNodeId, nodes, pushUndo, intl, createNewNode]);
+  }, [canvasRef, fileInputRef, handleUndo, handleRedo, handleExport, handleAutoLayout, handleShowSearch, handleToggleNodeInfoPanel, selectedNodeId, nodes, pushUndo, intl, createNewNode, findNonOverlappingPosition, handleDeleteNode, maxLevel, selectNodes, setEdges]);
 
   // Load help panel state from localStorage on initial render
   useEffect(() => {
@@ -1813,13 +1838,9 @@ function App({ graphId = 'default' }) {
   }, [nodes, pushUndo]);
 
   const handleDeleteNode = useCallback((nodeId) => {
-    const collectIds = (id, acc) => {
-      acc.push(id);
-      nodes.filter(n => n.parentId === id).forEach(n => collectIds(n.id, acc));
-      return acc;
-    };
-    const idsToDelete = collectIds(nodeId, []);
+    const idsToDelete = [nodeId];
     pushUndo(nodes.filter(n => !idsToDelete.includes(n.id)));
+    setEdges(prev => Array.isArray(prev) ? prev.filter(e => !idsToDelete.includes(e.source) && !idsToDelete.includes(e.target)) : prev);
     setSelectedNodeIds([]);
     setSelectedNodeId(null);
     setShowNodeEditor(false);
@@ -1830,132 +1851,75 @@ function App({ graphId = 'default' }) {
     if (!Array.isArray(ids) || ids.length < 2) return;
     const isShift = options.shift === true;
 
-    const isAncestor = (maybeAncestorId, nodeId) => {
-      let current = nodes.find(n => n.id === nodeId);
-      const visited = new Set();
-      while (current && current.parentId != null) {
-        if (visited.has(current.id)) break;
-        visited.add(current.id);
-        if (current.parentId === maybeAncestorId) return true;
-        current = nodes.find(n => n.id === current.parentId);
+    const currentEdges = Array.isArray(edges) ? [...edges] : [];
+    const pairKey = (a, b) => (a <= b ? `${a}-${b}` : `${b}-${a}`);
+    const pairs = [];
+    for (let i = 0; i < ids.length; i++) {
+      for (let j = i + 1; j < ids.length; j++) {
+        pairs.push([ids[i], ids[j]]);
       }
-      return false;
-    };
+    }
+    const hasPair = (a, b) => currentEdges.some(e => pairKey(e.source, e.target) === pairKey(a, b) && !e.directed);
 
-    if (Array.isArray(edges)) {
-      let newEdges = edges.length > 0 ? [...edges] : (() => {
-        const seen = new Set();
-        const result = [];
-        nodes.forEach(n => {
-          if (n.parentId != null) {
-            const a = n.parentId; const b = n.id;
-            const key = a <= b ? `${a}-${b}` : `${b}-${a}`;
-            if (!seen.has(key)) { seen.add(key); result.push({ source: a, target: b, directed: false }); }
+    let newEdges = [...currentEdges];
+
+    if (isShift) {
+      const sortedIds = [...ids].sort((a, b) => a - b);
+      const selectionKey = sortedIds.join('-');
+      const m = pairs.length;
+      if (m > 0) {
+        let idx = shiftPairIndex;
+        const total = 1 << m;
+        if (selectionKey !== shiftPairSelKey || idx >= total) {
+          idx = 0;
+          setShiftPairSelKey(selectionKey);
+        }
+        const next = (idx + 1) % total;
+        const gray = next ^ (next >> 1);
+        const desired = new Set();
+        for (let bit = 0; bit < m; bit++) {
+          if ((gray >> bit) & 1) {
+            const [a, b] = pairs[bit];
+            desired.add(pairKey(a, b));
+          }
+        }
+        newEdges = newEdges.filter(e => {
+          const key = pairKey(e.source, e.target);
+          const internal = pairs.some(([a, b]) => key === pairKey(a, b));
+          if (!internal) return true;
+          if (e.directed) return true;
+          return desired.has(key);
+        });
+        desired.forEach(key => {
+          const exists = newEdges.some(e => pairKey(e.source, e.target) === key && !e.directed);
+          if (!exists) {
+            const [aStr, bStr] = key.split('-');
+            const a = parseInt(aStr, 10);
+            const b = parseInt(bStr, 10);
+            newEdges.push({ source: a, target: b, directed: false });
           }
         });
-        return result;
-      })();
-
-      const pairKey = (a, b) => a <= b ? `${a}-${b}` : `${b}-${a}`;
-      const pairs = [];
-      for (let i = 0; i < ids.length; i++) {
-        for (let j = i + 1; j < ids.length; j++) {
-          pairs.push([ids[i], ids[j]]);
-        }
-      }
-      const hasPair = (a, b) => newEdges.some(e => pairKey(e.source, e.target) === pairKey(a, b) && !e.directed);
-
-      if (isShift) {
-        const sortedIds = [...ids].sort((a, b) => a - b);
-        const selectionKey = sortedIds.join('-');
-        const m = pairs.length;
-        if (m > 0) {
-          let idx = shiftPairIndex;
-          const total = 1 << m;
-          if (selectionKey !== shiftPairSelKey || idx >= total) {
-            idx = 0;
-            setShiftPairSelKey(selectionKey);
-          }
-          const next = (idx + 1) % total;
-          const gray = next ^ (next >> 1);
-          const desired = new Set();
-          for (let bit = 0; bit < m; bit++) {
-            if ((gray >> bit) & 1) {
-              const [a, b] = pairs[bit];
-              desired.add(pairKey(a, b));
-            }
-          }
-          newEdges = newEdges.filter(e => {
-            const key = pairKey(e.source, e.target);
-            const internal = pairs.some(([a, b]) => key === pairKey(a, b));
-            if (!internal) return true;
-            if (e.directed) return true;
-            return desired.has(key);
-          });
-          desired.forEach(key => {
-            const exists = newEdges.some(e => pairKey(e.source, e.target) === key && !e.directed);
-            if (!exists) {
-              const [aStr, bStr] = key.split('-');
-              const a = parseInt(aStr, 10); const b = parseInt(bStr, 10);
-              newEdges.push({ source: a, target: b, directed: false });
-            }
-          });
-          setShiftPairIndex(next);
-        }
-      } else {
-        const allPresent = pairs.length > 0 && pairs.every(([a, b]) => hasPair(a, b));
-        if (allPresent) {
-          const removeSet = new Set(pairs.map(([a, b]) => pairKey(a, b)));
-          newEdges = newEdges.filter(e => {
-            const key = pairKey(e.source, e.target);
-            return !removeSet.has(key) || !!e.directed;
-          });
-        } else {
-          pairs.forEach(([a, b]) => {
-            if (!hasPair(a, b)) newEdges.push({ source: a, target: b, directed: false });
-          });
-        }
-      }
-      setEdges(newEdges);
-      return;
-    }
-
-    const idSet = new Set(ids);
-    if (isShift) {
-      const anchorId = ids[0];
-      const others = ids.slice(1);
-      const target = others.find(oid => {
-        const node = nodes.find(n => n.id === oid);
-        if (!node) return false;
-        if (node.parentId && !idSet.has(node.parentId)) return false;
-        return node.parentId !== anchorId;
-      });
-      if (target != null) {
-        const updated = nodes.map(n => n.id === target ? { ...n, parentId: anchorId } : n);
-        pushUndo(updated);
+        setShiftPairIndex(next);
       }
     } else {
-      const anchorId = ids[0];
-      const others = ids.slice(1);
-      const anyConnected = others.some(oid => {
-        const node = nodes.find(n => n.id === oid);
-        return node && node.parentId === anchorId;
-      });
-      if (anyConnected) {
-        const updated = nodes.map(n => (idSet.has(n.id) && n.parentId === anchorId) ? { ...n, parentId: null } : n);
-        pushUndo(updated);
-      } else {
-        const updated = nodes.map(n => {
-          if (!others.includes(n.id)) return n;
-          if (n.id === anchorId) return n;
-          if (isAncestor(n.id, anchorId)) return n;
-          if (n.parentId != null && !idSet.has(n.parentId)) return n;
-          return { ...n, parentId: anchorId };
+      const allPresent = pairs.length > 0 && pairs.every(([a, b]) => hasPair(a, b));
+      if (allPresent) {
+        const removeSet = new Set(pairs.map(([a, b]) => pairKey(a, b)));
+        newEdges = newEdges.filter(e => {
+          const key = pairKey(e.source, e.target);
+          return !removeSet.has(key) || !!e.directed;
         });
-        pushUndo(updated);
+      } else {
+        pairs.forEach(([a, b]) => {
+          if (!hasPair(a, b)) {
+            newEdges.push({ source: a, target: b, directed: false });
+          }
+        });
       }
     }
-  }, [edges, nodes, pushUndo, shiftPairIndex, shiftPairSelKey]);
+
+    setEdges(newEdges);
+  }, [edges, shiftPairIndex, shiftPairSelKey]);
 
   const updateNodesFromPlugin = useCallback((updater) => {
     const draft = nodes.map(node => ({ ...node }));
@@ -1990,18 +1954,9 @@ function App({ graphId = 'default' }) {
   }, []);
 
   const handleDeleteNodesFromPanel = useCallback((nodeIds) => {
-    const collectIds = (id, acc) => {
-      acc.push(id);
-      nodes.filter(n => n.parentId === id).forEach(n => collectIds(n.id, acc));
-      return acc;
-    };
-    
-    let allIdsToDelete = [];
-    nodeIds.forEach(id => {
-      allIdsToDelete = [...allIdsToDelete, ...collectIds(id, [])];
-    });
-    
-    pushUndo(nodes.filter(n => !allIdsToDelete.includes(n.id)));
+    const ids = Array.isArray(nodeIds) ? nodeIds : [];
+    pushUndo(nodes.filter(n => !ids.includes(n.id)));
+    setEdges(prev => Array.isArray(prev) ? prev.filter(e => !ids.includes(e.source) && !ids.includes(e.target)) : prev);
     setSelectedNodeIds([]);
     setSelectedNodeId(null);
   }, [nodes, pushUndo]);
@@ -2278,6 +2233,7 @@ function App({ graphId = 'default' }) {
       handleToggleConnections([a, b], options);
     },
     updateNodes: updateNodesFromPlugin,
+    maxLevel,
     showNodeInfoPanel,
     hideNodeInfoPanel,
     onEditNode: handleEditNodeFromPanel,
@@ -2299,6 +2255,7 @@ function App({ graphId = 'default' }) {
     selectNodes,
     handleToggleConnections,
     updateNodesFromPlugin,
+    maxLevel,
     showNodeInfoPanel,
     hideNodeInfoPanel,
     handleEditNodeFromPanel,
@@ -2340,15 +2297,7 @@ function App({ graphId = 'default' }) {
             console.log('No node selected for deletion');
             return;
           }
-          const collectIds = (id, acc) => {
-            acc.push(id);
-            nodes.filter(n => n.parentId === id).forEach(n => collectIds(n.id, acc));
-            return acc;
-          };
-          const idsToDelete = collectIds(selectedNodeId, []);
-          console.log('Deleting nodes:', { idsToDelete, totalNodes: nodes.length });
-          pushUndo(nodes.filter(n => !idsToDelete.includes(n.id)));
-          setSelectedNodeId(null);
+          handleDeleteNode(selectedNodeId);
         }}
         onAutoLayout={handleAutoLayout}
         onSearch={handleShowSearch}
@@ -2385,6 +2334,8 @@ function App({ graphId = 'default' }) {
         customPlugins={customPlugins}
         onImportCustomPlugin={importCustomPlugin}
         onRemoveCustomPlugin={removeCustomPlugin}
+        maxLevel={maxLevel}
+        onChangeMaxLevel={setMaxLevel}
       />
       <div style={{ height: 80 }} />
       <MainHeader />
@@ -2501,17 +2452,11 @@ function App({ graphId = 'default' }) {
               closeContextMenu();
               const parent = nodes.find(n => n.id === contextMenu.target.nodeId);
               if (!parent) return;
-              const pos = findNonOverlappingChildPosition(parent, nodes);
-              const useEdges = Array.isArray(edges) && edges.length > 0;
-              const newNode = createNewNode(useEdges ? null : parent.id, pos);
+              const targetLevel = Math.min(maxLevel, (parent.level ?? 0) + 1);
+              const pos = findNonOverlappingPosition(parent, nodes, targetLevel);
+              const newNode = createNewNode(parent, pos, { level: targetLevel });
               pushUndo([...nodes, newNode]);
-              setEdges(prev => {
-                if (!Array.isArray(prev) || prev.length === 0) return prev;
-                const key = (a,b) => a <= b ? `${a}-${b}` : `${b}-${a}`;
-                const exists = prev.some(e => key(e.source, e.target) === key(parent.id, newNode.id) && !e.directed);
-                if (exists) return prev;
-                return [...prev, { source: parent.id, target: newNode.id, directed: false }];
-              });
+              setEdges(prev => addUndirectedEdge(Array.isArray(prev) ? prev : [], parent.id, newNode.id));
             }}><FormattedMessage id="node.addConnected" defaultMessage="Add Connected Node" /></button>
             <button onClick={() => {
               closeContextMenu();

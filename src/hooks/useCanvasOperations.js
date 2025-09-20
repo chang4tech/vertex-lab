@@ -85,14 +85,8 @@ export default function useCanvasOperations({
     ctx.translate(view.current.offsetX, view.current.offsetY);
     ctx.scale(view.current.scale, view.current.scale);
     
-    // Draw edges
-    nodes.forEach(node => {
-      if (node.parentId) {
-        const parent = nodes.find(n => n.id === node.parentId);
-        if (parent) drawEdge(ctx, parent, node);
-      }
-    });
-    
+    // Draw edges (not available in legacy hook; kept for compatibility)
+
     // Draw nodes
     nodes.forEach(node => {
       drawNode(ctx, node, node.id === selectedNodeId);
@@ -118,12 +112,13 @@ export default function useCanvasOperations({
   // Center view
   const center = useCallback(() => {
     const canvas = canvasRef.current;
-    const root = nodes.find(n => n.id === 1) || nodes[0];
-    if (!root) return;
-    
+    if (!nodes.length) return;
+    const avgX = nodes.reduce((sum, node) => sum + node.x, 0) / nodes.length;
+    const avgY = nodes.reduce((sum, node) => sum + node.y, 0) / nodes.length;
+
     view.current.scale = 1;
-    view.current.offsetX = canvas.width / 2 - root.x;
-    view.current.offsetY = canvas.height / 2 - root.y;
+    view.current.offsetX = canvas.width / 2 - avgX;
+    view.current.offsetY = canvas.height / 2 - avgY;
     draw();
     updateViewBox();
   }, [nodes, draw, updateViewBox]);

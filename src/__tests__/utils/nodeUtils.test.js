@@ -28,7 +28,7 @@ describe('nodeUtils', () => {
       expect(enhancedNode.label).toBe('Test Node');
       expect(enhancedNode.x).toBe(100);
       expect(enhancedNode.y).toBe(200);
-      expect(enhancedNode.parentId).toBe(null);
+      expect(enhancedNode.level).toBe(0);
       expect(enhancedNode.shape).toBe(NODE_SHAPES.CIRCLE);
       expect(enhancedNode.color).toBe('#ffffff');
       expect(enhancedNode.tags).toEqual([]);

@@ -62,7 +62,9 @@ export const APP_SHORTCUTS = [
   { key: 'Delete', modifiers: [], description: 'Delete Selected' },
   { key: 'Backspace', modifiers: [], description: 'Delete Selected' },
   { key: 'Enter', modifiers: [], description: 'Rename Node' },
-  { key: 'Tab', modifiers: [], description: 'Add Connected Node' },
+  { key: 'Tab', modifiers: [], description: 'Create Node (Level +1)' },
+  { key: 'Tab', modifiers: ['shift'], description: 'Create Node (Level -1)' },
+  { key: 'Tab', modifiers: ['alt'], description: 'Create Node (Same Level)' },
   // Connections
   { key: 'e', modifiers: [], description: 'Connect/Disconnect Selected' },
 ];

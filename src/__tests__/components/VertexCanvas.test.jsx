@@ -28,9 +28,9 @@ const mockContext = {
 
 describe('VertexCanvas', () => {
   const mockNodes = [
-    { id: 1, label: 'Root', x: 400, y: 300, parentId: null },
-    { id: 2, label: 'Child 1', x: 250, y: 200, parentId: 1 },
-    { id: 3, label: 'Child 2', x: 550, y: 200, parentId: 1 },
+    { id: 1, label: 'Root', x: 400, y: 300, level: 0 },
+    { id: 2, label: 'Node 2', x: 250, y: 200, level: 1 },
+    { id: 3, label: 'Node 3', x: 550, y: 200, level: 1 },
   ];
 
   const mockProps = {

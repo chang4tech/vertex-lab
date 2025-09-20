@@ -49,7 +49,7 @@ const debugLog = (...args) => {
 /**
  * VertexCanvas - a simple diagramming canvas using HTML5 Canvas.
  * Props:
- *   nodes: array of node objects { id, label, x, y, parentId }
+ *   nodes: array of node objects { id, label, x, y, level }
  *   edges: optional array of edges [{ id?, source, target, directed? }]
  *   onNodeClick: function(nodeId)
  */
@@ -522,16 +522,6 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       drawEdge(ctx, a, b, currentTheme);
       // Future: if (edge.directed) draw arrowhead
     });
-  } else {
-    // Fallback to parentId (legacy tree)
-    visibleNodes.forEach(node => {
-      if (node.parentId) {
-        const parent = nodes.find(n => n.id === node.parentId);
-        if (parent && visibleNodes.includes(parent)) {
-          drawEdge(ctx, parent, node, currentTheme);
-        }
-      }
-    });
   }
     
     // Draw visible nodes with selection and highlighting
@@ -757,15 +747,6 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
         if (!a || !b) return;
         if (!visibleNodes.includes(a) || !visibleNodes.includes(b)) return;
         drawEdge(ctx, a, b, currentTheme);
-      });
-    } else {
-      visibleNodes.forEach(node => {
-        if (node.parentId) {
-          const parent = nodes.find(n => n.id === node.parentId);
-          if (parent && visibleNodes.includes(parent)) {
-            drawEdge(ctx, parent, node, currentTheme);
-          }
-        }
       });
     }
       

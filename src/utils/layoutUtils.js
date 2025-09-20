@@ -134,32 +134,12 @@ export function applyForceDirectedLayout(nodes, canvasDimensions, maxIterations 
       }
     }
     
-    // Moderate attraction forces for parent-child relationships
+    // Gentle attraction towards level-aligned horizontal bands
+    const levelSpacing = 180;
     adjustedNodes.forEach(node => {
-      if (node.parentId) {
-        const parent = nodeMap.get(node.parentId);
-        if (parent) {
-          const dx = parent.x - node.x;
-          const dy = parent.y - node.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          
-          const idealDistance = 100; // Ideal parent-child distance
-          const attractionForce = Math.max(0, (distance - idealDistance) * 0.03);
-          
-          if (distance > 1) {
-            const forceX = (dx / distance) * attractionForce;
-            const forceY = (dy / distance) * attractionForce;
-            
-            const nodeForce = forces.get(node.id);
-            const parentForce = forces.get(parent.id);
-            
-            nodeForce.x += forceX;
-            nodeForce.y += forceY;
-            parentForce.x -= forceX * 0.3; // Parent moves less
-            parentForce.y -= forceY * 0.3;
-          }
-        }
-      }
+      const targetY = (node.level ?? 0) * levelSpacing;
+      const nodeForce = forces.get(node.id);
+      nodeForce.y += (targetY - node.y) * 0.02;
     });
     
     // Apply forces with adaptive damping
@@ -181,17 +161,6 @@ export function applyForceDirectedLayout(nodes, canvasDimensions, maxIterations 
       node.y += force.y * adaptiveDamping;
     });
     
-    // Keep root node relatively stable but allow some movement
-    const rootNode = adjustedNodes.find(n => n.parentId === null);
-    if (rootNode && iter < maxIterations - 20) {
-      const centerX = canvasDimensions ? canvasDimensions.width / 2 : 400;
-      const centerY = canvasDimensions ? canvasDimensions.height / 2 : 300;
-      const pullStrength = Math.max(0.005, 0.02 - iter * 0.0001);
-      
-      rootNode.x += (centerX - rootNode.x) * pullStrength;
-      rootNode.y += (centerY - rootNode.y) * pullStrength;
-    }
-    
     // Check for convergence
     if (collisionCount === 0) {
       console.log(`Layout converged after ${iter + 1} iterations with no collisions`);
@@ -209,10 +178,8 @@ export function applyForceDirectedLayout(nodes, canvasDimensions, maxIterations 
       console.log(`Layout stagnant, applying random perturbation at iteration ${iter}`);
       // Add small random perturbations to break deadlocks
       adjustedNodes.forEach(node => {
-        if (node.parentId !== null) { // Don't move root too much
-          node.x += (Math.random() - 0.5) * 10;
-          node.y += (Math.random() - 0.5) * 10;
-        }
+        node.x += (Math.random() - 0.5) * 10;
+        node.y += (Math.random() - 0.5) * 10;
       });
       stagnantIterations = 0;
     }
@@ -290,8 +257,8 @@ function resolveRemainingCollisions(nodes, collisions) {
       const pushY = (dy / distance) * pushDistance;
       
       // Determine which node should move more based on hierarchy
-      const nodeAIsRoot = nodeA.parentId === null;
-      const nodeBIsRoot = nodeB.parentId === null;
+    const nodeAIsRoot = (nodeA.level ?? 0) === 0;
+    const nodeBIsRoot = (nodeB.level ?? 0) === 0;
       
       if (nodeAIsRoot && !nodeBIsRoot) {
         // Move child more than root

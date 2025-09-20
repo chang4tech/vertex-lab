@@ -48,9 +48,9 @@ describe('layoutUtils', () => {
 
     it('adjusts node positions to resolve collisions', () => {
       const nodes = [
-        { id: 1, label: 'Root', x: 400, y: 300, parentId: null },
-        { id: 2, label: 'Child 1', x: 405, y: 305, parentId: 1 }, // Too close to root
-        { id: 3, label: 'Child 2', x: 410, y: 310, parentId: 1 }  // Too close to both
+        { id: 1, label: 'Root', x: 400, y: 300, level: 0 },
+        { id: 2, label: 'Peer 1', x: 405, y: 305, level: 0 }, // Too close to root
+        { id: 3, label: 'Peer 2', x: 410, y: 310, level: 0 }  // Too close to both
       ];
 
       const originalNodes = JSON.parse(JSON.stringify(nodes));
@@ -72,22 +72,20 @@ describe('layoutUtils', () => {
       expect(child1Moved || child2Moved).toBe(true); // At least one should have moved
     });
 
-    it('maintains parent-child relationships', () => {
+    it('keeps nodes roughly separated by level bands', () => {
       const nodes = [
-        { id: 1, label: 'Root', x: 400, y: 300, parentId: null },
-        { id: 2, label: 'Child', x: 500, y: 400, parentId: 1 }
+        { id: 1, label: 'Root', x: 400, y: 300, level: 0 },
+        { id: 2, label: 'Level 1', x: 405, y: 305, level: 1 }
       ];
 
       const adjustedNodes = applyForceDirectedLayout(nodes, canvasDimensions, 5);
       
       expect(adjustedNodes).toHaveLength(2);
       
-      // Parent-child should still be reasonably close
       const root = adjustedNodes.find(n => n.id === 1);
       const child = adjustedNodes.find(n => n.id === 2);
       
-      const distance = Math.sqrt((root.x - child.x) ** 2 + (root.y - child.y) ** 2);
-      expect(distance).toBeLessThan(200); // Should maintain some proximity
+      expect(child.y).toBeGreaterThan(root.y);
     });
   });
 
@@ -107,8 +105,8 @@ describe('layoutUtils', () => {
 
     it('applies force-directed layout when collisions detected', () => {
       const nodes = [
-        { id: 1, label: 'Root', x: 400, y: 300, parentId: null },
-        { id: 2, label: 'Child', x: 405, y: 305, parentId: 1 } // Too close
+        { id: 1, label: 'Root', x: 400, y: 300, level: 0 },
+        { id: 2, label: 'Sibling', x: 405, y: 305, level: 0 } // Too close
       ];
 
       const organizedNodes = organizeLayout(nodes, canvasDimensions);

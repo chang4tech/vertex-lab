@@ -15,17 +15,18 @@ describe('levelsPlugin', () => {
 
   it('sets level on a node and clears parent', () => {
     const updateNodes = vi.fn((updater) => {
-      const next = updater([{ id: 1, parentId: 5 }]);
+      const next = updater([{ id: 1, parentId: 5, level: 2 }]);
       expect(next).toEqual([{ id: 1, parentId: null, level: 3 }]);
     });
     const selectNodes = vi.fn();
     const setHighlightedNodes = vi.fn();
     const api = {
-      nodes: [{ id: 1, parentId: 5 }],
+      nodes: [{ id: 1, parentId: 5, level: 2 }],
       selectedNodeIds: [1],
       updateNodes,
       selectNodes,
       setHighlightedNodes,
+      maxLevel: 5,
     };
 
     setLevelCommand.run(api, { nodeId: 1 });
@@ -49,8 +50,9 @@ describe('levelsPlugin', () => {
     });
 
     const api = {
-      nodes: [{ id: 1, parentId: 2 }, { id: 2, parentId: null }],
+      nodes: [{ id: 1, parentId: 2, level: 1 }, { id: 2, parentId: null, level: 0 }],
       updateNodes,
+      maxLevel: 5,
     };
 
     clearParentsCommand.run(api);
