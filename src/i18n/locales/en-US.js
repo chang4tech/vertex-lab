@@ -58,10 +58,12 @@ export default {
   'library.delete': 'Delete Saved Graph',
   'library.enterName': 'Enter a name for this graph:',
   'library.saved': 'Graph saved to library',
+  'library.savedOffline': 'Graph saved locally. It will sync once the server is available.',
   'library.noTemplates': 'No graphs in library yet.',
   'library.deletePrompt': 'Enter graph name to delete:',
   'library.availableTemplates': 'Available graphs:',
   'library.deleted': 'Graph deleted from library',
+  'library.deletedOffline': 'Removed the local copy of this graph.',
   'library.notFound': 'Graph not found',
   'library.cannotDeleteSample': 'Built-in samples cannot be deleted.',
   'library.graphsTitle': 'Library Graphs',
@@ -115,6 +117,7 @@ export default {
   'header.signIn': 'Sign in',
   'header.signUp': 'Sign up',
   'header.account': 'Your account',
+  'status.offline': 'Offline mode',
 
   // Node labels
   'node.centralTopic': 'Start Node',

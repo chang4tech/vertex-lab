@@ -58,10 +58,12 @@ export default {
   'library.delete': '删除保存的图',
   'library.enterName': '输入图的名称：',
   'library.saved': '图已保存到库',
+  'library.savedOffline': '图已保存到本地，恢复连接后将自动同步。',
   'library.noTemplates': '库中没有图',
   'library.deletePrompt': '输入要删除的图名称：',
   'library.availableTemplates': '可用的图：',
   'library.deleted': '图已删除',
+  'library.deletedOffline': '本地存储中的图已删除。',
   'library.notFound': '未找到对应的图',
   'library.cannotDeleteSample': '内置示例无法删除。',
   'library.graphsTitle': '库中的图',
@@ -115,6 +117,7 @@ export default {
   'header.signIn': '登录',
   'header.signUp': '注册',
   'header.account': '你的账号',
+  'status.offline': '离线模式',
 
   // Node labels
   'node.centralTopic': '起始节点',

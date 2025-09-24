@@ -188,6 +188,21 @@ const MenuBar = React.forwardRef(({
   const [showPluginsManager, setShowPluginsManager] = useState(false);
   const intl = useIntl();
   const { currentTheme, toggleTheme } = useTheme();
+  const isOffline = userStatus === 'offline';
+  const offlineBadgeStyle = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    padding: '2px 8px',
+    borderRadius: 999,
+    fontSize: 11,
+    fontWeight: 600,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    background: currentTheme.colors.warningBackground ?? 'rgba(245, 158, 11, 0.18)',
+    color: currentTheme.colors.warningText ?? currentTheme.colors.primaryText,
+    border: `1px solid ${currentTheme.colors.warningBorder ?? 'rgba(245, 158, 11, 0.36)'}`,
+  };
   const [helpModal, setHelpModal] = useState({ open: false, titleId: null, messageId: null });
   const [graphIdCopied, setGraphIdCopied] = useState(false);
 
@@ -354,6 +369,11 @@ const MenuBar = React.forwardRef(({
         right: 0
       }}>
         <div style={{ fontWeight: 700, fontSize: isMobile ? 16 : 18, color: currentTheme.colors.menuText }}>🧠 Vertex Lab</div>
+        {isOffline && (
+          <span style={offlineBadgeStyle}>
+            <FormattedMessage id="status.offline" defaultMessage="Offline mode" />
+          </span>
+        )}
         <input
           aria-label={intl.formatMessage({ id: 'graph.title', defaultMessage: 'Graph title' })}
           value={graphTitle}
@@ -433,6 +453,17 @@ const MenuBar = React.forwardRef(({
               </span>
               <span style={{ fontSize: 13, fontWeight: 600 }}>{userDisplayName}</span>
             </button>
+          ) : userStatus === 'offline' ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={offlineBadgeStyle}>
+                <FormattedMessage id="status.offline" defaultMessage="Offline mode" />
+              </span>
+              {userDisplayName && (
+                <span style={{ color: currentTheme.colors.secondaryText, fontSize: 13 }}>
+                  {userDisplayName}
+                </span>
+              )}
+            </div>
           ) : (
             <>
               <button
