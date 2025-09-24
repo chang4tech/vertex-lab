@@ -1433,6 +1433,8 @@ function App({ graphId = 'default' }) {
           nodes: Array.isArray(entry.nodes) ? entry.nodes : [],
           edges: Array.isArray(entry.edges) ? entry.edges : [],
           isSample: false,
+          storage: entry.storage || 'remote',
+          isLocal: entry.storage === 'local',
         }))
       : []
   ), [userLibrary]);
@@ -1613,7 +1615,7 @@ function App({ graphId = 'default' }) {
 
   const handleLibrarySave = useCallback(async () => {
     if (typeof window === 'undefined') return;
-    if (userStatus !== 'authenticated') {
+    if (userStatus === 'unauthenticated') {
       sessionStorage.setItem('vertex_auth_return', window.location.hash || '#/');
       window.location.hash = '#/login';
       return;
@@ -1625,9 +1627,13 @@ function App({ graphId = 'default' }) {
       edges: cloneEdgesForState(edges),
     };
     try {
-      await saveLibraryGraph({ name, ...payload });
-      await refreshLibrary().catch(() => {});
-      alert(intl.formatMessage({ id: 'library.saved' }));
+      const result = await saveLibraryGraph({ name, ...payload });
+      if (result?.source === 'remote') {
+        await refreshLibrary().catch(() => {});
+        alert(intl.formatMessage({ id: 'library.saved' }));
+      } else {
+        alert(intl.formatMessage({ id: 'library.savedOffline', defaultMessage: 'Graph saved locally. It will sync once the server is available.' }));
+      }
     } catch (err) {
       console.error('[library] save error', err);
       alert(intl.formatMessage({ id: 'library.saveFailed', defaultMessage: 'Unable to save graph. Please try again.' }));
@@ -1670,9 +1676,13 @@ function App({ graphId = 'default' }) {
       return;
     }
     try {
-      await deleteLibraryGraph(entry.graphId ?? entry.id.replace(/^user:/, ''));
-      await refreshLibrary().catch(() => {});
-      alert(intl.formatMessage({ id: 'library.deleted' }));
+      const result = await deleteLibraryGraph(entry.graphId ?? entry.id.replace(/^user:/, ''));
+      if (result?.source === 'remote') {
+        await refreshLibrary().catch(() => {});
+        alert(intl.formatMessage({ id: 'library.deleted' }));
+      } else {
+        alert(intl.formatMessage({ id: 'library.deletedOffline', defaultMessage: 'Removed the local copy.' }));
+      }
     } catch (err) {
       console.error('[library] delete error', err);
       alert(intl.formatMessage({ id: 'library.deleteFailed', defaultMessage: 'Unable to delete graph.' }));

@@ -49,6 +49,7 @@ ESLint uses `eslint.config.js`, inheriting the recommended rules for Node.js.
 - Override runtime settings during deploys by setting `window.__VERTEX_CONFIG__ = { apiBaseUrl: 'https://api.example.com' }` in `index.html` or a dedicated config script. (the default `public/runtime-config.js` is copied to the build and can be edited in-place).
 - Add additional routes under `server/src/routes/` and their controllers under `server/src/controllers/`.
 - Remember to export any shared types or contracts so the frontend can consume them.
+- When the backend is offline, the frontend falls back to local storage for saved graphs and re-syncs once the API returns.
 
 ### Postgres quick start
 

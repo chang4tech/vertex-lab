@@ -1,9 +1,24 @@
 import React from 'react';
 import { apiFetch } from '../utils/apiClient.js';
+import { loadOfflineLibrary, saveOfflineLibrary } from '../utils/offlineLibrary.js';
 
 const UserContext = React.createContext(null);
 
 const LOCAL_CACHE_KEY = 'vertex_user_cache_v1';
+
+const isNetworkError = (error) => {
+  if (!error) return false;
+  if (error.name === 'TypeError') return true;
+  const message = typeof error.message === 'string' ? error.message : '';
+  return message.includes('Failed to fetch') || message.includes('NetworkError');
+};
+
+const generateLocalId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `local-${Math.random().toString(36).slice(2, 10)}`;
+};
 
 const loadCachedSession = () => {
   if (typeof window === 'undefined') return null;
@@ -28,6 +43,7 @@ const normalizeLibraryEntry = (entry) => {
   }
   const nodes = Array.isArray(entry.nodes) ? entry.nodes : [];
   const edges = Array.isArray(entry.edges) ? entry.edges : [];
+  const storage = entry.storage || entry.source || 'remote';
   return {
     id: entry.id ?? `${entry.name || 'graph'}-${entry.createdAt || Math.random().toString(36).slice(2)}`,
     graphId: entry.id ?? entry.name,
@@ -37,15 +53,20 @@ const normalizeLibraryEntry = (entry) => {
     createdAt: entry.createdAt ?? null,
     updatedAt: entry.updatedAt ?? null,
     metadata: entry.metadata && typeof entry.metadata === 'object' ? entry.metadata : {},
+    storage,
   };
 };
 
 export function UserProvider({ children }) {
   const cachedSession = React.useMemo(() => loadCachedSession(), []);
+  const offlineDefaults = React.useMemo(() => loadOfflineLibrary(), []);
   const [user, setUser] = React.useState(cachedSession?.user ?? null);
-  const [status, setStatus] = React.useState(cachedSession?.user ? 'authenticated' : 'loading'); // loading | authenticated | unauthenticated | error
+  const [status, setStatus] = React.useState(cachedSession?.user ? 'authenticated' : 'loading'); // loading | authenticated | unauthenticated | offline | error
   const [error, setError] = React.useState(null);
-  const [library, setLibrary] = React.useState(cachedSession?.library ?? []);
+  const [library, setLibrary] = React.useState(() => {
+    if (cachedSession?.library?.length) return cachedSession.library;
+    return offlineDefaults;
+  });
   const [libraryStatus, setLibraryStatus] = React.useState('idle');
   const [libraryError, setLibraryError] = React.useState(null);
 
@@ -118,6 +139,17 @@ export function UserProvider({ children }) {
         setLibrary([]);
         return;
       }
+      if (isNetworkError(err)) {
+        const cached = loadCachedSession();
+        if (cached?.user) {
+          setUser(cached.user);
+        }
+        const offlineLibrary = cached?.library?.length ? cached.library : loadOfflineLibrary();
+        setLibrary(offlineLibrary);
+        setStatus('offline');
+        setError(null);
+        return;
+      }
       const cached = loadCachedSession();
       if (cached?.user) {
         setUser(cached.user);
@@ -139,13 +171,22 @@ export function UserProvider({ children }) {
   React.useEffect(() => {
     if (status === 'authenticated' && user) {
       cacheSession(user, library);
-    } else if (status === 'unauthenticated' || status === 'error' || !user) {
+    } else if (status === 'unauthenticated' || status === 'error') {
       clearCache();
     }
   }, [status, user, library, cacheSession, clearCache]);
 
+  React.useEffect(() => {
+    saveOfflineLibrary(library);
+  }, [library]);
+
   const fetchLibrary = React.useCallback(async () => {
     if (status !== 'authenticated') {
+      if (status === 'offline') {
+        const offlineEntries = loadOfflineLibrary();
+        setLibrary(offlineEntries);
+        return offlineEntries;
+      }
       setLibrary([]);
       return [];
     }
@@ -178,6 +219,13 @@ export function UserProvider({ children }) {
       return normalized;
     } catch (err) {
       console.error('[user] Failed to fetch library', err);
+      if (isNetworkError(err)) {
+        const offlineEntries = loadOfflineLibrary();
+        setLibrary(offlineEntries);
+        setStatus('offline');
+        setLibraryError(null);
+        return offlineEntries;
+      }
       setLibraryError(err);
       throw err;
     } finally {
@@ -186,18 +234,49 @@ export function UserProvider({ children }) {
   }, [status, clearCache]);
 
   const saveLibraryGraph = React.useCallback(async ({ name, nodes, edges }) => {
-    if (status !== 'authenticated') {
-      throw new Error('User is not authenticated');
-    }
+    const normalizedName = name || 'Untitled graph';
+    const safeNodes = Array.isArray(nodes) ? nodes : [];
+    const safeEdges = Array.isArray(edges) ? edges : [];
+
+    const persistLocal = () => {
+      const now = new Date().toISOString();
+      const localId = generateLocalId();
+      const entry = normalizeLibraryEntry({
+        id: localId,
+        graphId: localId,
+        name: normalizedName,
+        nodes: safeNodes,
+        edges: safeEdges,
+        metadata: {},
+        createdAt: now,
+        updatedAt: now,
+        storage: 'local',
+      });
+      if (!entry) return null;
+      setLibrary(prev => {
+        const next = [...prev.filter(item => item.id !== entry.id && item.graphId !== entry.graphId), entry];
+        saveOfflineLibrary(next);
+        return next;
+      });
+      return entry;
+    };
+
     setLibraryStatus('loading');
     setLibraryError(null);
+
+    if (status !== 'authenticated') {
+      const entry = persistLocal();
+      setLibraryStatus('idle');
+      return { source: 'local', entry };
+    }
+
     try {
       const response = await apiFetch('/api/library', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, nodes, edges }),
+        body: JSON.stringify({ name: normalizedName, nodes: safeNodes, edges: safeEdges }),
       });
       if (response.status === 401) {
         setStatus('unauthenticated');
@@ -217,19 +296,28 @@ export function UserProvider({ children }) {
       }
       const result = await response.json().catch(() => null);
       if (Array.isArray(result)) {
-        setLibrary(result.map(normalizeLibraryEntry).filter(Boolean));
+        const normalized = result.map(normalizeLibraryEntry).filter(Boolean);
+        setLibrary(normalized);
       } else if (result) {
         const normalized = normalizeLibraryEntry(result);
         if (normalized) {
           setLibrary(prev => {
             const next = prev.filter(entry => entry.id !== normalized.id && entry.graphId !== normalized.graphId);
-            return [...next, normalized];
+            const updated = [...next, normalized];
+            saveOfflineLibrary(updated);
+            return updated;
           });
         }
       } else {
         await fetchLibrary();
       }
+      return { source: 'remote' };
     } catch (err) {
+      if (isNetworkError(err)) {
+        const entry = persistLocal();
+        setStatus('offline');
+        return { source: 'local', entry };
+      }
       console.error('[user] Failed to save library graph', err);
       setLibraryError(err);
       throw err;
@@ -239,11 +327,31 @@ export function UserProvider({ children }) {
   }, [status, fetchLibrary]);
 
   const deleteLibraryGraph = React.useCallback(async (graphId) => {
-    if (status !== 'authenticated') {
-      throw new Error('User is not authenticated');
-    }
+    const removeLocal = () => {
+      let removed = false;
+      setLibrary(prev => {
+        const next = prev.filter(entry => entry.id !== graphId && entry.graphId !== graphId);
+        removed = next.length !== prev.length;
+        if (removed) {
+          saveOfflineLibrary(next);
+        }
+        return next;
+      });
+      return removed;
+    };
+
     setLibraryStatus('loading');
     setLibraryError(null);
+
+    if (status !== 'authenticated') {
+      const removed = removeLocal();
+      setLibraryStatus('idle');
+      if (!removed) {
+        throw new Error('Graph not found');
+      }
+      return { source: 'local' };
+    }
+
     try {
       const response = await apiFetch(`/api/library/${encodeURIComponent(graphId)}`, {
         method: 'DELETE',
@@ -257,16 +365,26 @@ export function UserProvider({ children }) {
       if (!response.ok) {
         const payload = await response.json().catch(() => null);
         if (response.status === 404 && payload?.message === 'Graph not found') {
-          setLibrary(prev => prev.filter(entry => entry.id !== graphId && entry.graphId !== graphId));
-          return;
+          removeLocal();
+          return { source: 'remote' };
         }
         if (payload && payload.message) {
           throw new Error(payload.message);
         }
         throw new Error(`Failed to delete graph (status ${response.status})`);
       }
-      setLibrary(prev => prev.filter(entry => entry.id !== graphId && entry.graphId !== graphId));
+      setLibrary(prev => {
+        const next = prev.filter(entry => entry.id !== graphId && entry.graphId !== graphId);
+        saveOfflineLibrary(next);
+        return next;
+      });
+      return { source: 'remote' };
     } catch (err) {
+      if (isNetworkError(err)) {
+        removeLocal();
+        setStatus('offline');
+        return { source: 'local' };
+      }
       console.error('[user] Failed to delete library graph', err);
       setLibraryError(err);
       throw err;
@@ -278,6 +396,8 @@ export function UserProvider({ children }) {
   const value = React.useMemo(() => ({
     user,
     status,
+    isOffline: status === 'offline',
+    canSyncRemote: status === 'authenticated',
     error,
     refreshUser: fetchUser,
     library,

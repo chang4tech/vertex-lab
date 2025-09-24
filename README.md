@@ -106,6 +106,8 @@ The backend listens on port 4000 by default; adjust the `.env` file if the port 
 
 For persistent teams, set `DATABASE_URL` to a Postgres instance (see `doc/BACKEND_SETUP.md` for setup). Local development defaults to SQLite at `server/data/vertex.db`.
 
+If the API is unavailable, Vertex Lab automatically falls back to local storage so you can keep saving and loading diagrams offline. Changes sync once the backend is reachable again.
+
 Set `VITE_API_BASE_URL` in your front-end `.env` (see `.env.example`) if the API runs somewhere else. You can also override at runtime by defining `window.__VERTEX_CONFIG__ = { apiBaseUrl: 'https://api.example.com' }` before the app script loads.
 
 For production deployments, edit `public/runtime-config.js` (copied verbatim to `dist/runtime-config.js`) to point at the desired API host without triggering a rebuild.
