@@ -2237,12 +2237,13 @@ function App({ graphId = 'default' }) {
     minimap: () => (
       <Minimap
         nodes={nodes}
+        edges={edges}
         viewBox={viewBox}
         visible={showMinimap}
         onViewportChange={handleMinimapViewportChange}
       />
     ),
-  }), [nodes, viewBox, showMinimap, handleMinimapViewportChange]);
+  }), [nodes, edges, viewBox, showMinimap, handleMinimapViewportChange]);
 
   const combinedOverlayEntries = useMemo(() => {
     const entries = [];

@@ -306,40 +306,114 @@ export function getDescendantNodes(nodes, parentId) {
 }
 
 // Check if node should be visible (considering collapsed parents)
-export function isNodeVisible(nodes, node) {
+export function isNodeVisible(nodes, node, edges = []) {
   if (!node) return false;
 
-  const hasHierarchy = nodes.some(n => n?.parentId != null);
-  if (!hasHierarchy) {
-    const nodeLevel = node.level ?? 0;
-    return !nodes.some(n => n?.isCollapsed && (n.level ?? 0) < nodeLevel);
-  }
-
-  const nodeMap = new Map();
+  const nodesById = new Map();
   nodes.forEach(n => {
     if (n?.id != null) {
-      nodeMap.set(n.id, n);
+      nodesById.set(n.id, n);
     }
   });
 
-  const visited = new Set();
-  let currentParentId = node.parentId;
-  while (currentParentId != null && !visited.has(currentParentId)) {
-    visited.add(currentParentId);
-    const parent = nodeMap.get(currentParentId);
-    if (!parent) break;
-    if (parent.isCollapsed) {
-      return false;
+  const hasHierarchy = nodes.some(n => n?.parentId != null);
+  if (hasHierarchy) {
+    const visited = new Set();
+    let currentParentId = node.parentId;
+    while (currentParentId != null && !visited.has(currentParentId)) {
+      visited.add(currentParentId);
+      const parent = nodesById.get(currentParentId);
+      if (!parent) break;
+      if (parent.isCollapsed) {
+        return false;
+      }
+      currentParentId = parent.parentId ?? null;
     }
-    currentParentId = parent.parentId ?? null;
+    return true;
   }
 
-  return true;
+  const collapsedNodes = nodes.filter(n => n?.isCollapsed);
+  if (collapsedNodes.length === 0) {
+    return true;
+  }
+
+  if (Array.isArray(edges) && edges.length > 0) {
+    const adjacency = buildAdjacency(edges);
+    const nodeLevel = node.level ?? 0;
+    for (const ancestor of collapsedNodes) {
+      if (!ancestor || ancestor.id === node.id) continue;
+      const ancestorLevel = ancestor.level ?? 0;
+      if (ancestorLevel >= nodeLevel) continue;
+      if (isDescendantViaEdges(ancestor.id, node.id, nodesById, adjacency)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  const nodeLevel = node.level ?? 0;
+  return !collapsedNodes.some(n => (n.level ?? 0) < nodeLevel);
 }
 
 // Get visible nodes (filtering out collapsed children)
-export function getVisibleNodes(nodes) {
-  return nodes.filter(node => isNodeVisible(nodes, node));
+export function getVisibleNodes(nodes, edges = []) {
+  return nodes.filter(node => isNodeVisible(nodes, node, edges));
+}
+
+function buildAdjacency(edges) {
+  const adjacency = new Map();
+  if (!Array.isArray(edges)) return adjacency;
+
+  const add = (a, b) => {
+    if (a == null || b == null) return;
+    if (!adjacency.has(a)) adjacency.set(a, new Set());
+    adjacency.get(a).add(b);
+  };
+
+  edges.forEach(edge => {
+    if (!edge) return;
+    add(edge.source, edge.target);
+    add(edge.target, edge.source);
+  });
+
+  return adjacency;
+}
+
+function isDescendantViaEdges(ancestorId, targetId, nodesById, adjacency) {
+  const ancestorNode = nodesById.get(ancestorId);
+  const targetNode = nodesById.get(targetId);
+  if (!ancestorNode || !targetNode) return false;
+  if (ancestorId === targetId) return false;
+
+  const ancestorLevel = ancestorNode.level ?? 0;
+  const targetLevel = targetNode.level ?? ancestorLevel;
+  if (targetLevel <= ancestorLevel) return false;
+
+  const queue = [ancestorId];
+  const visited = new Set(queue);
+
+  while (queue.length > 0) {
+    const currentId = queue.shift();
+    const currentNode = nodesById.get(currentId);
+    const currentLevel = currentNode?.level ?? ancestorLevel;
+    const neighbors = adjacency.get(currentId);
+    if (!neighbors) continue;
+
+    for (const neighborId of neighbors) {
+      if (visited.has(neighborId)) continue;
+      const neighborNode = nodesById.get(neighborId);
+      if (!neighborNode) continue;
+      const neighborLevel = neighborNode.level ?? currentLevel;
+      if (neighborLevel <= currentLevel) continue;
+      if (neighborId === targetId) {
+        return true;
+      }
+      visited.add(neighborId);
+      queue.push(neighborId);
+    }
+  }
+
+  return false;
 }
 
 // Convert legacy nodes to enhanced format

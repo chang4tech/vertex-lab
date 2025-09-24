@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { useTheme } from '../../contexts/ThemeContext';
 import { NODE_SHAPES, upgradeNode, getThemeNodeColor, getNodeBorderColor, getVisibleNodes } from '../../utils/nodeUtils';
 
-export function Minimap({ nodes, viewBox, scale = 0.15, visible, onViewportChange }) {
+export function Minimap({ nodes, edges = [], viewBox, scale = 0.15, visible, onViewportChange }) {
   const canvasRef = useRef(null);
   const lastDraw = useRef({ bounds: null, finalScale: 1, padding: 20 });
   const { currentTheme } = useTheme();
@@ -27,7 +27,7 @@ export function Minimap({ nodes, viewBox, scale = 0.15, visible, onViewportChang
   // Calculate diagram bounds
   const getBounds = useCallback(() => {
     if (!nodes?.length) return { minX: 0, maxX: 800, minY: 0, maxY: 600 };
-    const visible = getVisibleNodes(nodes);
+    const visible = getVisibleNodes(nodes, edges);
     return visible.reduce((bounds, node) => {
       const { hw, hh } = getHalfExtents(node);
       return {
@@ -37,7 +37,7 @@ export function Minimap({ nodes, viewBox, scale = 0.15, visible, onViewportChang
         maxY: Math.max(bounds.maxY, node.y + hh)
       };
     }, { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
-  }, [nodes, getHalfExtents]);
+  }, [nodes, edges, getHalfExtents]);
 
   useEffect(() => {
     if (!visible) return;
@@ -69,7 +69,7 @@ export function Minimap({ nodes, viewBox, scale = 0.15, visible, onViewportChang
     ctx.translate(-bounds.minX * finalScale, -bounds.minY * finalScale);
 
     // Draw nodes using their actual shapes/colors
-    const visibleNodes = getVisibleNodes(nodes);
+    const visibleNodes = getVisibleNodes(nodes, edges);
     visibleNodes.forEach(node => {
       const enhanced = upgradeNode(node);
       const x = enhanced.x * finalScale;
@@ -166,7 +166,7 @@ export function Minimap({ nodes, viewBox, scale = 0.15, visible, onViewportChang
         viewBox.height * finalScale
       );
     }
-  }, [nodes, viewBox, scale, visible, getBounds, currentTheme]);
+  }, [nodes, edges, viewBox, scale, visible, getBounds, currentTheme]);
 
   if (!visible) return null;
 
@@ -219,6 +219,10 @@ Minimap.propTypes = {
     y: PropTypes.number.isRequired,
     label: PropTypes.string
   })),
+  edges: PropTypes.arrayOf(PropTypes.shape({
+    source: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+    target: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired
+  })),
   viewBox: PropTypes.shape({
     x: PropTypes.number.isRequired,
     y: PropTypes.number.isRequired,
@@ -232,6 +236,7 @@ Minimap.propTypes = {
 
 Minimap.defaultProps = {
   nodes: [],
+  edges: [],
   scale: 0.15,
   visible: false
 };

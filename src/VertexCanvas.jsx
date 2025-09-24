@@ -278,7 +278,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       hasUserInteracted.current = true;
       // Center the graph content within the canvas at current zoom
       const canvas = canvasRef.current;
-      const visibleNodes = getVisibleNodes(nodes);
+      const visibleNodes = getVisibleNodes(nodes, propsEdges);
       if (!visibleNodes || visibleNodes.length === 0) return;
       // Include node extents for better centering
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -319,7 +319,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
         hasUserInteracted.current = true;
       }
       const canvas = canvasRef.current;
-      const visibleNodes = getVisibleNodes(nodes);
+      const visibleNodes = getVisibleNodes(nodes, propsEdges);
       if (!visibleNodes || visibleNodes.length === 0) return;
       // Bounds including node shape extents
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -509,7 +509,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
     ctx.scale(view.current.scale, view.current.scale);
     
     // Get visible nodes (considering collapsed state)
-    const visibleNodes = getVisibleNodes(nodes);
+    const visibleNodes = getVisibleNodes(nodes, propsEdges);
     
   // Draw edges
   if (Array.isArray(propsEdges) && propsEdges.length > 0) {
@@ -678,7 +678,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
         const maxY = Math.max(startY, currentY);
         // Only trigger if dragged more than a tiny threshold
         if (Math.abs(maxX - minX) > 2 && Math.abs(maxY - minY) > 2) {
-          const visibleNodes = getVisibleNodes(nodes);
+          const visibleNodes = getVisibleNodes(nodes, propsEdges);
           const inRect = visibleNodes
             .filter(n => n.x >= minX && n.x <= maxX && n.y >= minY && n.y <= maxY)
             .map(n => n.id);
@@ -737,7 +737,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       ctx.scale(view.current.scale, view.current.scale);
       
       // Get visible nodes
-      const visibleNodes = getVisibleNodes(nodes);
+      const visibleNodes = getVisibleNodes(nodes, propsEdges);
       
     // Draw edges
     if (Array.isArray(propsEdges) && propsEdges.length > 0) {
@@ -803,7 +803,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       e.preventDefault();
       const { x, y } = getTransformed(e.clientX, e.clientY);
       // Check visible nodes only
-      const visibleNodes = getVisibleNodes(nodes);
+      const visibleNodes = getVisibleNodes(nodes, propsEdges);
       let clickedNodeId = null;
       const nodeRadius = currentTheme.colors.nodeRadius;
       for (const node of visibleNodes) {
@@ -861,7 +861,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
           const worldX = (e.clientX - rect.left - view.current.offsetX) / view.current.scale;
           const worldY = (e.clientY - rect.top - view.current.offsetY) / view.current.scale;
           // Hit test visible nodes
-          const visibleNodes = getVisibleNodes(nodes);
+          const visibleNodes = getVisibleNodes(nodes, propsEdges);
           const nodeRadius = currentTheme.colors.nodeRadius;
           let clickedNodeId = null;
           for (const node of visibleNodes) {
@@ -981,7 +981,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
     const y = (e.clientY - rect.top - view.current.offsetY) / view.current.scale;
     
     // Check visible nodes only
-    const visibleNodes = getVisibleNodes(nodes);
+    const visibleNodes = getVisibleNodes(nodes, propsEdges);
     let clickedNodeId = null;
     
     for (const node of visibleNodes) {
@@ -1027,7 +1027,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
     const y = (e.clientY - rect.top - view.current.offsetY) / view.current.scale;
     
     // Check visible nodes only
-    const visibleNodes = getVisibleNodes(nodes);
+    const visibleNodes = getVisibleNodes(nodes, propsEdges);
     for (const node of visibleNodes) {
       const dx = node.x - x;
       const dy = node.y - y;

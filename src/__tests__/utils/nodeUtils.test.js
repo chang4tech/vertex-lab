@@ -114,6 +114,24 @@ describe('nodeUtils', () => {
       const visibleNodes = getVisibleNodes(nodes);
       expect(visibleNodes.map(n => n.id).sort()).toEqual([1,3,5]);
     });
+
+    it('should use edges to limit collapses when parent hierarchy is missing', () => {
+      const root = createEnhancedNode({ id: 1, label: 'Root', x: 0, y: 0, level: 0 });
+      const branchA = createEnhancedNode({ id: 2, label: 'Branch A', x: 100, y: 100, level: 1, isCollapsed: true });
+      const branchB = createEnhancedNode({ id: 3, label: 'Branch B', x: 200, y: 200, level: 1 });
+      const leafA = createEnhancedNode({ id: 4, label: 'Leaf A', x: 300, y: 300, level: 2 });
+      const leafB = createEnhancedNode({ id: 5, label: 'Leaf B', x: 400, y: 400, level: 2 });
+      const nodes = [root, branchA, branchB, leafA, leafB];
+      const edges = [
+        { source: 1, target: 2 },
+        { source: 2, target: 4 },
+        { source: 1, target: 3 },
+        { source: 3, target: 5 }
+      ];
+
+      const visibleNodes = getVisibleNodes(nodes, edges);
+      expect(visibleNodes.map(n => n.id).sort()).toEqual([1,2,3,5]);
+    });
   });
 
   describe('hierarchy helpers', () => {
