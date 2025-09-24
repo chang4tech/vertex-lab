@@ -91,6 +91,26 @@ See `doc/PLUGIN_SPEC.md` for the full specification. Migration and progress note
 
 4. Open http://localhost:5173 in your browser
 
+### Backend Services
+
+A Fastify-powered API is available under `server/`. Install its dependencies separately and run it alongside the front-end.
+
+```bash
+cd server
+npm install
+cp .env.example .env # update as needed
+npm run dev
+```
+
+The backend listens on port 4000 by default; adjust the `.env` file if the port conflicts with other services.
+
+For persistent teams, set `DATABASE_URL` to a Postgres instance (see `doc/BACKEND_SETUP.md` for setup). Local development defaults to SQLite at `server/data/vertex.db`.
+
+Set `VITE_API_BASE_URL` in your front-end `.env` (see `.env.example`) if the API runs somewhere else. You can also override at runtime by defining `window.__VERTEX_CONFIG__ = { apiBaseUrl: 'https://api.example.com' }` before the app script loads.
+
+For production deployments, edit `public/runtime-config.js` (copied verbatim to `dist/runtime-config.js`) to point at the desired API host without triggering a rebuild.
+
+
 ### Access from other devices (same network)
 
 - Start on LAN: `npm run dev -- --host`

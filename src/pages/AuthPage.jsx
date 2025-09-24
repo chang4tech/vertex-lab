@@ -1,8 +1,7 @@
 import React from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useUser } from '../contexts/UserProvider.jsx';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+import { apiFetch } from '../utils/apiClient.js';
 
 function AuthPage({ mode = 'login' }) {
   const intl = useIntl();
@@ -31,7 +30,7 @@ function AuthPage({ mode = 'login' }) {
     setStatus('submitting');
     setError(null);
     try {
-      const endpoint = isSignup ? `${API_BASE}/api/auth/signup` : `${API_BASE}/api/auth/login`;
+      const endpoint = isSignup ? '/api/auth/signup' : '/api/auth/login';
       const payload = {
         email: formState.email,
         password: formState.password,
@@ -39,10 +38,9 @@ function AuthPage({ mode = 'login' }) {
       if (isSignup) {
         payload.name = formState.name;
       }
-      const response = await fetch(endpoint, {
+      const response = await apiFetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(payload),
       });
       if (!response.ok) {

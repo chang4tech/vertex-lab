@@ -1,6 +1,7 @@
 import React from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useUser } from '../contexts/UserProvider.jsx';
+import { apiFetch } from '../utils/apiClient.js';
 
 function ProfilePage() {
   const { user, status, error, library, isLibraryLoading, refreshLibrary, deleteLibraryGraph, refreshUser } = useUser();
@@ -74,7 +75,7 @@ function ProfilePage() {
             type="button"
             onClick={async () => {
               try {
-                await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+                await apiFetch('/api/auth/logout', { method: 'POST' });
               } catch (logoutError) {
                 console.error('[profile] logout error', logoutError);
               }

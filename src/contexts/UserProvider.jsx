@@ -1,8 +1,26 @@
 import React from 'react';
+import { apiFetch } from '../utils/apiClient.js';
 
 const UserContext = React.createContext(null);
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+const LOCAL_CACHE_KEY = 'vertex_user_cache_v1';
+
+const loadCachedSession = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(LOCAL_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    return {
+      user: parsed.user && typeof parsed.user === 'object' ? parsed.user : null,
+      library: Array.isArray(parsed.library) ? parsed.library : [],
+    };
+  } catch (error) {
+    console.warn('[user] Failed to read cached session', error);
+    return null;
+  }
+};
 
 const normalizeLibraryEntry = (entry) => {
   if (!entry || typeof entry !== 'object') {
@@ -23,35 +41,54 @@ const normalizeLibraryEntry = (entry) => {
 };
 
 export function UserProvider({ children }) {
-  const [user, setUser] = React.useState(null);
-  const [status, setStatus] = React.useState('loading'); // loading | authenticated | unauthenticated | error
+  const cachedSession = React.useMemo(() => loadCachedSession(), []);
+  const [user, setUser] = React.useState(cachedSession?.user ?? null);
+  const [status, setStatus] = React.useState(cachedSession?.user ? 'authenticated' : 'loading'); // loading | authenticated | unauthenticated | error
   const [error, setError] = React.useState(null);
-  const [library, setLibrary] = React.useState([]);
+  const [library, setLibrary] = React.useState(cachedSession?.library ?? []);
   const [libraryStatus, setLibraryStatus] = React.useState('idle');
   const [libraryError, setLibraryError] = React.useState(null);
+
+  const cacheSession = React.useCallback((nextUser, nextLibrary) => {
+    if (typeof window === 'undefined') return;
+    if (!nextUser) {
+      window.localStorage.removeItem(LOCAL_CACHE_KEY);
+      return;
+    }
+    try {
+      window.localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify({
+        user: nextUser,
+        library: nextLibrary ?? [],
+        cachedAt: Date.now(),
+      }));
+    } catch (storageError) {
+      console.warn('[user] Failed to cache session', storageError);
+    }
+  }, []);
+
+  const clearCache = React.useCallback(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.removeItem(LOCAL_CACHE_KEY);
+  }, []);
 
   const fetchUser = React.useCallback(async () => {
     setStatus('loading');
     setError(null);
     try {
-      const response = await fetch(`${API_BASE}/api/user`, { credentials: 'include' });
-      if (response.status === 401) {
+      const response = await apiFetch('/api/user');
+      if (response.status === 401 || response.status === 404) {
+        clearCache();
         setUser(null);
         setStatus('unauthenticated');
         setLibrary([]);
         return;
       }
       if (!response.ok) {
-        if (response.status === 404) {
-          setUser(null);
-          setStatus('unauthenticated');
-          setLibrary([]);
-          return;
-        }
         throw new Error(`Failed to load user (status ${response.status})`);
       }
       const contentType = response.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) {
+        clearCache();
         setUser(null);
         setStatus('unauthenticated');
         setLibrary([]);
@@ -59,25 +96,33 @@ export function UserProvider({ children }) {
       }
       const data = await response.json().catch(() => null);
       if (!data) {
+        clearCache();
         setUser(null);
         setStatus('unauthenticated');
         setLibrary([]);
         return;
       }
-      setUser(data);
+      const { library: libraryData = [], ...userDetails } = data;
+      setUser(userDetails);
       setStatus('authenticated');
-      if (Array.isArray(data.library)) {
-        const normalized = data.library.map(normalizeLibraryEntry).filter(Boolean);
-        setLibrary(normalized);
-      } else {
-        setLibrary([]);
-      }
+      const normalized = Array.isArray(libraryData)
+        ? libraryData.map(normalizeLibraryEntry).filter(Boolean)
+        : [];
+      setLibrary(normalized);
     } catch (err) {
       console.error('[user] Failed to fetch user', err);
       if (err?.name === 'SyntaxError') {
+        clearCache();
         setUser(null);
         setStatus('unauthenticated');
         setLibrary([]);
+        return;
+      }
+      const cached = loadCachedSession();
+      if (cached?.user) {
+        setUser(cached.user);
+        setLibrary(cached.library ?? []);
+        setStatus('authenticated');
         return;
       }
       setUser(null);
@@ -85,11 +130,19 @@ export function UserProvider({ children }) {
       setError(err);
       setLibrary([]);
     }
-  }, []);
+  }, [clearCache]);
 
   React.useEffect(() => {
     fetchUser();
   }, [fetchUser]);
+
+  React.useEffect(() => {
+    if (status === 'authenticated' && user) {
+      cacheSession(user, library);
+    } else if (status === 'unauthenticated' || status === 'error' || !user) {
+      clearCache();
+    }
+  }, [status, user, library, cacheSession, clearCache]);
 
   const fetchLibrary = React.useCallback(async () => {
     if (status !== 'authenticated') {
@@ -99,11 +152,12 @@ export function UserProvider({ children }) {
     setLibraryStatus('loading');
     setLibraryError(null);
     try {
-      const response = await fetch(`${API_BASE}/api/library`, { credentials: 'include' });
+      const response = await apiFetch('/api/library');
       if (response.status === 401) {
         setStatus('unauthenticated');
         setUser(null);
         setLibrary([]);
+        clearCache();
         return [];
       }
       if (!response.ok) {
@@ -129,7 +183,7 @@ export function UserProvider({ children }) {
     } finally {
       setLibraryStatus('idle');
     }
-  }, [status]);
+  }, [status, clearCache]);
 
   const saveLibraryGraph = React.useCallback(async ({ name, nodes, edges }) => {
     if (status !== 'authenticated') {
@@ -138,9 +192,8 @@ export function UserProvider({ children }) {
     setLibraryStatus('loading');
     setLibraryError(null);
     try {
-      const response = await fetch(`${API_BASE}/api/library`, {
+      const response = await apiFetch('/api/library', {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -166,11 +219,13 @@ export function UserProvider({ children }) {
       if (Array.isArray(result)) {
         setLibrary(result.map(normalizeLibraryEntry).filter(Boolean));
       } else if (result) {
-        setLibrary(prev => {
-          const next = prev.filter(entry => entry.id !== result.id);
-          const normalized = normalizeLibraryEntry(result);
-          return normalized ? [...next, normalized] : next;
-        });
+        const normalized = normalizeLibraryEntry(result);
+        if (normalized) {
+          setLibrary(prev => {
+            const next = prev.filter(entry => entry.id !== normalized.id && entry.graphId !== normalized.graphId);
+            return [...next, normalized];
+          });
+        }
       } else {
         await fetchLibrary();
       }
@@ -190,9 +245,8 @@ export function UserProvider({ children }) {
     setLibraryStatus('loading');
     setLibraryError(null);
     try {
-      const response = await fetch(`${API_BASE}/api/library/${encodeURIComponent(graphId)}`, {
+      const response = await apiFetch(`/api/library/${encodeURIComponent(graphId)}`, {
         method: 'DELETE',
-        credentials: 'include',
       });
       if (response.status === 401) {
         setStatus('unauthenticated');
@@ -202,15 +256,16 @@ export function UserProvider({ children }) {
       }
       if (!response.ok) {
         const payload = await response.json().catch(() => null);
+        if (response.status === 404 && payload?.message === 'Graph not found') {
+          setLibrary(prev => prev.filter(entry => entry.id !== graphId && entry.graphId !== graphId));
+          return;
+        }
         if (payload && payload.message) {
           throw new Error(payload.message);
         }
-        if (response.status === 404) {
-          throw new Error('API endpoint not available. Configure the server.');
-        }
         throw new Error(`Failed to delete graph (status ${response.status})`);
       }
-      setLibrary(prev => prev.filter(entry => entry.id !== graphId));
+      setLibrary(prev => prev.filter(entry => entry.id !== graphId && entry.graphId !== graphId));
     } catch (err) {
       console.error('[user] Failed to delete library graph', err);
       setLibraryError(err);
