@@ -1,0 +1,41 @@
+{
+  "nodes": [
+    {"id":1,"label":"Structured Contact Program","x":0,"y":0,"level":0,"parentId":null,"color":"#e8f5e8","shape":"circle","tags":[],"icon":"⚙️","fontSize":16,"fontWeight":"normal","fontStyle":"normal","isCollapsed":false,"notes":""},
+    {"id":2,"label":"Participants","x":-260,"y":-140,"level":1,"parentId":1,"color":"#e3f2fd","shape":"circle","tags":[],"icon":"","fontSize":16,"fontWeight":"normal","fontStyle":"normal","isCollapsed":false,"notes":""},
+    {"id":3,"label":"Preparation","x":260,"y":-140,"level":1,"parentId":1,"color":"#e0f2f1","shape":"circle","tags":[],"icon":"","fontSize":16,"fontWeight":"normal","fontStyle":"normal","isCollapsed":false,"notes":""},
+    {"id":4,"label":"Facilitated Interaction","x":-260,"y":140,"level":1,"parentId":1,"color":"#fff3e0","shape":"circle","tags":[],"icon":"","fontSize":16,"fontWeight":"normal","fontStyle":"normal","isCollapsed":false,"notes":""},
+    {"id":5,"label":"Shared Projects","x":260,"y":140,"level":1,"parentId":1,"color":"#f3e5f5","shape":"circle","tags":[],"icon":"","fontSize":16,"fontWeight":"normal","fontStyle":"normal","isCollapsed":false,"notes":""},
+    {"id":6,"label":"Reflection & Follow-up","x":0,"y":260,"level":1,"parentId":1,"color":"#fff9c4","shape":"circle","tags":[],"icon":"","fontSize":16,"fontWeight":"normal","fontStyle":"normal","isCollapsed":false,"notes":""},
+    {"id":7,"label":"Balanced Representation","x":-420,"y":-200,"level":2,"parentId":2,"color":"#ffffff","shape":"circle","tags":[],"icon":"","fontSize":16,"fontWeight":"normal","fontStyle":"normal","isCollapsed":false,"notes":""},
+    {"id":8,"label":"Shared Code of Conduct","x":-420,"y":-80,"level":2,"parentId":2,"color":"#ffffff","shape":"circle","tags":[],"icon":"","fontSize":16,"fontWeight":"normal","fontStyle":"normal","isCollapsed":false,"notes":""},
+    {"id":9,"label":"Orientation Session","x":420,"y":-200,"level":2,"parentId":3,"color":"#ffffff","shape":"circle","tags":[],"icon":"","fontSize":16,"fontWeight":"normal","fontStyle":"normal","isCollapsed":false,"notes":""},
+    {"id":10,"label":"Perspective Taking Exercises","x":420,"y":-80,"level":2,"parentId":3,"color":"#ffffff","shape":"circle","tags":[],"icon":"","fontSize":16,"fontWeight":"normal","fontStyle":"normal","isCollapsed":false,"notes":""},
+    {"id":11,"label":"Guided Dialogue","x":-420,"y":80,"level":2,"parentId":4,"color":"#ffffff","shape":"circle","tags":[],"icon":"","fontSize":16,"fontWeight":"normal","fontStyle":"normal","isCollapsed":false,"notes":""},
+    {"id":12,"label":"Rotating Roles","x":-420,"y":220,"level":2,"parentId":4,"color":"#ffffff","shape":"circle","tags":[],"icon":"","fontSize":16,"fontWeight":"normal","fontStyle":"normal","isCollapsed":false,"notes":""},
+    {"id":13,"label":"Collaborative Goals","x":420,"y":80,"level":2,"parentId":5,"color":"#ffffff","shape":"circle","tags":[],"icon":"","fontSize":16,"fontWeight":"normal","fontStyle":"normal","isCollapsed":false,"notes":""},
+    {"id":14,"label":"Problem-solving Tasks","x":420,"y":220,"level":2,"parentId":5,"color":"#ffffff","shape":"circle","tags":[],"icon":"","fontSize":16,"fontWeight":"normal","fontStyle":"normal","isCollapsed":false,"notes":""},
+    {"id":15,"label":"Joint Reflection","x":0,"y":360,"level":2,"parentId":6,"color":"#ffffff","shape":"circle","tags":[],"icon":"","fontSize":16,"fontWeight":"normal","fontStyle":"normal","isCollapsed":false,"notes":""},
+    {"id":16,"label":"Long-term Partnerships","x":140,"y":320,"level":2,"parentId":6,"color":"#ffffff","shape":"circle","tags":[],"icon":"","fontSize":16,"fontWeight":"normal","fontStyle":"normal","isCollapsed":false,"notes":""},
+    {"id":17,"label":"Community Showcase","x":-140,"y":320,"level":2,"parentId":6,"color":"#ffffff","shape":"circle","tags":[],"icon":"","fontSize":16,"fontWeight":"normal","fontStyle":"normal","isCollapsed":false,"notes":""}
+  ],
+  "edges": [
+    {"source":1,"target":2,"directed":false},
+    {"source":1,"target":3,"directed":false},
+    {"source":1,"target":4,"directed":false},
+    {"source":1,"target":5,"directed":false},
+    {"source":1,"target":6,"directed":false},
+    {"source":2,"target":7,"directed":false},
+    {"source":2,"target":8,"directed":false},
+    {"source":3,"target":9,"directed":false},
+    {"source":3,"target":10,"directed":false},
+    {"source":4,"target":11,"directed":false},
+    {"source":4,"target":12,"directed":false},
+    {"source":5,"target":13,"directed":false},
+    {"source":5,"target":14,"directed":false},
+    {"source":6,"target":15,"directed":false},
+    {"source":6,"target":16,"directed":false},
+    {"source":6,"target":17,"directed":false},
+    {"source":2,"target":3,"directed":false},
+    {"source":4,"target":5,"directed":false}
+  ]
+}

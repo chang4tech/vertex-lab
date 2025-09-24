@@ -51,6 +51,7 @@ export default {
   'library.noGraphs': '尚未保存任何图。',
   'library.sampleBadge': '示例',
   'library.graphMeta': '{nodes} 个节点 · {edges} 条连线',
+  'library.loading': '正在加载示例图…',
 
   // Settings
   'settings.title': '设置',

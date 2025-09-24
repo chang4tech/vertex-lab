@@ -51,6 +51,7 @@ export default {
   'library.noGraphs': 'No saved graphs yet.',
   'library.sampleBadge': 'Sample',
   'library.graphMeta': '{nodes} nodes · {edges} edges',
+  'library.loading': 'Loading sample graphs...',
 
   // Settings
   'settings.title': 'Settings',

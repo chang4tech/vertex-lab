@@ -1,0 +1,17 @@
+[
+  {
+    "id": "cognitive-psychology",
+    "name": "Cognitive Psychology",
+    "file": "/sample/cognitive-psychology.json"
+  },
+  {
+    "id": "structured-contact",
+    "name": "Structured Contact",
+    "file": "/sample/structured-contact.json"
+  },
+  {
+    "id": "chronicles-of-narnia",
+    "name": "The Chronicles of Narnia",
+    "file": "/sample/chronicles-of-narnia.json"
+  }
+]

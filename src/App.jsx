@@ -28,7 +28,6 @@ import { createEnhancedNode } from './utils/nodeUtils';
 import { addUndirectedEdge } from './utils/edgeUtils';
 import { getConnectedNavigationCandidates } from './utils/navigationUtils';
 import { useIsMobile } from './hooks/useIsMobile';
-import { getDefaultLibrarySamples } from './utils/librarySamples';
 
 const OVERLAY_LAYOUT_STORAGE_KEY = 'vertex_overlay_layout';
 
@@ -134,8 +133,8 @@ const parseStoredLibrary = () => {
   }
 };
 
-const mergeLibraryWithSamples = (storedLibrary) => ({
-  ...getDefaultLibrarySamples(),
+const mergeLibraryWithSamples = (samples = {}, storedLibrary = {}) => ({
+  ...samples,
   ...storedLibrary,
 });
 
@@ -166,6 +165,7 @@ const MenuBar = React.forwardRef(({
   onSaveLibraryGraph,
   onLoadLibraryGraph,
   onDeleteLibraryGraph,
+  isLibraryLoading = false,
 }, ref) => {
   const isMobile = useIsMobile();
   const localMenuBarRef = useRef(null);
@@ -747,7 +747,11 @@ const MenuBar = React.forwardRef(({
               </div>
               {libraryEntries.length === 0 ? (
                 <div style={{ padding: '4px 8px', color: currentTheme.colors.secondaryText, fontSize: '13px' }}>
-                  <FormattedMessage id="library.noGraphs" defaultMessage="No graphs in library yet." />
+                  {isLibraryLoading ? (
+                    <FormattedMessage id="library.loading" defaultMessage="Loading sample graphs..." />
+                  ) : (
+                    <FormattedMessage id="library.noGraphs" defaultMessage="No saved graphs yet." />
+                  )}
                 </div>
               ) : (
                 libraryEntries.map((entry) => (
@@ -1207,6 +1211,8 @@ function App({ graphId = 'default' }) {
   const prevPluginPrefsRef = useRef(pluginPrefs);
   const [pluginTips, setPluginTips] = useState([]);
   const [customLibrary, setCustomLibrary] = useState(() => parseStoredLibrary());
+  const [sampleLibrary, setSampleLibrary] = useState({});
+  const [isSampleLibraryLoading, setIsSampleLibraryLoading] = useState(true);
   useEffect(() => {
     (async () => {
       const loaded = await loadCustomPluginsFromStorage();
@@ -1258,7 +1264,59 @@ function App({ graphId = 'default' }) {
 
   // (moved below activePlugins) Show a one-time tip when a plugin gets enabled
 
-  const mergedLibrary = useMemo(() => mergeLibraryWithSamples(customLibrary), [customLibrary]);
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadSamples = async () => {
+      try {
+        const response = await fetch('/sample/index.json', { cache: 'no-store' });
+        if (!response.ok) {
+          throw new Error(`Failed to load sample manifest (status ${response.status})`);
+        }
+        const manifest = await response.json();
+        if (!Array.isArray(manifest)) {
+          throw new Error('Sample manifest is not an array');
+        }
+        const entries = {};
+        await Promise.all(manifest.map(async (item) => {
+          if (!item || typeof item !== 'object') return;
+          const { name, file } = item;
+          if (!name || !file) return;
+          try {
+            const sampleResponse = await fetch(file, { cache: 'no-store' });
+            if (!sampleResponse.ok) throw new Error(`Sample fetch failed for ${name}`);
+            const sampleData = await sampleResponse.json();
+            entries[name] = sampleData;
+          } catch (sampleError) {
+            console.error('[library] Failed to load sample graph', name, sampleError);
+          }
+        }));
+        if (!cancelled) {
+          setSampleLibrary(entries);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error('[library] Failed to load sample manifest', error);
+          setSampleLibrary({});
+        }
+      } finally {
+        if (!cancelled) {
+          setIsSampleLibraryLoading(false);
+        }
+      }
+    };
+
+    loadSamples();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const mergedLibrary = useMemo(
+    () => mergeLibraryWithSamples(sampleLibrary, customLibrary),
+    [sampleLibrary, customLibrary]
+  );
 
   const libraryEntries = useMemo(() => (
     Object.entries(mergedLibrary).map(([name, entry]) => {
@@ -1269,10 +1327,10 @@ function App({ graphId = 'default' }) {
         name,
         nodesCount: Array.isArray(nodesArray) ? nodesArray.length : 0,
         edgesCount: Array.isArray(edgesArray) ? edgesArray.length : 0,
-        isSample: !customLibrary[name],
+        isSample: Boolean(sampleLibrary[name]) && !customLibrary[name],
       };
     })
-  ), [mergedLibrary, customLibrary]);
+  ), [mergedLibrary, customLibrary, sampleLibrary]);
 
   // Node info panel state
   const [showNodeInfoPanel, setShowNodeInfoPanel] = useState(() => {
@@ -2647,6 +2705,7 @@ function App({ graphId = 'default' }) {
         onSaveLibraryGraph={handleLibrarySave}
         onLoadLibraryGraph={handleLibraryLoad}
         onDeleteLibraryGraph={handleLibraryDelete}
+        isLibraryLoading={isSampleLibraryLoading}
       />
       <div style={{ height: 80 }} />
       <MainHeader />
