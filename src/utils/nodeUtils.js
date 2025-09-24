@@ -260,6 +260,13 @@ export function filterNodesByTag(nodes, tagId) {
 
 // Get child nodes (for collapsing functionality)
 export function getChildNodes(nodes, parentId) {
+  if (!Array.isArray(nodes) || parentId == null) return [];
+
+  const hasHierarchy = nodes.some(node => node?.parentId != null);
+  if (hasHierarchy) {
+    return nodes.filter(node => node?.parentId === parentId);
+  }
+
   const parent = nodes.find(node => node.id === parentId);
   if (!parent) return [];
   const parentLevel = parent.level ?? 0;
@@ -269,6 +276,29 @@ export function getChildNodes(nodes, parentId) {
 
 // Get all descendant nodes (recursive)
 export function getDescendantNodes(nodes, parentId) {
+  if (!Array.isArray(nodes) || parentId == null) return [];
+
+  const hasHierarchy = nodes.some(node => node?.parentId != null);
+  if (hasHierarchy) {
+    const descendants = [];
+    const queue = [parentId];
+    const visited = new Set(queue);
+    let cursor = 0;
+
+    while (cursor < queue.length) {
+      const currentId = queue[cursor++];
+      nodes.forEach(node => {
+        if (node?.parentId === currentId && !visited.has(node.id)) {
+          visited.add(node.id);
+          descendants.push(node);
+          queue.push(node.id);
+        }
+      });
+    }
+
+    return descendants;
+  }
+
   const parent = nodes.find(node => node.id === parentId);
   if (!parent) return [];
   const parentLevel = parent.level ?? 0;
@@ -277,8 +307,34 @@ export function getDescendantNodes(nodes, parentId) {
 
 // Check if node should be visible (considering collapsed parents)
 export function isNodeVisible(nodes, node) {
-  const nodeLevel = node.level ?? 0;
-  return !nodes.some(n => n?.isCollapsed && (n.level ?? 0) < nodeLevel);
+  if (!node) return false;
+
+  const hasHierarchy = nodes.some(n => n?.parentId != null);
+  if (!hasHierarchy) {
+    const nodeLevel = node.level ?? 0;
+    return !nodes.some(n => n?.isCollapsed && (n.level ?? 0) < nodeLevel);
+  }
+
+  const nodeMap = new Map();
+  nodes.forEach(n => {
+    if (n?.id != null) {
+      nodeMap.set(n.id, n);
+    }
+  });
+
+  const visited = new Set();
+  let currentParentId = node.parentId;
+  while (currentParentId != null && !visited.has(currentParentId)) {
+    visited.add(currentParentId);
+    const parent = nodeMap.get(currentParentId);
+    if (!parent) break;
+    if (parent.isCollapsed) {
+      return false;
+    }
+    currentParentId = parent.parentId ?? null;
+  }
+
+  return true;
 }
 
 // Get visible nodes (filtering out collapsed children)

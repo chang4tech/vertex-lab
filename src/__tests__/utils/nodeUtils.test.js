@@ -8,7 +8,9 @@ import {
   addTag,
   removeTag,
   getAllTags,
-  isNodeVisible
+  isNodeVisible,
+  getChildNodes,
+  getDescendantNodes
 } from '../../utils/nodeUtils';
 
 describe('nodeUtils', () => {
@@ -100,6 +102,18 @@ describe('nodeUtils', () => {
       const visibleNodes = getVisibleNodes(nodes);
       expect(visibleNodes.map(n => n.id).sort()).toEqual([1,2,3]);
     });
+
+    it('should only hide descendants when parent hierarchy is defined', () => {
+      const root = createEnhancedNode({ id: 1, label: 'Root', x: 0, y: 0, level: 0, isCollapsed: true });
+      const branchA = createEnhancedNode({ id: 2, label: 'Branch A', x: 100, y: 100, level: 1, parentId: 1 });
+      const branchB = createEnhancedNode({ id: 3, label: 'Branch B', x: 200, y: 200, level: 1, parentId: null });
+      const leafA = createEnhancedNode({ id: 4, label: 'Leaf A', x: 300, y: 300, level: 2, parentId: 2 });
+      const leafB = createEnhancedNode({ id: 5, label: 'Leaf B', x: 400, y: 400, level: 2, parentId: 3 });
+      const nodes = [root, branchA, branchB, leafA, leafB];
+
+      const visibleNodes = getVisibleNodes(nodes);
+      expect(visibleNodes.map(n => n.id).sort()).toEqual([1,3,5]);
+    });
   });
 
   describe('hierarchy helpers', () => {
@@ -110,11 +124,22 @@ describe('nodeUtils', () => {
       const g1 = createEnhancedNode({ id: 4, label: 'g1', x: 30, y: 30, level: 2 });
       const nodes = [root, c1, c2, g1];
 
-      const { getChildNodes, getDescendantNodes } = require('../../utils/nodeUtils');
       const children = getChildNodes(nodes, 1).map(n => n.id);
       expect(children.sort()).toEqual([2,3]);
       const desc = getDescendantNodes(nodes, 1).map(n => n.id);
       expect(desc.sort()).toEqual([2,3,4]);
+    });
+
+    it('leverages parentId relationships when available', () => {
+      const root = createEnhancedNode({ id: 1, label: 'root', x: 0, y: 0, level: 0 });
+      const c1 = createEnhancedNode({ id: 2, label: 'c1', x: 10, y: 10, level: 1, parentId: 1 });
+      const c2 = createEnhancedNode({ id: 3, label: 'c2', x: 20, y: 20, level: 1, parentId: 1 });
+      const c3 = createEnhancedNode({ id: 4, label: 'c3', x: 30, y: 30, level: 1, parentId: null });
+      const g1 = createEnhancedNode({ id: 5, label: 'g1', x: 40, y: 40, level: 2, parentId: 2 });
+      const nodes = [root, c1, c2, c3, g1];
+
+      expect(getChildNodes(nodes, 1).map(n => n.id).sort()).toEqual([2,3]);
+      expect(getDescendantNodes(nodes, 1).map(n => n.id).sort()).toEqual([2,3,5]);
     });
   });
 
