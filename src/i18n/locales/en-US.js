@@ -24,6 +24,23 @@ export default {
   'edit.autoLayout': 'Auto Layout',
   'edit.search': 'Search',
 
+  // Auth
+  'auth.signupTitle': 'Create your account',
+  'auth.loginTitle': 'Welcome back',
+  'auth.signupAction': 'Sign up',
+  'auth.loginAction': 'Sign in',
+  'auth.haveAccount': 'Already have an account? Sign in',
+  'auth.needAccount': 'Need an account? Sign up',
+  'auth.name': 'Full name',
+  'auth.namePlaceholder': 'Jane Doe',
+  'auth.email': 'Email',
+  'auth.emailPlaceholder': 'you@example.com',
+  'auth.password': 'Password',
+  'auth.passwordPlaceholder': '••••••••',
+  'auth.genericError': 'Unable to complete request.',
+  'auth.submitting': 'Submitting…',
+  'auth.back': 'Back',
+
   // View menu
   'view.center': 'Center',
   'view.zoomIn': 'Zoom In',
@@ -52,6 +69,8 @@ export default {
   'library.sampleBadge': 'Sample',
   'library.graphMeta': '{nodes} nodes · {edges} edges',
   'library.loading': 'Loading sample graphs...',
+  'library.saveFailed': 'Unable to save graph. Please try again.',
+  'library.deleteFailed': 'Unable to delete graph. Please try again.',
 
   // Settings
   'settings.title': 'Settings',
@@ -90,6 +109,12 @@ export default {
   'plugin.hub.tip': '{name} enabled: explore its Control Hub',
   'plugin.hub.open': 'Open Control Hub',
   'plugin.hub.dismiss': 'Dismiss',
+
+  // Header / account
+  'header.userLoading': 'Loading…',
+  'header.signIn': 'Sign in',
+  'header.signUp': 'Sign up',
+  'header.account': 'Your account',
 
   // Node labels
   'node.centralTopic': 'Start Node',
@@ -259,7 +284,31 @@ export default {
   // Landing
   'landing.subtitle': 'Create a new graph to get started.',
   'landing.newGraph': 'New Graph',
+  'landing.signIn': 'Sign in',
+  'landing.signUp': 'Sign up',
   // Graph
   'graph.untitled': 'Untitled',
   'graph.title': 'Graph title',
+  // Profile
+  'profile.loading': 'Loading your profile…',
+  'profile.loadError': 'Unable to load your profile.',
+  'profile.title': 'Your profile',
+  'profile.back': 'Back',
+  'profile.logout': 'Sign out',
+  'profile.basicInfo': 'Basic information',
+  'profile.name': 'Name',
+  'profile.email': 'Email',
+  'profile.created': 'Account created',
+  'profile.updated': 'Last updated',
+  'profile.missing': 'Not provided',
+  'profile.metadata': 'Metadata',
+  'profile.noMetadata': 'No additional metadata available.',
+  'profile.library': 'Your library',
+  'profile.refresh': 'Refresh',
+  'profile.libraryLoading': 'Syncing your library…',
+  'profile.libraryEmpty': 'You have not saved any graphs yet.',
+  'profile.libraryMeta': '{nodes} nodes · {edges} edges',
+  'profile.libraryUpdated': 'Updated {time}',
+  'profile.loadInCanvas': 'Open in canvas',
+  'profile.deleteGraph': 'Delete',
 };

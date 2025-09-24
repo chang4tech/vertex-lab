@@ -28,6 +28,7 @@ import { createEnhancedNode } from './utils/nodeUtils';
 import { addUndirectedEdge } from './utils/edgeUtils';
 import { getConnectedNavigationCandidates } from './utils/navigationUtils';
 import { useIsMobile } from './hooks/useIsMobile';
+import { useUser } from './contexts/UserProvider.jsx';
 
 const OVERLAY_LAYOUT_STORAGE_KEY = 'vertex_overlay_layout';
 
@@ -120,27 +121,20 @@ const mergeOverlayLayout = (prev, patch) => {
   return updated;
 };
 
-const parseStoredLibrary = () => {
-  if (typeof window === 'undefined') return {};
-  try {
-    const raw = window.localStorage.getItem('vertex_library');
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object') return {};
-    return parsed;
-  } catch {
-    return {};
-  }
-};
-
-const mergeLibraryWithSamples = (samples = {}, storedLibrary = {}) => ({
-  ...samples,
-  ...storedLibrary,
-});
-
 const cloneNodesForState = (nodes) => (Array.isArray(nodes) ? nodes.map(node => ({ ...node })) : []);
 
 const cloneEdgesForState = (edges) => (Array.isArray(edges) ? edges.map(edge => ({ ...edge })) : []);
+
+const headerAuthButtonStyle = (theme) => ({
+  padding: '6px 12px',
+  borderRadius: 999,
+  border: `1px solid ${theme.colors.inputBorder}`,
+  background: theme.colors.panelBackground,
+  color: theme.colors.primaryText,
+  cursor: 'pointer',
+  fontSize: 13,
+  fontWeight: 600,
+});
 
 // --- Menu Bar Component ---
 const MenuBar = React.forwardRef(({
@@ -166,6 +160,12 @@ const MenuBar = React.forwardRef(({
   onLoadLibraryGraph,
   onDeleteLibraryGraph,
   isLibraryLoading = false,
+  userStatus = 'loading',
+  userDisplayName = '',
+  userInitial = '?',
+  onShowProfile,
+  onRequestLogin,
+  onRequestSignup,
 }, ref) => {
   const isMobile = useIsMobile();
   const localMenuBarRef = useRef(null);
@@ -360,6 +360,7 @@ const MenuBar = React.forwardRef(({
           onChange={(e) => setGraphTitle(e.target.value)}
           placeholder={intl.formatMessage({ id: 'graph.untitled', defaultMessage: 'Untitled' })}
           style={{
+            flex: isMobile ? undefined : '0 1 240px',
             height: 24,
             borderRadius: 6,
             border: `1px solid ${currentTheme.colors.inputBorder}`,
@@ -393,6 +394,70 @@ const MenuBar = React.forwardRef(({
               : intl.formatMessage({ id: 'graphId.label', defaultMessage: 'ID: {id}' }, { id: graphId })}
           </button>
         )}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+          {userStatus === 'loading' ? (
+            <span style={{ color: currentTheme.colors.secondaryText, fontSize: 12 }}>
+              <FormattedMessage id="header.userLoading" defaultMessage="Loading…" />
+            </span>
+          ) : userStatus === 'authenticated' ? (
+            <button
+              type="button"
+              onClick={() => {
+                sessionStorage.setItem('vertex_auth_return', window.location.hash || '#/');
+                onShowProfile?.();
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                border: '1px solid var(--input-border, #d1d5db)',
+                background: currentTheme.colors.panelBackground,
+                color: currentTheme.colors.primaryText,
+                borderRadius: 999,
+                padding: '4px 10px 4px 4px',
+                cursor: 'pointer',
+              }}
+            >
+              <span style={{
+                width: 26,
+                height: 26,
+                borderRadius: '50%',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: currentTheme.colors.inputBackground,
+                color: currentTheme.colors.primaryText,
+                fontWeight: 600,
+              }}>
+                {userInitial}
+              </span>
+              <span style={{ fontSize: 13, fontWeight: 600 }}>{userDisplayName}</span>
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  sessionStorage.setItem('vertex_auth_return', window.location.hash || '#/');
+                  onRequestLogin?.();
+                }}
+                style={headerAuthButtonStyle(currentTheme)}
+              >
+                <FormattedMessage id="header.signIn" defaultMessage="Sign in" />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  sessionStorage.setItem('vertex_auth_return', window.location.hash || '#/');
+                  onRequestSignup?.();
+                }}
+                style={{ ...headerAuthButtonStyle(currentTheme), border: 'none', background: currentTheme.colors.primaryButton, color: currentTheme.colors.primaryButtonText }}
+              >
+                <FormattedMessage id="header.signUp" defaultMessage="Sign up" />
+              </button>
+            </>
+          )}
+        </div>
       </div>
       <nav ref={localMenuBarRef} style={{
         width: '100%',
@@ -796,7 +861,7 @@ const MenuBar = React.forwardRef(({
                         <FormattedMessage
                           id="library.graphMeta"
                           defaultMessage="{nodes} nodes · {edges} edges"
-                          values={{ nodes: entry.nodesCount, edges: entry.edgesCount }}
+                          values={{ nodes: entry.nodes?.length ?? 0, edges: entry.edges?.length ?? 0 }}
                         />
                       </div>
                     </button>
@@ -1203,6 +1268,32 @@ function App({ graphId = 'default' }) {
   // Node editor state
   const [showNodeEditor, setShowNodeEditor] = useState(false);
   const [editingNodeId, setEditingNodeId] = useState(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const stored = sessionStorage.getItem('vertex_loaded_graph');
+    if (!stored) return;
+    try {
+      const data = JSON.parse(stored);
+      if (Array.isArray(data?.nodes)) {
+        setNodes(cloneNodesForState(data.nodes));
+      }
+      if (Array.isArray(data?.edges)) {
+        setEdges(cloneEdgesForState(data.edges));
+      }
+      setUndoStack([]);
+      setRedoStack([]);
+      setSelectedNodeId(null);
+      setSelectedNodeIds([]);
+      setShowNodeEditor(false);
+      setEditingNodeId(null);
+    } catch (err) {
+      console.error('[profile] Failed to restore graph from profile transfer', err);
+    } finally {
+      sessionStorage.removeItem('vertex_loaded_graph');
+    }
+  }, [setNodes, setEdges, setUndoStack, setRedoStack, setSelectedNodeId, setSelectedNodeIds]);
+
   // Plugins (custom + merged)
   const [customPlugins, setCustomPlugins] = useState([]);
   const [allPlugins, setAllPlugins] = useState(corePlugins);
@@ -1210,8 +1301,8 @@ function App({ graphId = 'default' }) {
   const [pluginPrefs, setPluginPrefs] = useState(() => loadPluginPrefs(corePlugins));
   const prevPluginPrefsRef = useRef(pluginPrefs);
   const [pluginTips, setPluginTips] = useState([]);
-  const [customLibrary, setCustomLibrary] = useState(() => parseStoredLibrary());
-  const [sampleLibrary, setSampleLibrary] = useState({});
+  const { user, status: userStatus, library: userLibrary, isLibraryLoading: isUserLibraryLoading, saveLibraryGraph, deleteLibraryGraph, refreshLibrary } = useUser();
+  const [sampleLibrary, setSampleLibrary] = useState([]);
   const [isSampleLibraryLoading, setIsSampleLibraryLoading] = useState(true);
   useEffect(() => {
     (async () => {
@@ -1277,27 +1368,35 @@ function App({ graphId = 'default' }) {
         if (!Array.isArray(manifest)) {
           throw new Error('Sample manifest is not an array');
         }
-        const entries = {};
-        await Promise.all(manifest.map(async (item) => {
-          if (!item || typeof item !== 'object') return;
-          const { name, file } = item;
-          if (!name || !file) return;
+        const entries = await Promise.all(manifest.map(async (item) => {
+          if (!item || typeof item !== 'object') return null;
+          const { id, name, file, description } = item;
+          if (!name || !file) return null;
           try {
             const sampleResponse = await fetch(file, { cache: 'no-store' });
             if (!sampleResponse.ok) throw new Error(`Sample fetch failed for ${name}`);
             const sampleData = await sampleResponse.json();
-            entries[name] = sampleData;
+            return {
+              id: `sample:${id || name}`,
+              key: id || name,
+              name,
+              description: description || sampleData?.description || '',
+              nodes: Array.isArray(sampleData?.nodes) ? sampleData.nodes : [],
+              edges: Array.isArray(sampleData?.edges) ? sampleData.edges : [],
+              isSample: true,
+            };
           } catch (sampleError) {
             console.error('[library] Failed to load sample graph', name, sampleError);
+            return null;
           }
         }));
         if (!cancelled) {
-          setSampleLibrary(entries);
+          setSampleLibrary(entries.filter(Boolean));
         }
       } catch (error) {
         if (!cancelled) {
           console.error('[library] Failed to load sample manifest', error);
-          setSampleLibrary({});
+          setSampleLibrary([]);
         }
       } finally {
         if (!cancelled) {
@@ -1313,24 +1412,56 @@ function App({ graphId = 'default' }) {
     };
   }, []);
 
-  const mergedLibrary = useMemo(
-    () => mergeLibraryWithSamples(sampleLibrary, customLibrary),
-    [sampleLibrary, customLibrary]
-  );
+  const sampleLibraryEntries = useMemo(() => (
+    sampleLibrary.map(entry => ({
+      ...entry,
+      id: entry.id || `sample:${entry.name}`,
+      graphId: entry.key || entry.id || entry.name,
+      isSample: true,
+      nodes: Array.isArray(entry.nodes) ? entry.nodes : [],
+      edges: Array.isArray(entry.edges) ? entry.edges : [],
+    }))
+  ), [sampleLibrary]);
+
+  const userLibraryEntries = useMemo(() => (
+    Array.isArray(userLibrary)
+      ? userLibrary.map(entry => ({
+          ...entry,
+          id: entry.id ? `user:${entry.id}` : `user:${entry.name || Math.random().toString(36).slice(2)}`,
+          graphId: entry.id || entry.name,
+          name: entry.name || 'Untitled graph',
+          nodes: Array.isArray(entry.nodes) ? entry.nodes : [],
+          edges: Array.isArray(entry.edges) ? entry.edges : [],
+          isSample: false,
+        }))
+      : []
+  ), [userLibrary]);
 
   const libraryEntries = useMemo(() => (
-    Object.entries(mergedLibrary).map(([name, entry]) => {
-      const nodesArray = Array.isArray(entry) ? entry : entry?.nodes;
-      const edgesArray = Array.isArray(entry) ? [] : entry?.edges || [];
-      return {
-        id: name,
-        name,
-        nodesCount: Array.isArray(nodesArray) ? nodesArray.length : 0,
-        edgesCount: Array.isArray(edgesArray) ? edgesArray.length : 0,
-        isSample: Boolean(sampleLibrary[name]) && !customLibrary[name],
-      };
-    })
-  ), [mergedLibrary, customLibrary, sampleLibrary]);
+    [...sampleLibraryEntries, ...userLibraryEntries]
+  ), [sampleLibraryEntries, userLibraryEntries]);
+
+  const libraryLoading = isSampleLibraryLoading || isUserLibraryLoading;
+
+  const userDisplayName = useMemo(() => {
+    if (user?.name && user.name.trim()) return user.name;
+    if (user?.email) return user.email;
+    return intl.formatMessage({ id: 'header.account', defaultMessage: 'Your account' });
+  }, [user, intl]);
+
+  const userInitial = useMemo(() => {
+    const source = (user?.name || user?.email || '').trim();
+    if (!source) return '👤';
+    return source.charAt(0).toUpperCase();
+  }, [user]);
+
+  const prevUserStatusRef = useRef(userStatus);
+  useEffect(() => {
+    if (userStatus === 'authenticated' && prevUserStatusRef.current !== 'authenticated') {
+      refreshLibrary().catch(err => console.error('[library] failed to refresh library', err));
+    }
+    prevUserStatusRef.current = userStatus;
+  }, [userStatus, refreshLibrary]);
 
   // Node info panel state
   const [showNodeInfoPanel, setShowNodeInfoPanel] = useState(() => {
@@ -1480,32 +1611,41 @@ function App({ graphId = 'default' }) {
     setRedoStack(stack => stack.slice(1));
   }, [undoStack, redoStack, nodes]);
 
-  const handleLibrarySave = useCallback(() => {
+  const handleLibrarySave = useCallback(async () => {
     if (typeof window === 'undefined') return;
+    if (userStatus !== 'authenticated') {
+      sessionStorage.setItem('vertex_auth_return', window.location.hash || '#/');
+      window.location.hash = '#/login';
+      return;
+    }
     const name = window.prompt(intl.formatMessage({ id: 'library.enterName' }));
     if (!name) return;
     const payload = {
       nodes: cloneNodesForState(nodes),
       edges: cloneEdgesForState(edges),
     };
-    setCustomLibrary(prev => {
-      const next = { ...prev, [name]: payload };
-      try {
-        window.localStorage.setItem('vertex_library', JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-    alert(intl.formatMessage({ id: 'library.saved' }));
-  }, [intl, nodes, edges, setCustomLibrary]);
+    try {
+      await saveLibraryGraph({ name, ...payload });
+      await refreshLibrary().catch(() => {});
+      alert(intl.formatMessage({ id: 'library.saved' }));
+    } catch (err) {
+      console.error('[library] save error', err);
+      alert(intl.formatMessage({ id: 'library.saveFailed', defaultMessage: 'Unable to save graph. Please try again.' }));
+    }
+  }, [intl, nodes, edges, saveLibraryGraph, refreshLibrary, userStatus]);
 
-  const handleLibraryLoad = useCallback((name) => {
-    const entry = mergedLibrary[name];
+  const handleLibraryLoad = useCallback((entryId) => {
+    if (!entryId) {
+      alert(intl.formatMessage({ id: 'library.notFound' }));
+      return;
+    }
+    const entry = libraryEntries.find(item => item.id === entryId);
     if (!entry) {
       alert(intl.formatMessage({ id: 'library.notFound' }));
       return;
     }
-    const entryNodes = Array.isArray(entry) ? entry : entry?.nodes;
-    const entryEdges = Array.isArray(entry) ? [] : entry?.edges || [];
+    const entryNodes = Array.isArray(entry.nodes) ? entry.nodes : [];
+    const entryEdges = Array.isArray(entry.edges) ? entry.edges : [];
     setNodes(cloneNodesForState(entryNodes));
     setEdges(cloneEdgesForState(entryEdges));
     setUndoStack([]);
@@ -1517,44 +1657,27 @@ function App({ graphId = 'default' }) {
     if (canvasRef.current?.center) {
       canvasRef.current.center();
     }
-  }, [
-    mergedLibrary,
-    intl,
-    canvasRef,
-    setNodes,
-    setEdges,
-    setUndoStack,
-    setRedoStack,
-    setSelectedNodeId,
-    setSelectedNodeIds,
-    setShowNodeEditor,
-    setEditingNodeId,
-  ]);
+  }, [intl, canvasRef, setNodes, setEdges, setUndoStack, setRedoStack, setSelectedNodeId, setSelectedNodeIds, setShowNodeEditor, setEditingNodeId, libraryEntries]);
 
-  const handleLibraryDelete = useCallback((name) => {
-    if (!customLibrary[name]) {
+  const handleLibraryDelete = useCallback(async (entryId) => {
+    const entry = libraryEntries.find(item => item.id === entryId);
+    if (!entry) {
+      alert(intl.formatMessage({ id: 'library.notFound' }));
+      return;
+    }
+    if (entry.isSample) {
       alert(intl.formatMessage({ id: 'library.cannotDeleteSample' }));
       return;
     }
-    let deleted = false;
-    setCustomLibrary(prev => {
-      if (!prev[name]) {
-        return prev;
-      }
-      const next = { ...prev };
-      delete next[name];
-      try {
-        window.localStorage.setItem('vertex_library', JSON.stringify(next));
-      } catch {}
-      deleted = true;
-      return next;
-    });
-    if (deleted) {
+    try {
+      await deleteLibraryGraph(entry.graphId ?? entry.id.replace(/^user:/, ''));
+      await refreshLibrary().catch(() => {});
       alert(intl.formatMessage({ id: 'library.deleted' }));
-    } else {
-      alert(intl.formatMessage({ id: 'library.notFound' }));
+    } catch (err) {
+      console.error('[library] delete error', err);
+      alert(intl.formatMessage({ id: 'library.deleteFailed', defaultMessage: 'Unable to delete graph.' }));
     }
-  }, [customLibrary, intl, setCustomLibrary]);
+  }, [deleteLibraryGraph, intl, libraryEntries, refreshLibrary]);
 
   const handleExport = useCallback(() => {
     const blob = new Blob([JSON.stringify(nodes, null, 2)], { type: 'application/json' });
@@ -2705,7 +2828,13 @@ function App({ graphId = 'default' }) {
         onSaveLibraryGraph={handleLibrarySave}
         onLoadLibraryGraph={handleLibraryLoad}
         onDeleteLibraryGraph={handleLibraryDelete}
-        isLibraryLoading={isSampleLibraryLoading}
+        isLibraryLoading={libraryLoading}
+        userStatus={userStatus}
+        userDisplayName={userDisplayName}
+        userInitial={userInitial}
+        onShowProfile={() => { window.location.hash = '#/profile'; }}
+        onRequestLogin={() => { window.location.hash = '#/login'; }}
+        onRequestSignup={() => { window.location.hash = '#/signup'; }}
       />
       <div style={{ height: 80 }} />
       <MainHeader />

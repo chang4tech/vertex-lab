@@ -24,6 +24,23 @@ export default {
   'edit.autoLayout': '自动布局',
   'edit.search': '搜索',
 
+  // Auth
+  'auth.signupTitle': '创建您的账号',
+  'auth.loginTitle': '欢迎回来',
+  'auth.signupAction': '注册',
+  'auth.loginAction': '登录',
+  'auth.haveAccount': '已有账号？点击登录',
+  'auth.needAccount': '还没有账号？立即注册',
+  'auth.name': '姓名',
+  'auth.namePlaceholder': '张三',
+  'auth.email': '邮箱',
+  'auth.emailPlaceholder': 'you@example.com',
+  'auth.password': '密码',
+  'auth.passwordPlaceholder': '••••••••',
+  'auth.genericError': '请求失败，请稍后重试。',
+  'auth.submitting': '提交中…',
+  'auth.back': '返回',
+
   // View menu
   'view.center': '居中',
   'view.zoomIn': '放大',
@@ -52,6 +69,8 @@ export default {
   'library.sampleBadge': '示例',
   'library.graphMeta': '{nodes} 个节点 · {edges} 条连线',
   'library.loading': '正在加载示例图…',
+  'library.saveFailed': '无法保存图，请稍后重试。',
+  'library.deleteFailed': '无法删除图，请稍后重试。',
 
   // Settings
   'settings.title': '设置',
@@ -90,6 +109,12 @@ export default {
   'plugin.hub.tip': '{name} 已启用：前往控制中心了解更多',
   'plugin.hub.open': '打开控制中心',
   'plugin.hub.dismiss': '忽略',
+
+  // Header / account
+  'header.userLoading': '加载中…',
+  'header.signIn': '登录',
+  'header.signUp': '注册',
+  'header.account': '你的账号',
 
   // Node labels
   'node.centralTopic': '起始节点',
@@ -259,7 +284,31 @@ export default {
   // Landing
   'landing.subtitle': '创建一个新图开始使用。',
   'landing.newGraph': '新建图',
+  'landing.signIn': '登录',
+  'landing.signUp': '注册',
   // Graph
   'graph.untitled': '未命名',
   'graph.title': '图标题',
+  // Profile
+  'profile.loading': '正在加载个人信息…',
+  'profile.loadError': '无法加载个人信息。',
+  'profile.title': '个人信息',
+  'profile.back': '返回',
+  'profile.logout': '退出登录',
+  'profile.basicInfo': '基本信息',
+  'profile.name': '姓名',
+  'profile.email': '邮箱',
+  'profile.created': '账号创建时间',
+  'profile.updated': '最近更新时间',
+  'profile.missing': '未填写',
+  'profile.metadata': '元数据',
+  'profile.noMetadata': '暂无其他元数据。',
+  'profile.library': '你的库',
+  'profile.refresh': '刷新',
+  'profile.libraryLoading': '正在同步你的库…',
+  'profile.libraryEmpty': '你还没有保存任何图。',
+  'profile.libraryMeta': '{nodes} 个节点 · {edges} 条连线',
+  'profile.libraryUpdated': '更新于 {time}',
+  'profile.loadInCanvas': '在画布中打开',
+  'profile.deleteGraph': '删除',
 };

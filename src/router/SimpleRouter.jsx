@@ -1,6 +1,8 @@
 import React from 'react';
 import App from '../App.jsx';
 import PluginPage from '../components/PluginPage.jsx';
+import AuthPage from '../pages/AuthPage.jsx';
+import ProfilePage from '../pages/ProfilePage.jsx';
 import { FormattedMessage } from 'react-intl';
 
 function parseHash() {
@@ -14,6 +16,15 @@ function parseHash() {
     const pluginId = decodeURIComponent(segments[1]);
     // Legacy support: ignore extra segments like /config or /console
     return { route: 'plugin', pluginId };
+  }
+  if (segments[0] === 'login') {
+    return { route: 'auth', mode: 'login' };
+  }
+  if (segments[0] === 'signup') {
+    return { route: 'auth', mode: 'signup' };
+  }
+  if (segments[0] === 'profile') {
+    return { route: 'profile' };
   }
   return { route: 'landing' };
 }
@@ -33,6 +44,12 @@ export function SimpleRouter() {
   if (state.route === 'plugin') {
     return <PluginPage pluginId={state.pluginId} />;
   }
+  if (state.route === 'auth') {
+    return <AuthPage mode={state.mode} />;
+  }
+  if (state.route === 'profile') {
+    return <ProfilePage />;
+  }
   return <Landing />;
 }
 
@@ -51,10 +68,47 @@ function Landing() {
         <p style={{ color: 'var(--secondary-text, #666)' }}>
           <FormattedMessage id="landing.subtitle" defaultMessage="Create a new graph to get started." />
         </p>
-        <button onClick={onCreate} style={{ padding: '10px 16px', borderRadius: 8, border: 'none', background: 'var(--primary-button, #1976d2)', color: 'var(--primary-button-text, #fff)', cursor: 'pointer' }}>
-          <FormattedMessage id="landing.newGraph" defaultMessage="New Graph" />
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <button onClick={onCreate} style={{ padding: '10px 16px', borderRadius: 8, border: 'none', background: 'var(--primary-button, #1976d2)', color: 'var(--primary-button-text, #fff)', cursor: 'pointer' }}>
+            <FormattedMessage id="landing.newGraph" defaultMessage="New Graph" />
+          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <a
+              href="#/login"
+              onClick={(event) => {
+                event.preventDefault();
+                sessionStorage.setItem('vertex_auth_return', '#/');
+                window.location.hash = '#/login';
+              }}
+              style={linkButtonStyle}
+            >
+              <FormattedMessage id="landing.signIn" defaultMessage="Sign in" />
+            </a>
+            <a
+              href="#/signup"
+              onClick={(event) => {
+                event.preventDefault();
+                sessionStorage.setItem('vertex_auth_return', '#/');
+                window.location.hash = '#/signup';
+              }}
+              style={linkButtonStyle}
+            >
+              <FormattedMessage id="landing.signUp" defaultMessage="Sign up" />
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
+
+const linkButtonStyle = {
+  padding: '10px 16px',
+  borderRadius: 8,
+  border: '1px solid var(--input-border, #d1d5db)',
+  textDecoration: 'none',
+  color: 'var(--primary-button, #1976d2)',
+  cursor: 'pointer',
+  background: 'var(--panel-background, #ffffff)',
+  fontWeight: 600,
+};
