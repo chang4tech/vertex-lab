@@ -56,6 +56,8 @@ export const APP_SHORTCUTS = [
   { key: 'c', modifiers: ['alt'], description: 'Center Diagram' },
   { key: 'i', modifiers: ['cmd'], description: 'Toggle Node Info Panel' },
   { key: 'i', modifiers: ['ctrl'], description: 'Toggle Node Info Panel' },
+  { key: 'e', modifiers: ['cmd', 'shift'], description: 'Toggle Edge Info Panel' },
+  { key: 'e', modifiers: ['ctrl', 'shift'], description: 'Toggle Edge Info Panel' },
   { key: 'm', modifiers: [], description: 'Toggle Minimap' },
 
   // Selection / editing

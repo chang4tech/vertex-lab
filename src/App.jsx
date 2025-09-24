@@ -28,6 +28,7 @@ import { createEnhancedNode } from './utils/nodeUtils';
 import { addUndirectedEdge } from './utils/edgeUtils';
 import { getConnectedNavigationCandidates } from './utils/navigationUtils';
 import { useIsMobile } from './hooks/useIsMobile';
+import { getDefaultLibrarySamples } from './utils/librarySamples';
 
 const OVERLAY_LAYOUT_STORAGE_KEY = 'vertex_overlay_layout';
 
@@ -120,11 +121,34 @@ const mergeOverlayLayout = (prev, patch) => {
   return updated;
 };
 
+const parseStoredLibrary = () => {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem('vertex_library');
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return {};
+    return parsed;
+  } catch {
+    return {};
+  }
+};
+
+const mergeLibraryWithSamples = (storedLibrary) => ({
+  ...getDefaultLibrarySamples(),
+  ...storedLibrary,
+});
+
+const cloneNodesForState = (nodes) => (Array.isArray(nodes) ? nodes.map(node => ({ ...node })) : []);
+
+const cloneEdgesForState = (edges) => (Array.isArray(edges) ? edges.map(edge => ({ ...edge })) : []);
+
 // --- Menu Bar Component ---
 const MenuBar = React.forwardRef(({
   onExport, onImport, onNew, onMakeCopy, onShowVersionHistory, onUndo, onRedo, onDelete, onAutoLayout, onSearch, onCenter, onZoomIn, onZoomOut, onResetZoom, onShowThemes,
   nodes, setNodes, setUndoStack, setRedoStack, setSelectedNodeId, canvasRef,
   showMinimap, setShowMinimap, showNodeInfoPanel, onToggleNodeInfoPanel,
+  showEdgeInfoPanel, onToggleEdgeInfoPanel,
   onToggleHelp, isHelpVisible,
   fileInputRef,
   graphId,
@@ -138,6 +162,10 @@ const MenuBar = React.forwardRef(({
   onRemoveCustomPlugin,
   maxLevel,
   onChangeMaxLevel,
+  libraryEntries = [],
+  onSaveLibraryGraph,
+  onLoadLibraryGraph,
+  onDeleteLibraryGraph,
 }, ref) => {
   const isMobile = useIsMobile();
   const localMenuBarRef = useRef(null);
@@ -679,6 +707,19 @@ const MenuBar = React.forwardRef(({
               <span className="menu-shortcut">{formatShortcut({ key: 'i', modifiers: ['cmd'] })}</span>
               {showNodeInfoPanel && <span style={{ marginLeft: 8 }}>✓</span>}
             </div>
+            <div
+              className="menu-item"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onToggleEdgeInfoPanel();
+                setOpenMenu(null);
+              }}
+            >
+              <FormattedMessage id="view.showEdgeInfoPanel" defaultMessage="Show Edge Info" />
+              <span className="menu-shortcut">{formatShortcut({ key: 'e', modifiers: ['cmd', 'shift'] })}</span>
+              {showEdgeInfoPanel && <span style={{ marginLeft: 8 }}>✓</span>}
+            </div>
           </>)}
         </div>
         <div ref={menuRefs.library} style={{ cursor: 'pointer', position: 'relative' }}>
@@ -694,74 +735,94 @@ const MenuBar = React.forwardRef(({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('Save to Library clicked');
-                const name = window.prompt(intl.formatMessage({ id: 'library.enterName' }));
-                if (name) {
-                  const library = JSON.parse(localStorage.getItem('vertex_library') || '{}');
-                  library[name] = nodes;
-                  localStorage.setItem('vertex_library', JSON.stringify(library));
-                  alert(intl.formatMessage({ id: 'library.saved' }));
-                }
+                console.log('Save graph to Library clicked');
+                onSaveLibraryGraph?.();
                 setOpenMenu(null);
               }}
-            ><FormattedMessage id="library.save" defaultMessage="Save to Library" /></div>
+            ><FormattedMessage id="library.save" defaultMessage="Save Graph to Library" /></div>
             <div className="menu-separator" />
-            <div
-              className="menu-item"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Load from Library clicked');
-                const library = JSON.parse(localStorage.getItem('vertex_library') || '{}');
-                const templates = Object.keys(library);
-                if (templates.length === 0) {
-                  alert(intl.formatMessage({ id: 'library.noTemplates' }));
-                  return;
-                }
-                const name = window.prompt(intl.formatMessage(
-                  { id: 'library.availableTemplates' }) + '\n' + templates.join('\n')
-                );
-                if (name && library[name]) {
-                  setNodes([...library[name]]);
-                  setUndoStack([]);
-                  setRedoStack([]);
-                  setSelectedNodeId(null);
-                  if (canvasRef.current?.center) {
-                    canvasRef.current.center();
-                  }
-                } else if (name) {
-                  alert(intl.formatMessage({ id: 'library.notFound' }));
-                }
-                setOpenMenu(null);
-              }}
-            ><FormattedMessage id="library.load" defaultMessage="Load from Library" /></div>
-            <div
-              className="menu-item"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Delete from Library clicked');
-                const library = JSON.parse(localStorage.getItem('vertex_library') || '{}');
-                const templates = Object.keys(library);
-                if (templates.length === 0) {
-                  alert(intl.formatMessage({ id: 'library.noTemplates' }));
-                  return;
-                }
-                const name = window.prompt(intl.formatMessage(
-                  { id: 'library.deletePrompt' }) + '\n\n' + 
-                  intl.formatMessage({ id: 'library.availableTemplates' }) + '\n' + 
-                  templates.join('\n')
-                );
-                if (name && library[name]) {
-                  delete library[name];
-                  localStorage.setItem('vertex_library', JSON.stringify(library));
-                  alert(intl.formatMessage({ id: 'library.deleted' }));
-                } else if (name) {
-                  alert(intl.formatMessage({ id: 'library.notFound' }));
-                }
-                setOpenMenu(null);
-              }}
-            ><FormattedMessage id="library.delete" defaultMessage="Delete from Library" /></div>
+            <div style={{ padding: '4px 0', display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 260, overflowY: 'auto' }}>
+              <div style={{ padding: '0 4px', fontSize: '12px', fontWeight: 600, color: currentTheme.colors.secondaryText }}>
+                <FormattedMessage id="library.graphsTitle" defaultMessage="Library Graphs" />
+              </div>
+              {libraryEntries.length === 0 ? (
+                <div style={{ padding: '4px 8px', color: currentTheme.colors.secondaryText, fontSize: '13px' }}>
+                  <FormattedMessage id="library.noGraphs" defaultMessage="No graphs in library yet." />
+                </div>
+              ) : (
+                libraryEntries.map((entry) => (
+                  <div key={entry.id} style={{ display: 'flex', alignItems: 'stretch', gap: 6 }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onLoadLibraryGraph?.(entry.id);
+                        setOpenMenu(null);
+                      }}
+                      style={{
+                        flex: 1,
+                        textAlign: 'left',
+                        border: `1px solid ${currentTheme.colors.inputBorder}`,
+                        background: currentTheme.colors.inputBackground,
+                        borderRadius: 8,
+                        padding: '8px 10px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 4,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: currentTheme.colors.primaryText, fontWeight: 600, fontSize: '14px' }}>
+                        <span>{entry.name}</span>
+                        {entry.isSample && (
+                          <span
+                            style={{
+                              fontSize: '11px',
+                              padding: '2px 6px',
+                              borderRadius: 999,
+                              background: currentTheme.colors.panelBackground,
+                              border: `1px solid ${currentTheme.colors.inputBorder}`,
+                              color: currentTheme.colors.secondaryText,
+                            }}
+                          >
+                            {intl.formatMessage({ id: 'library.sampleBadge', defaultMessage: 'Sample' })}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '12px', color: currentTheme.colors.secondaryText }}>
+                        <FormattedMessage
+                          id="library.graphMeta"
+                          defaultMessage="{nodes} nodes · {edges} edges"
+                          values={{ nodes: entry.nodesCount, edges: entry.edgesCount }}
+                        />
+                      </div>
+                    </button>
+                    {!entry.isSample && (
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          onDeleteLibraryGraph?.(entry.id);
+                          setOpenMenu(null);
+                        }}
+                        style={{
+                          border: `1px solid ${currentTheme.colors.inputBorder}`,
+                          background: currentTheme.colors.panelBackground,
+                          color: currentTheme.colors.secondaryText,
+                          borderRadius: 8,
+                          padding: '8px',
+                          cursor: 'pointer',
+                          minWidth: 36,
+                        }}
+                        aria-label={intl.formatMessage({ id: 'library.delete', defaultMessage: 'Delete Saved Graph' })}
+                      >
+                        🗑
+                      </button>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
           </>)}
         </div>
         <div ref={menuRefs.settings} style={{ cursor: 'pointer', position: 'relative' }}>
@@ -1145,6 +1206,7 @@ function App({ graphId = 'default' }) {
   const [pluginPrefs, setPluginPrefs] = useState(() => loadPluginPrefs(corePlugins));
   const prevPluginPrefsRef = useRef(pluginPrefs);
   const [pluginTips, setPluginTips] = useState([]);
+  const [customLibrary, setCustomLibrary] = useState(() => parseStoredLibrary());
   useEffect(() => {
     (async () => {
       const loaded = await loadCustomPluginsFromStorage();
@@ -1196,11 +1258,43 @@ function App({ graphId = 'default' }) {
 
   // (moved below activePlugins) Show a one-time tip when a plugin gets enabled
 
+  const mergedLibrary = useMemo(() => mergeLibraryWithSamples(customLibrary), [customLibrary]);
+
+  const libraryEntries = useMemo(() => (
+    Object.entries(mergedLibrary).map(([name, entry]) => {
+      const nodesArray = Array.isArray(entry) ? entry : entry?.nodes;
+      const edgesArray = Array.isArray(entry) ? [] : entry?.edges || [];
+      return {
+        id: name,
+        name,
+        nodesCount: Array.isArray(nodesArray) ? nodesArray.length : 0,
+        edgesCount: Array.isArray(edgesArray) ? edgesArray.length : 0,
+        isSample: !customLibrary[name],
+      };
+    })
+  ), [mergedLibrary, customLibrary]);
+
   // Node info panel state
   const [showNodeInfoPanel, setShowNodeInfoPanel] = useState(() => {
-    const saved = localStorage.getItem('vertex_show_node_info_panel');
-    return saved !== null ? saved === 'true' : false;
+    try {
+      const saved = localStorage.getItem('vertex_show_node_info_panel');
+      return saved !== null ? saved === 'true' : false;
+    } catch {
+      return false;
+    }
   });
+  const [showEdgeInfoPanel, setShowEdgeInfoPanel] = useState(() => {
+    try {
+      const saved = localStorage.getItem('vertex_show_edge_info_panel');
+      return saved !== null ? saved === 'true' : false;
+    } catch {
+      return false;
+    }
+  });
+
+  const panelWidth = isMobile ? 280 : 320;
+  const totalSidePanelWidth = (showNodeInfoPanel ? panelWidth : 0) + (showEdgeInfoPanel ? panelWidth : 0);
+  const overlayRightInset = totalSidePanelWidth > 0 ? totalSidePanelWidth + (isMobile ? 8 : 16) : 0;
 
   // Responsive canvas size
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
@@ -1209,7 +1303,7 @@ function App({ graphId = 'default' }) {
       const W = window.innerWidth;
       const H = window.innerHeight;
       const sidePadding = 0;
-      const rightPanel = showNodeInfoPanel ? 320 : 0;
+      const rightPanel = totalSidePanelWidth;
       const topNav = menuBarRef.current?.offsetHeight || 0;
       const verticalMargin = 0;
       const width = Math.max(isMobile ? 320 : 600, W - sidePadding - rightPanel);
@@ -1219,7 +1313,7 @@ function App({ graphId = 'default' }) {
     compute();
     window.addEventListener('resize', compute);
     return () => window.removeEventListener('resize', compute);
-  }, [showNodeInfoPanel, isMobile]);
+  }, [showNodeInfoPanel, showEdgeInfoPanel, isMobile, totalSidePanelWidth]);
 
   useEffect(() => {
     initialFitDoneRef.current = false;
@@ -1288,8 +1382,12 @@ function App({ graphId = 'default' }) {
 
   // Save node info panel visibility preference
   useEffect(() => {
-    localStorage.setItem('vertex_show_node_info_panel', showNodeInfoPanel);
+    try { localStorage.setItem('vertex_show_node_info_panel', String(showNodeInfoPanel)); } catch {}
   }, [showNodeInfoPanel]);
+
+  useEffect(() => {
+    try { localStorage.setItem('vertex_show_edge_info_panel', String(showEdgeInfoPanel)); } catch {}
+  }, [showEdgeInfoPanel]);
 
   // Handler functions wrapped in useCallback
   const handleUndo = useCallback(() => {
@@ -1323,6 +1421,82 @@ function App({ graphId = 'default' }) {
     setUndoStack(stack => [...stack, [...nodes]]);
     setRedoStack(stack => stack.slice(1));
   }, [undoStack, redoStack, nodes]);
+
+  const handleLibrarySave = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const name = window.prompt(intl.formatMessage({ id: 'library.enterName' }));
+    if (!name) return;
+    const payload = {
+      nodes: cloneNodesForState(nodes),
+      edges: cloneEdgesForState(edges),
+    };
+    setCustomLibrary(prev => {
+      const next = { ...prev, [name]: payload };
+      try {
+        window.localStorage.setItem('vertex_library', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+    alert(intl.formatMessage({ id: 'library.saved' }));
+  }, [intl, nodes, edges, setCustomLibrary]);
+
+  const handleLibraryLoad = useCallback((name) => {
+    const entry = mergedLibrary[name];
+    if (!entry) {
+      alert(intl.formatMessage({ id: 'library.notFound' }));
+      return;
+    }
+    const entryNodes = Array.isArray(entry) ? entry : entry?.nodes;
+    const entryEdges = Array.isArray(entry) ? [] : entry?.edges || [];
+    setNodes(cloneNodesForState(entryNodes));
+    setEdges(cloneEdgesForState(entryEdges));
+    setUndoStack([]);
+    setRedoStack([]);
+    setSelectedNodeId(null);
+    setSelectedNodeIds([]);
+    setShowNodeEditor(false);
+    setEditingNodeId(null);
+    if (canvasRef.current?.center) {
+      canvasRef.current.center();
+    }
+  }, [
+    mergedLibrary,
+    intl,
+    canvasRef,
+    setNodes,
+    setEdges,
+    setUndoStack,
+    setRedoStack,
+    setSelectedNodeId,
+    setSelectedNodeIds,
+    setShowNodeEditor,
+    setEditingNodeId,
+  ]);
+
+  const handleLibraryDelete = useCallback((name) => {
+    if (!customLibrary[name]) {
+      alert(intl.formatMessage({ id: 'library.cannotDeleteSample' }));
+      return;
+    }
+    let deleted = false;
+    setCustomLibrary(prev => {
+      if (!prev[name]) {
+        return prev;
+      }
+      const next = { ...prev };
+      delete next[name];
+      try {
+        window.localStorage.setItem('vertex_library', JSON.stringify(next));
+      } catch {}
+      deleted = true;
+      return next;
+    });
+    if (deleted) {
+      alert(intl.formatMessage({ id: 'library.deleted' }));
+    } else {
+      alert(intl.formatMessage({ id: 'library.notFound' }));
+    }
+  }, [customLibrary, intl, setCustomLibrary]);
 
   const handleExport = useCallback(() => {
     const blob = new Blob([JSON.stringify(nodes, null, 2)], { type: 'application/json' });
@@ -1627,11 +1801,35 @@ function App({ graphId = 'default' }) {
 
   // Node info panel handlers
   const handleToggleNodeInfoPanel = useCallback(() => {
-    setShowNodeInfoPanel(prev => !prev);
+    setShowNodeInfoPanel(prev => {
+      const next = !prev;
+      try { localStorage.setItem('vertex_show_node_info_panel', String(next)); } catch {}
+      return next;
+    });
   }, []);
 
   const hideNodeInfoPanel = useCallback(() => {
-    setShowNodeInfoPanel(false);
+    setShowNodeInfoPanel(prev => {
+      if (!prev) return prev;
+      try { localStorage.setItem('vertex_show_node_info_panel', 'false'); } catch {}
+      return false;
+    });
+  }, []);
+
+  const handleToggleEdgeInfoPanel = useCallback(() => {
+    setShowEdgeInfoPanel(prev => {
+      const next = !prev;
+      try { localStorage.setItem('vertex_show_edge_info_panel', String(next)); } catch {}
+      return next;
+    });
+  }, []);
+
+  const hideEdgeInfoPanel = useCallback(() => {
+    setShowEdgeInfoPanel(prev => {
+      if (!prev) return prev;
+      try { localStorage.setItem('vertex_show_edge_info_panel', 'false'); } catch {}
+      return false;
+    });
   }, []);
 
   const handleMinimapViewportChange = useCallback((newViewport) => {
@@ -2183,14 +2381,14 @@ function App({ graphId = 'default' }) {
       className: 'overlay-slot overlay-slot--top-right',
       style: {
         top: `calc(${topOffsetPx}px + env(safe-area-inset-top))`,
-        right: `calc(24px + env(safe-area-inset-right))`,
+        right: `calc(${24 + overlayRightInset}px + env(safe-area-inset-right))`,
       },
     },
     'bottom-right': {
       className: 'overlay-slot overlay-slot--bottom-right',
       style: {
         bottom: `calc(24px + env(safe-area-inset-bottom))`,
-        right: `calc(16px + env(safe-area-inset-right))`,
+        right: `calc(${16 + overlayRightInset}px + env(safe-area-inset-right))`,
       },
     },
     'bottom-left': {
@@ -2200,7 +2398,7 @@ function App({ graphId = 'default' }) {
         left: `calc(16px + env(safe-area-inset-left))`,
       },
     },
-  }), [topOffsetPx]);
+  }), [topOffsetPx, overlayRightInset]);
 
   const slotStyles = useMemo(() => {
     const merged = { ...baseSlotStyles };
@@ -2337,6 +2535,8 @@ function App({ graphId = 'default' }) {
     maxLevel,
     showNodeInfoPanel,
     hideNodeInfoPanel,
+    showEdgeInfoPanel,
+    hideEdgeInfoPanel,
     onEditNode: handleEditNodeFromPanel,
     onDeleteNodes: handleDeleteNodesFromPanel,
     onToggleCollapse: handleToggleCollapseFromPanel,
@@ -2360,6 +2560,8 @@ function App({ graphId = 'default' }) {
     maxLevel,
     showNodeInfoPanel,
     hideNodeInfoPanel,
+    showEdgeInfoPanel,
+    hideEdgeInfoPanel,
     handleEditNodeFromPanel,
     handleDeleteNodesFromPanel,
     handleToggleCollapseFromPanel,
@@ -2425,6 +2627,8 @@ function App({ graphId = 'default' }) {
         setShowMinimap={setShowMinimap}
         showNodeInfoPanel={showNodeInfoPanel}
         onToggleNodeInfoPanel={handleToggleNodeInfoPanel}
+        showEdgeInfoPanel={showEdgeInfoPanel}
+        onToggleEdgeInfoPanel={handleToggleEdgeInfoPanel}
         onToggleHelp={toggleHelp}
         isHelpVisible={isHelpVisible}
         fileInputRef={fileInputRef}
@@ -2439,6 +2643,10 @@ function App({ graphId = 'default' }) {
         onRemoveCustomPlugin={removeCustomPlugin}
         maxLevel={maxLevel}
         onChangeMaxLevel={setMaxLevel}
+        libraryEntries={libraryEntries}
+        onSaveLibraryGraph={handleLibrarySave}
+        onLoadLibraryGraph={handleLibraryLoad}
+        onDeleteLibraryGraph={handleLibraryDelete}
       />
       <div style={{ height: 80 }} />
       <MainHeader />

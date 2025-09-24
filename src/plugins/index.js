@@ -1,4 +1,5 @@
 import { nodeInfoPlugin } from './core/nodeInfoPlugin.jsx';
+import { edgeInfoPlugin } from './core/edgeInfoPlugin.jsx';
 import { selectionToolsPlugin } from './core/selectionToolsPlugin.jsx';
 import { clipboardPlugin } from './core/clipboardPlugin.jsx';
 import { graphStatsPlugin } from './core/graphStatsPlugin.jsx';
@@ -11,6 +12,7 @@ import { showcasePlugin } from './examples/showcasePlugin.jsx';
 
 export const corePlugins = [
   nodeInfoPlugin,
+  edgeInfoPlugin,
   graphStatsPlugin,
   helpOverlayPlugin,
   selectionToolsPlugin,
