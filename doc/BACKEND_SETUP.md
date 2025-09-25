@@ -26,6 +26,8 @@ npm run dev
 
 The server listens on `http://localhost:4000` by default. Adjust the port in `.env` if it conflicts with other services.
 
+Running `npm run dev` first executes `npm run postgres:start`, which uses Homebrew to start `postgresql@14` and create the `vertex` database/user if they do not exist. Override `DATABASE_URL` if you manage Postgres differently.
+
 ## 4. Run Tests
 
 ```bash
@@ -49,7 +51,7 @@ ESLint uses `eslint.config.js`, inheriting the recommended rules for Node.js.
 - Override runtime settings during deploys by setting `window.__VERTEX_CONFIG__ = { apiBaseUrl: 'https://api.example.com' }` in `index.html` or a dedicated config script. (the default `public/runtime-config.js` is copied to the build and can be edited in-place).
 - Add additional routes under `server/src/routes/` and their controllers under `server/src/controllers/`.
 - Remember to export any shared types or contracts so the frontend can consume them.
-- When the backend is offline, the frontend falls back to local storage for saved graphs and re-syncs once the API returns.
+- When the backend is offline, the frontend falls back to local storage for saved graphs. Unsynced drafts are highlighted in the UI and automatically re-sync once the API returns.
 
 ### Postgres quick start
 

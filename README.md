@@ -102,11 +102,13 @@ cp .env.example .env # update as needed
 npm run dev
 ```
 
+`npm run dev` automatically runs `npm run postgres:start` which ensures a local Postgres 14 service (via Homebrew) is running and the `vertex` database/user exist. Set `DATABASE_URL` differently if you use another Postgres instance.
+
 The backend listens on port 4000 by default; adjust the `.env` file if the port conflicts with other services.
 
 For persistent teams, set `DATABASE_URL` to a Postgres instance (see `doc/BACKEND_SETUP.md` for setup). Local development defaults to SQLite at `server/data/vertex.db`.
 
-If the API is unavailable, Vertex Lab automatically falls back to local storage so you can keep saving and loading diagrams offline. Changes sync once the backend is reachable again.
+If the API is unavailable, Vertex Lab automatically falls back to local storage so you can keep saving and loading diagrams offline. When the connection returns, local drafts are pushed in the background and the UI shows an “Unsynced” badge on any graphs that are still waiting to upload.
 
 Set `VITE_API_BASE_URL` in your front-end `.env` (see `.env.example`) if the API runs somewhere else. You can also override at runtime by defining `window.__VERTEX_CONFIG__ = { apiBaseUrl: 'https://api.example.com' }` before the app script loads.
 
