@@ -105,9 +105,12 @@ export function UserProvider({ children }) {
     window.localStorage.removeItem(LOCAL_CACHE_KEY);
   }, []);
 
-  const fetchUser = React.useCallback(async () => {
-    setStatus('loading');
-    setError(null);
+  const fetchUser = React.useCallback(async (options = {}) => {
+    const { silent = false } = options;
+    if (!silent) {
+      setStatus('loading');
+      setError(null);
+    }
     try {
       const response = await apiFetch('/api/user');
       if (response.status === 401 || response.status === 404) {
@@ -144,7 +147,8 @@ export function UserProvider({ children }) {
         : [];
       setLibrary(normalized);
     } catch (err) {
-      console.error('[user] Failed to fetch user', err);
+      const log = silent ? console.warn : console.error;
+      log('[user] Failed to fetch user', err);
       if (err?.name === 'SyntaxError') {
         clearCache();
         setUser(null);
@@ -262,7 +266,7 @@ export function UserProvider({ children }) {
     if (localEntries.length === 0) {
       if (statusRef.current === 'offline' && isNavigatorOnline()) {
         try {
-          await fetchUser();
+          await fetchUser({ silent: true });
         } catch (error) {
           console.warn('[user] Failed to refresh user during online recovery', error);
         }
@@ -281,7 +285,7 @@ export function UserProvider({ children }) {
     try {
       if (statusRef.current !== 'authenticated') {
         try {
-          await fetchUser();
+          await fetchUser({ silent: true });
         } catch (error) {
           console.warn('[user] Unable to refresh user before syncing offline entries', error);
         }
