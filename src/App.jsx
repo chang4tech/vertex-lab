@@ -203,6 +203,17 @@ const MenuBar = React.forwardRef(({
     color: currentTheme.colors.warningText ?? currentTheme.colors.primaryText,
     border: `1px solid ${currentTheme.colors.warningBorder ?? 'rgba(245, 158, 11, 0.36)'}`,
   };
+  const localDraftBadgeStyle = {
+    fontSize: '11px',
+    padding: '2px 6px',
+    borderRadius: 999,
+    fontWeight: 600,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    background: currentTheme.colors.warningBackground ?? 'rgba(245, 158, 11, 0.18)',
+    color: currentTheme.colors.warningText ?? currentTheme.colors.primaryText,
+    border: `1px solid ${currentTheme.colors.warningBorder ?? 'rgba(245, 158, 11, 0.36)'}`,
+  };
   const [helpModal, setHelpModal] = useState({ open: false, titleId: null, messageId: null });
   const [graphIdCopied, setGraphIdCopied] = useState(false);
 
@@ -885,6 +896,11 @@ const MenuBar = React.forwardRef(({
                             }}
                           >
                             {intl.formatMessage({ id: 'library.sampleBadge', defaultMessage: 'Sample' })}
+                          </span>
+                        )}
+                        {entry.isLocal && (
+                          <span style={localDraftBadgeStyle}>
+                            {intl.formatMessage({ id: 'library.localBadge', defaultMessage: 'Unsynced' })}
                           </span>
                         )}
                       </div>

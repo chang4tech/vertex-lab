@@ -4,7 +4,7 @@ import { useUser } from '../contexts/UserProvider.jsx';
 import { apiFetch } from '../utils/apiClient.js';
 
 function ProfilePage() {
-  const { user, status, error, library, isLibraryLoading, refreshLibrary, deleteLibraryGraph, refreshUser } = useUser();
+  const { user, status, error, library, isLibraryLoading, refreshLibrary, deleteLibraryGraph, refreshUser, hasLocalDrafts } = useUser();
   const [actionError, setActionError] = React.useState(null);
 
   React.useEffect(() => {
@@ -48,6 +48,21 @@ function ProfilePage() {
     : [];
 
   const hasLibraryEntries = Array.isArray(library) && library.length > 0;
+
+  const localDraftBadgeStyle = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 4,
+    fontSize: '12px',
+    padding: '2px 8px',
+    borderRadius: 999,
+    fontWeight: 600,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    background: 'rgba(245, 158, 11, 0.18)',
+    color: '#92400e',
+    border: '1px solid rgba(245, 158, 11, 0.36)',
+  };
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '32px 24px', gap: 24 }}>
@@ -137,6 +152,19 @@ function ProfilePage() {
         {actionError && (
           <div style={{ color: '#dc2626', marginBottom: 8, fontSize: 13 }}>{actionError}</div>
         )}
+        {hasLocalDrafts && (
+          <div style={{
+            marginBottom: 12,
+            fontSize: 13,
+            color: '#92400e',
+            background: 'rgba(254, 243, 199, 0.7)',
+            border: '1px solid rgba(245, 158, 11, 0.36)',
+            borderRadius: 8,
+            padding: '8px 12px'
+          }}>
+            <FormattedMessage id="profile.libraryLocalNotice" defaultMessage="Unsynced drafts are stored locally and will sync once you're back online." />
+          </div>
+        )}
         {isLibraryLoading && (
           <div style={{ color: '#4b5563', fontSize: 14 }}>
             <FormattedMessage id="profile.libraryLoading" defaultMessage="Syncing your library…" />
@@ -151,7 +179,14 @@ function ProfilePage() {
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 12 }}>
             {library.map((entry) => (
               <li key={entry.id} style={{ border: '1px solid var(--input-border, #d1d5db)', borderRadius: 8, padding: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <div style={{ fontWeight: 600 }}>{entry.name}</div>
+                <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span>{entry.name}</span>
+                  {entry.storage === 'local' && (
+                    <span style={localDraftBadgeStyle}>
+                      <FormattedMessage id="library.localBadge" defaultMessage="Unsynced" />
+                    </span>
+                  )}
+                </div>
                 <div style={{ fontSize: 13, color: '#4b5563' }}>
                   <FormattedMessage id="profile.libraryMeta" defaultMessage="{nodes} nodes · {edges} edges" values={{ nodes: entry.nodes?.length ?? 0, edges: entry.edges?.length ?? 0 }} />
                 </div>
