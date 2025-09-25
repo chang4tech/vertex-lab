@@ -25,7 +25,7 @@ import { APP_SHORTCUTS, formatShortcut } from './utils/shortcutUtils';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { updateNode } from './utils/nodeUtils';
 import { createEnhancedNode } from './utils/nodeUtils';
-import { addUndirectedEdge } from './utils/edgeUtils';
+import { addUndirectedEdge, edgesFromParentIds } from './utils/edgeUtils';
 import { getConnectedNavigationCandidates } from './utils/navigationUtils';
 import { useIsMobile } from './hooks/useIsMobile';
 import { useUser } from './contexts/UserProvider.jsx';
@@ -33,6 +33,16 @@ import { useUser } from './contexts/UserProvider.jsx';
 const OVERLAY_LAYOUT_STORAGE_KEY = 'vertex_overlay_layout';
 
 const createEmptyOverlayLayout = () => ({ items: {}, slots: {} });
+
+const buildDefaultNodes = (intl) => ([
+  createEnhancedNode({ id: 1, parentId: null, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, level: 0 }),
+  createEnhancedNode({ id: 2, parentId: 1, label: `${intl.formatMessage({ id: 'node.branch' })} 1`, x: 250, y: 200, level: 1 }),
+  createEnhancedNode({ id: 3, parentId: 1, label: `${intl.formatMessage({ id: 'node.branch' })} 2`, x: 550, y: 200, level: 1 }),
+  createEnhancedNode({ id: 4, parentId: 1, label: `${intl.formatMessage({ id: 'node.branch' })} 3`, x: 250, y: 400, level: 1 }),
+  createEnhancedNode({ id: 5, parentId: 1, label: `${intl.formatMessage({ id: 'node.branch' })} 4`, x: 550, y: 400, level: 1 }),
+]);
+
+const buildDefaultEdges = (nodes) => edgesFromParentIds(nodes);
 
 const createAltNavigationState = () => ({
   active: false,
@@ -1265,13 +1275,7 @@ function App({ graphId = 'default' }) {
       }
     }
     // Default initial state if no saved state exists
-    return [
-      createEnhancedNode({ id: 1, label: intl.formatMessage({ id: 'node.centralTopic' }), x: 400, y: 300, level: 0 }),
-      createEnhancedNode({ id: 2, label: `${intl.formatMessage({ id: 'node.branch' })} 1`, x: 250, y: 200, level: 1 }),
-      createEnhancedNode({ id: 3, label: `${intl.formatMessage({ id: 'node.branch' })} 2`, x: 550, y: 200, level: 1 }),
-      createEnhancedNode({ id: 4, label: `${intl.formatMessage({ id: 'node.branch' })} 3`, x: 250, y: 400, level: 1 }),
-      createEnhancedNode({ id: 5, label: `${intl.formatMessage({ id: 'node.branch' })} 4`, x: 550, y: 400, level: 1 }),
-    ];
+    return buildDefaultNodes(intl);
   });
   const [selectedNodeIds, setSelectedNodeIds] = useState([]);
   const [selectedNodeId, setSelectedNodeId] = useState(null); // Keep for backward compatibility
@@ -1283,17 +1287,21 @@ function App({ graphId = 'default' }) {
         if (Array.isArray(parsed)) return parsed;
       }
     } catch {}
-    // Derive from parentId for legacy diagrams
     try {
       const savedNodes = localStorage.getItem(graphKey('nodes'));
       if (savedNodes) {
         const parsedNodes = JSON.parse(savedNodes);
         if (Array.isArray(parsedNodes)) {
-          return [];
+          const enhancedNodes = parsedNodes.map(node => createEnhancedNode(node));
+          const derived = edgesFromParentIds(enhancedNodes);
+          if (derived.length) {
+            return derived;
+          }
         }
       }
     } catch {}
-    return [];
+    const defaults = buildDefaultNodes(intl);
+    return buildDefaultEdges(defaults);
   });
   // Shift+E progressive toggle pointer (one pair per press)
   const [shiftPairIndex, setShiftPairIndex] = useState(0);
