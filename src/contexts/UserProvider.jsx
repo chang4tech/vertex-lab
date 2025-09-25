@@ -37,6 +37,13 @@ const loadCachedSession = () => {
   }
 };
 
+const isNavigatorOnline = () => {
+  if (typeof navigator === 'undefined') {
+    return true;
+  }
+  return navigator.onLine !== false;
+};
+
 const normalizeLibraryEntry = (entry) => {
   if (!entry || typeof entry !== 'object') {
     return null;
@@ -69,6 +76,12 @@ export function UserProvider({ children }) {
   });
   const [libraryStatus, setLibraryStatus] = React.useState('idle');
   const [libraryError, setLibraryError] = React.useState(null);
+  const statusRef = React.useRef(status);
+  const syncingRef = React.useRef(false);
+
+  React.useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
 
   const cacheSession = React.useCallback((nextUser, nextLibrary) => {
     if (typeof window === 'undefined') return;
@@ -233,6 +246,110 @@ export function UserProvider({ children }) {
     }
   }, [status, clearCache]);
 
+  const syncOfflineEntries = React.useCallback(async () => {
+    if (typeof window === 'undefined') {
+      return { synced: 0 };
+    }
+    if (syncingRef.current) {
+      return { synced: 0 };
+    }
+
+    const storedEntries = loadOfflineLibrary();
+    const localEntries = Array.isArray(storedEntries)
+      ? storedEntries.filter(entry => entry?.storage === 'local')
+      : [];
+
+    if (localEntries.length === 0) {
+      if (statusRef.current === 'offline' && isNavigatorOnline()) {
+        try {
+          await fetchUser();
+        } catch (error) {
+          console.warn('[user] Failed to refresh user during online recovery', error);
+        }
+      }
+      return { synced: 0 };
+    }
+
+    if (!isNavigatorOnline()) {
+      return { synced: 0 };
+    }
+
+    syncingRef.current = true;
+    const syncedIds = new Set();
+    let syncedCount = 0;
+
+    try {
+      if (statusRef.current !== 'authenticated') {
+        try {
+          await fetchUser();
+        } catch (error) {
+          console.warn('[user] Unable to refresh user before syncing offline entries', error);
+        }
+      }
+
+      for (const entry of localEntries) {
+        const safeName = entry?.name || 'Untitled graph';
+        const safeNodes = Array.isArray(entry?.nodes) ? entry.nodes : [];
+        const safeEdges = Array.isArray(entry?.edges) ? entry.edges : [];
+
+        try {
+          const response = await apiFetch('/api/library', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name: safeName,
+              nodes: safeNodes,
+              edges: safeEdges,
+            }),
+          });
+
+          if (response.status === 401) {
+            setStatus('unauthenticated');
+            setUser(null);
+            setLibrary([]);
+            clearCache();
+            console.warn('[user] Offline sync halted due to expired session');
+            break;
+          }
+
+          if (!response.ok) {
+            const payload = await response.json().catch(() => null);
+            const message = payload?.message ? String(payload.message) : `Failed to sync graph (status ${response.status})`;
+            console.error('[user] Offline sync failed', message);
+            continue;
+          }
+
+          syncedCount += 1;
+          if (entry?.id) syncedIds.add(entry.id);
+          if (entry?.graphId) syncedIds.add(entry.graphId);
+        } catch (error) {
+          if (isNetworkError(error)) {
+            setStatus('offline');
+            console.warn('[user] Network issue while syncing offline entries, will retry later');
+            break;
+          }
+          console.error('[user] Unexpected error while syncing offline entries', error);
+        }
+      }
+
+      if (syncedIds.size > 0) {
+        setLibrary(prev => prev.filter(item => !syncedIds.has(item.id) && !syncedIds.has(item.graphId)));
+        try {
+          await fetchLibrary();
+        } catch (error) {
+          console.warn('[user] Failed to refresh library after offline sync', error);
+        }
+        setStatus(prev => (prev === 'offline' ? 'authenticated' : prev));
+      }
+
+      return { synced: syncedCount };
+    } finally {
+      syncingRef.current = false;
+    }
+  }, [clearCache, fetchLibrary, fetchUser]);
+
   const saveLibraryGraph = React.useCallback(async ({ name, nodes, edges }) => {
     const normalizedName = name || 'Untitled graph';
     const safeNodes = Array.isArray(nodes) ? nodes : [];
@@ -393,11 +510,50 @@ export function UserProvider({ children }) {
     }
   }, [status]);
 
+  const hasLocalDrafts = React.useMemo(() => (
+    Array.isArray(library) && library.some(entry => entry?.storage === 'local')
+  ), [library]);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+    const handleOnline = () => {
+      syncOfflineEntries();
+    };
+    window.addEventListener('online', handleOnline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+    };
+  }, [syncOfflineEntries]);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+    const shouldMonitor = status === 'offline' || hasLocalDrafts;
+    if (!shouldMonitor) {
+      return undefined;
+    }
+    if (isNavigatorOnline()) {
+      syncOfflineEntries();
+    }
+    const interval = window.setInterval(() => {
+      if (isNavigatorOnline()) {
+        syncOfflineEntries();
+      }
+    }, 15000);
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [status, hasLocalDrafts, syncOfflineEntries]);
+
   const value = React.useMemo(() => ({
     user,
     status,
     isOffline: status === 'offline',
     canSyncRemote: status === 'authenticated',
+    hasLocalDrafts,
     error,
     refreshUser: fetchUser,
     library,
@@ -406,7 +562,8 @@ export function UserProvider({ children }) {
     refreshLibrary: fetchLibrary,
     saveLibraryGraph,
     deleteLibraryGraph,
-  }), [user, status, error, fetchUser, library, libraryStatus, libraryError, fetchLibrary, saveLibraryGraph, deleteLibraryGraph]);
+    syncOfflineLibrary: syncOfflineEntries,
+  }), [user, status, hasLocalDrafts, error, fetchUser, library, libraryStatus, libraryError, fetchLibrary, saveLibraryGraph, deleteLibraryGraph, syncOfflineEntries]);
 
   return (
     <UserContext.Provider value={value}>
