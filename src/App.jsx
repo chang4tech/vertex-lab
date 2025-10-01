@@ -1587,8 +1587,23 @@ function App({ graphId = 'default' }) {
   const totalSidePanelWidth = (showNodeInfoPanel ? panelWidth : 0) + (showEdgeInfoPanel ? panelWidth : 0);
   const overlayRightInset = totalSidePanelWidth > 0 ? totalSidePanelWidth + (isMobile ? 8 : 16) : 0;
 
+  const initialCanvasSize = () => {
+    if (typeof window === 'undefined') {
+      return {
+        width: isMobile ? 320 : 600,
+        height: isMobile ? 300 : 400,
+      };
+    }
+    const sidePadding = 0;
+    const rightPanel = totalSidePanelWidth;
+    const topNav = menuBarRef.current?.offsetHeight || 0;
+    const width = Math.max(isMobile ? 320 : 600, window.innerWidth - sidePadding - rightPanel);
+    const height = Math.max(isMobile ? 300 : 400, window.innerHeight - topNav);
+    return { width, height };
+  };
+
   // Responsive canvas size
-  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
+  const [canvasSize, setCanvasSize] = useState(initialCanvasSize);
   useEffect(() => {
     const compute = () => {
       const W = window.innerWidth;
