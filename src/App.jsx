@@ -213,6 +213,28 @@ const MenuBar = React.forwardRef(({
     color: currentTheme.colors.warningText ?? currentTheme.colors.primaryText,
     border: `1px solid ${currentTheme.colors.warningBorder ?? 'rgba(245, 158, 11, 0.36)'}`,
   };
+  const accountChipBaseStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: 999,
+    padding: '6px 12px 6px 6px',
+    height: 36,
+    lineHeight: 1,
+    boxSizing: 'border-box',
+  };
+  const accountAvatarStyle = {
+    width: 24,
+    height: 24,
+    borderRadius: '50%',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: currentTheme.colors.inputBackground,
+    color: currentTheme.colors.primaryText,
+    fontWeight: 600,
+    flexShrink: 0,
+  };
   const localDraftBadgeStyle = {
     fontSize: '11px',
     padding: '2px 6px',
@@ -435,7 +457,15 @@ const MenuBar = React.forwardRef(({
               : intl.formatMessage({ id: 'graphId.label', defaultMessage: 'ID: {id}' }, { id: graphId })}
           </button>
         )}
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div
+          style={{
+            marginLeft: 'auto',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            paddingRight: isMobile ? 8 : 16,
+          }}
+        >
           {userStatus === 'loading' ? (
             <span style={{ color: currentTheme.colors.secondaryText, fontSize: 12 }}>
               <FormattedMessage id="header.userLoading" defaultMessage="Loading…" />
@@ -448,39 +478,54 @@ const MenuBar = React.forwardRef(({
                 onShowProfile?.();
               }}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                border: '1px solid var(--input-border, #d1d5db)',
+                ...accountChipBaseStyle,
+                border: `1px solid ${currentTheme.colors.inputBorder}`,
                 background: currentTheme.colors.panelBackground,
                 color: currentTheme.colors.primaryText,
-                borderRadius: 999,
-                padding: '4px 10px 4px 4px',
                 cursor: 'pointer',
               }}
             >
-              <span style={{
-                width: 26,
-                height: 26,
-                borderRadius: '50%',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: currentTheme.colors.inputBackground,
-                color: currentTheme.colors.primaryText,
-                fontWeight: 600,
-              }}>
+              <span style={accountAvatarStyle}>
                 {userInitial}
               </span>
-              <span style={{ fontSize: 13, fontWeight: 600 }}>{userDisplayName}</span>
+              <span
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                  display: 'flex',
+                  alignItems: 'center',
+                  lineHeight: 1.1,
+                }}
+              >
+                {userDisplayName}
+              </span>
             </button>
           ) : userStatus === 'offline' ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={offlineBadgeStyle}>
-                <FormattedMessage id="status.offline" defaultMessage="Offline mode" />
+            <div
+              style={{
+                ...accountChipBaseStyle,
+                border: `1px solid ${currentTheme.colors.inputBorder}`,
+                background: currentTheme.colors.panelBackground,
+                color: currentTheme.colors.secondaryText,
+                cursor: 'not-allowed',
+              }}
+              title={intl.formatMessage({ id: 'status.offline', defaultMessage: 'Offline mode' })}
+            >
+              <span style={{ ...accountAvatarStyle, color: currentTheme.colors.secondaryText }}>
+                {userInitial}
               </span>
               {userDisplayName && (
-                <span style={{ color: currentTheme.colors.secondaryText, fontSize: 13 }}>
+                <span
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                    display: 'flex',
+                    alignItems: 'center',
+                    lineHeight: 1.1,
+                  }}
+                >
                   {userDisplayName}
                 </span>
               )}
