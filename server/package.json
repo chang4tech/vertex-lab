@@ -4,11 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --watch src/index.js",
+    "dev": "npm run postgres:start && node --watch src/index.js",
     "start": "node src/index.js",
     "lint": "eslint .",
     "test": "vitest --run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "postgres:start": "bash ./scripts/ensure-local-postgres.sh"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
