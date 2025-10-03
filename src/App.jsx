@@ -1583,8 +1583,13 @@ function App({ graphId = 'default' }) {
     }
   });
 
+  const nodeInfoPluginEnabled = pluginPrefs?.['core.nodeInfo'] ?? true;
+  const edgeInfoPluginEnabled = pluginPrefs?.['core.edgeInfo'] ?? true;
+  const nodeInfoPanelVisible = nodeInfoPluginEnabled && showNodeInfoPanel;
+  const edgeInfoPanelVisible = edgeInfoPluginEnabled && showEdgeInfoPanel;
+
   const panelWidth = isMobile ? 280 : 320;
-  const totalSidePanelWidth = (showNodeInfoPanel ? panelWidth : 0) + (showEdgeInfoPanel ? panelWidth : 0);
+  const totalSidePanelWidth = (nodeInfoPanelVisible ? panelWidth : 0) + (edgeInfoPanelVisible ? panelWidth : 0);
   const overlayRightInset = totalSidePanelWidth > 0 ? totalSidePanelWidth + (isMobile ? 8 : 16) : 0;
 
   const initialCanvasSize = () => {
@@ -1619,7 +1624,7 @@ function App({ graphId = 'default' }) {
     compute();
     window.addEventListener('resize', compute);
     return () => window.removeEventListener('resize', compute);
-  }, [showNodeInfoPanel, showEdgeInfoPanel, isMobile, totalSidePanelWidth]);
+  }, [isMobile, totalSidePanelWidth]);
 
   useEffect(() => {
     initialFitDoneRef.current = false;
@@ -2839,9 +2844,9 @@ function App({ graphId = 'default' }) {
     },
     updateNodes: updateNodesFromPlugin,
     maxLevel,
-    showNodeInfoPanel,
+    showNodeInfoPanel: nodeInfoPanelVisible,
     hideNodeInfoPanel,
-    showEdgeInfoPanel,
+    showEdgeInfoPanel: edgeInfoPanelVisible,
     hideEdgeInfoPanel,
     onEditNode: handleEditNodeFromPanel,
     onDeleteNodes: handleDeleteNodesFromPanel,
@@ -2865,8 +2870,10 @@ function App({ graphId = 'default' }) {
     updateNodesFromPlugin,
     maxLevel,
     showNodeInfoPanel,
+    nodeInfoPanelVisible,
     hideNodeInfoPanel,
     showEdgeInfoPanel,
+    edgeInfoPanelVisible,
     hideEdgeInfoPanel,
     handleEditNodeFromPanel,
     handleDeleteNodesFromPanel,
@@ -2931,9 +2938,9 @@ function App({ graphId = 'default' }) {
         onShowThemes={handleShowThemes}
         showMinimap={showMinimap}
         setShowMinimap={setShowMinimap}
-        showNodeInfoPanel={showNodeInfoPanel}
+        showNodeInfoPanel={nodeInfoPanelVisible}
         onToggleNodeInfoPanel={handleToggleNodeInfoPanel}
-        showEdgeInfoPanel={showEdgeInfoPanel}
+        showEdgeInfoPanel={edgeInfoPanelVisible}
         onToggleEdgeInfoPanel={handleToggleEdgeInfoPanel}
         onToggleHelp={toggleHelp}
         isHelpVisible={isHelpVisible}
