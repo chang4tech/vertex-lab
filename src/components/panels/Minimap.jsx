@@ -26,17 +26,41 @@ export function Minimap({ nodes, edges = [], viewBox, scale = 0.15, visible, onV
 
   // Calculate diagram bounds
   const getBounds = useCallback(() => {
-    if (!nodes?.length) return { minX: 0, maxX: 800, minY: 0, maxY: 600 };
-    const visible = getVisibleNodes(nodes, edges);
-    return visible.reduce((bounds, node) => {
+    const defaultBounds = { minX: 0, maxX: 800, minY: 0, maxY: 600 };
+    const sourceNodes = Array.isArray(nodes) ? nodes.filter(Boolean) : [];
+    if (sourceNodes.length === 0) return defaultBounds;
+
+    const visibleNodes = getVisibleNodes(sourceNodes, edges);
+    const nodesToMeasure = visibleNodes.length > 0 ? visibleNodes : sourceNodes;
+
+    const [firstNode, ...rest] = nodesToMeasure;
+    if (!firstNode) {
+      return defaultBounds;
+    }
+    const firstExtents = getHalfExtents(firstNode);
+    let bounds = {
+      minX: firstNode.x - firstExtents.hw,
+      maxX: firstNode.x + firstExtents.hw,
+      minY: firstNode.y - firstExtents.hh,
+      maxY: firstNode.y + firstExtents.hh,
+    };
+
+    rest.forEach(node => {
+      if (!node) return;
       const { hw, hh } = getHalfExtents(node);
-      return {
+      bounds = {
         minX: Math.min(bounds.minX, node.x - hw),
         maxX: Math.max(bounds.maxX, node.x + hw),
         minY: Math.min(bounds.minY, node.y - hh),
-        maxY: Math.max(bounds.maxY, node.y + hh)
+        maxY: Math.max(bounds.maxY, node.y + hh),
       };
-    }, { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
+    });
+
+    if (!Number.isFinite(bounds.minX) || !Number.isFinite(bounds.maxX) || !Number.isFinite(bounds.minY) || !Number.isFinite(bounds.maxY)) {
+      return defaultBounds;
+    }
+
+    return bounds;
   }, [nodes, edges, getHalfExtents]);
 
   useEffect(() => {
