@@ -276,7 +276,24 @@ function drawEdge(ctx, from, to, theme) {
 
 import { forwardRef, useImperativeHandle } from 'react';
 
-const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, onNodeDoubleClick, selectedNodeIds = [], onNodePositionChange, highlightedNodeIds = [], onSelectionChange, onViewBoxChange, onContextMenuRequest, width = 800, height = 600 }, ref) => {
+const VertexCanvas = forwardRef(({
+  nodes,
+  edges: propsEdges = [],
+  onNodeClick,
+  onNodeDoubleClick,
+  selectedNodeIds = [],
+  onNodePositionChange,
+  highlightedNodeIds = [],
+  onSelectionChange,
+  onViewBoxChange,
+  onContextMenuRequest,
+  width = 800,
+  height = 600,
+  exportDecorators = [],
+  graphId = null,
+  graphUrl = '',
+  exportUser = null,
+}, ref) => {
   const canvasRef = useRef(null);
   const { currentTheme } = useTheme();
   
@@ -409,12 +426,58 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       debugLog('ResetZoom - scale:', view.current.scale, 'offsetX:', view.current.offsetX, 'offsetY:', view.current.offsetY);
       canvas.dispatchEvent(new Event('redraw'));
     },
-    exportAsPNG: () => {
+    exportAsPNG: async () => {
       const canvas = canvasRef.current;
       const now = new Date();
       const pad = n => n.toString().padStart(2, '0');
       const filename = `vertex-lab-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.png`;
-      const dataUrl = canvas.toDataURL('image/png');
+      const activeDecorators = Array.isArray(exportDecorators)
+        ? exportDecorators.filter(fn => typeof fn === 'function')
+        : [];
+      const targetCanvas = (() => {
+        if (!canvas) return null;
+        if (activeDecorators.length === 0) {
+          return canvas;
+        }
+        if (typeof document === 'undefined') {
+          return canvas;
+        }
+        const clone = document.createElement('canvas');
+        clone.width = canvas.width;
+        clone.height = canvas.height;
+        const cloneCtx = clone.getContext('2d');
+        if (cloneCtx) {
+          cloneCtx.drawImage(canvas, 0, 0);
+        }
+        return clone;
+      })();
+      if (!targetCanvas) return;
+      const targetCtx = targetCanvas.getContext('2d');
+      if (targetCtx && activeDecorators.length > 0) {
+        const decoratorContext = {
+          canvas: targetCanvas,
+          ctx: targetCtx,
+          width: targetCanvas.width,
+          height: targetCanvas.height,
+          graphId,
+          graphUrl,
+          user: exportUser,
+          userId: exportUser && typeof exportUser === 'object' ? exportUser.id ?? exportUser.sub ?? null : null,
+          userEmail: exportUser && typeof exportUser === 'object' ? exportUser.email ?? null : null,
+          devicePixelRatio: typeof window !== 'undefined' && Number.isFinite(window.devicePixelRatio) ? window.devicePixelRatio : 1,
+        };
+        for (const decorator of activeDecorators) {
+          try {
+            const maybePromise = decorator(decoratorContext);
+            if (maybePromise && typeof maybePromise.then === 'function') {
+              await maybePromise;
+            }
+          } catch (err) {
+            console.error('[export] decorator failed', err);
+          }
+        }
+      }
+      const dataUrl = targetCanvas.toDataURL('image/png');
 
       const link = typeof document !== 'undefined' ? document.createElement('a') : null;
       const supportsDownload = !!link && 'download' in link;

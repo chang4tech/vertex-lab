@@ -1472,6 +1472,34 @@ function App({ graphId = 'default' }) {
   const [pluginPrefs, setPluginPrefs] = useState(() => loadPluginPrefs(corePlugins));
   const prevPluginPrefsRef = useRef(pluginPrefs);
   const [pluginTips, setPluginTips] = useState([]);
+  const exportDecoratorsRef = useRef(new Map());
+  const [exportDecorators, setExportDecorators] = useState([]);
+  const updateExportDecorators = useCallback(() => {
+    const entries = Array.from(exportDecoratorsRef.current.values());
+    entries.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    setExportDecorators(entries.map(entry => entry.decorator));
+  }, []);
+  const registerExportDecorator = useCallback((pluginId, decorator, options = {}) => {
+    const keyBase = pluginId || 'plugin';
+    const keySuffix = options.id || 'default';
+    const key = `${keyBase}:${keySuffix}`;
+    if (typeof decorator !== 'function') {
+      if (exportDecoratorsRef.current.has(key)) {
+        exportDecoratorsRef.current.delete(key);
+        updateExportDecorators();
+      }
+      return () => {};
+    }
+    exportDecoratorsRef.current.set(key, { decorator, order: options.order ?? 0 });
+    updateExportDecorators();
+    return () => {
+      const current = exportDecoratorsRef.current.get(key);
+      if (current && current.decorator === decorator) {
+        exportDecoratorsRef.current.delete(key);
+        updateExportDecorators();
+      }
+    };
+  }, [updateExportDecorators]);
   const { user, status: userStatus, library: userLibrary, isLibraryLoading: isUserLibraryLoading, saveLibraryGraph, deleteLibraryGraph, refreshLibrary } = useUser();
   const [sampleLibrary, setSampleLibrary] = useState([]);
   const [isSampleLibraryLoading, setIsSampleLibraryLoading] = useState(true);
@@ -1627,6 +1655,15 @@ function App({ graphId = 'default' }) {
     if (!source) return '👤';
     return source.charAt(0).toUpperCase();
   }, [user]);
+
+  const graphUrl = useMemo(() => {
+    if (typeof window === 'undefined') return '';
+    try {
+      return window.location.href;
+    } catch {
+      return '';
+    }
+  }, [graphId]);
 
   const prevUserStatusRef = useRef(userStatus);
   useEffect(() => {
@@ -3019,6 +3056,10 @@ function App({ graphId = 'default' }) {
     overlayRightInset,
     corePanelOffset,
     pluginSidePanelWidth,
+    registerExportDecorator,
+    graphId,
+    graphUrl,
+    user,
     isModalActive: hasBlockingModal,
   }), [
     nodes,
@@ -3050,6 +3091,10 @@ function App({ graphId = 'default' }) {
     overlayRightInset,
     corePanelOffset,
     pluginSidePanelWidth,
+    registerExportDecorator,
+    graphId,
+    graphUrl,
+    user,
     hasBlockingModal,
   ]);
 
@@ -3189,6 +3234,10 @@ function App({ graphId = 'default' }) {
         onContextMenuRequest={openContextMenu}
         width={canvasSize.width}
         height={canvasSize.height}
+        exportDecorators={exportDecorators}
+        graphId={graphId}
+        graphUrl={graphUrl}
+        exportUser={user}
       />
 
       {/* Search */}
