@@ -179,6 +179,7 @@ const MenuBar = React.forwardRef(({
   onOpenSettings,
   onOpenPluginsManager,
   onOpenTagManager,
+  onShowHelpModal,
 }, ref) => {
   const isMobile = useIsMobile();
   const localMenuBarRef = useRef(null);
@@ -245,7 +246,6 @@ const MenuBar = React.forwardRef(({
     color: currentTheme.colors.warningText ?? currentTheme.colors.primaryText,
     border: `1px solid ${currentTheme.colors.warningBorder ?? 'rgba(245, 158, 11, 0.36)'}`,
   };
-  const [helpModal, setHelpModal] = useState({ open: false, titleId: null, messageId: null });
   const [graphIdCopied, setGraphIdCopied] = useState(false);
 
   useEffect(() => {
@@ -407,12 +407,6 @@ const MenuBar = React.forwardRef(({
   };
   return (
     <>
-      <HelpModal
-        open={helpModal.open}
-        titleId={helpModal.titleId}
-        messageId={helpModal.messageId}
-        onClose={() => setHelpModal({ open: false, titleId: null, messageId: null })}
-      />
       {/* Header above menus: site title + graph title and ID */}
       <div style={{
         width: '100%',
@@ -1098,7 +1092,7 @@ const MenuBar = React.forwardRef(({
               className="menu-item"
               onClick={(e) => {
                 e.preventDefault(); e.stopPropagation();
-                setHelpModal({ open: true, titleId: 'help.documentation', messageId: 'help.documentation.desc' });
+                onShowHelpModal?.('help.documentation', 'help.documentation.desc');
                 setOpenMenu(null);
               }}
             >
@@ -1109,7 +1103,7 @@ const MenuBar = React.forwardRef(({
               className="menu-item"
               onClick={(e) => {
                 e.preventDefault(); e.stopPropagation();
-                setHelpModal({ open: true, titleId: 'help.community', messageId: 'help.community.desc' });
+                onShowHelpModal?.('help.community', 'help.community.desc');
                 setOpenMenu(null);
               }}
             >
@@ -1119,7 +1113,7 @@ const MenuBar = React.forwardRef(({
               className="menu-item"
               onClick={(e) => {
                 e.preventDefault(); e.stopPropagation();
-                setHelpModal({ open: true, titleId: 'help.feedback', messageId: 'help.feedback.desc' });
+                onShowHelpModal?.('help.feedback', 'help.feedback.desc');
                 setOpenMenu(null);
               }}
             >
@@ -1129,7 +1123,7 @@ const MenuBar = React.forwardRef(({
               className="menu-item"
               onClick={(e) => {
                 e.preventDefault(); e.stopPropagation();
-                setHelpModal({ open: true, titleId: 'help.report', messageId: 'help.report.desc' });
+                onShowHelpModal?.('help.report', 'help.report.desc');
                 setOpenMenu(null);
               }}
             >
@@ -1390,6 +1384,7 @@ function App({ graphId = 'default' }) {
   const [settingsTab, setSettingsTab] = useState('all');
   const [showTagManager, setShowTagManager] = useState(false);
   const [showPluginsManager, setShowPluginsManager] = useState(false);
+  const [helpModal, setHelpModal] = useState({ open: false, titleId: null, messageId: null });
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -2992,6 +2987,12 @@ function App({ graphId = 'default' }) {
           onRemoveCustomPlugin={removeCustomPlugin}
         />
       )}
+      <HelpModal
+        open={helpModal.open}
+        titleId={helpModal.titleId}
+        messageId={helpModal.messageId}
+        onClose={() => setHelpModal({ open: false, titleId: null, messageId: null })}
+      />
       <MenuBar
         ref={menuBarRef}
         onExport={handleExport}
@@ -3069,6 +3070,7 @@ function App({ graphId = 'default' }) {
         onOpenSettings={handleOpenSettings}
         onOpenPluginsManager={handleOpenPluginsManager}
         onOpenTagManager={handleOpenTagManager}
+        onShowHelpModal={(titleId, messageId) => setHelpModal({ open: true, titleId, messageId })}
       />
       <div style={{ height: 80 }} />
       <MainHeader />
