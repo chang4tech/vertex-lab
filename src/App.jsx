@@ -301,8 +301,31 @@ const MenuBar = React.forwardRef(({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [openMenu]);
 
+  const handleDropdownWheel = useCallback((event) => {
+    // Prevent the wheel event from bubbling to the canvas/page which can zoom/scroll the diagram.
+    event.stopPropagation();
+    const target = event.currentTarget;
+    if (!target) return;
+    const { deltaY } = event;
+    const canScroll = target.scrollHeight > target.clientHeight;
+    if (!canScroll) {
+      event.preventDefault();
+      return;
+    }
+    const atTop = target.scrollTop <= 0;
+    const atBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 1;
+    if ((deltaY < 0 && atTop) || (deltaY > 0 && atBottom)) {
+      event.preventDefault();
+    }
+  }, []);
+
+  const handleDropdownTouchMove = useCallback((event) => {
+    // Contain touch scrolling inside the dropdown
+    event.stopPropagation();
+  }, []);
+
   const menuDropdown = (type, items) => openMenu === type && (
-    <div className="menu-dropdown" style={{
+    <div className="menu-dropdown" onWheel={handleDropdownWheel} onTouchMove={handleDropdownTouchMove} style={{
       position: 'absolute',
       top: 'calc(100% + 4px)',
       left: alignRight[type] ? 'auto' : 0,
