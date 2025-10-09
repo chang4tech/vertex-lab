@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { APP_SHORTCUTS, formatShortcut } from '../../utils/shortcutUtils';
 
-export function HelpPanel({ isVisible, onClose }) {
+export function HelpPanel({ isVisible, overlayRightInset = 0 }) {
   // Build a merged list from APP_SHORTCUTS, combining Cmd/Ctrl variants
   const mergedShortcuts = useMemo(() => {
     const groups = new Map();
@@ -41,8 +41,15 @@ export function HelpPanel({ isVisible, onClose }) {
     return list;
   }, []);
 
+  const rightOffset = Math.max(0, Number.isFinite(overlayRightInset) ? overlayRightInset : 0);
+  const className = `help ${isVisible ? 'show' : ''} ${rightOffset > 0 ? 'with-panel' : ''}`;
+
   return (
-    <div role="dialog" className={`help ${isVisible ? 'show' : ''}`}>
+    <div
+      role="dialog"
+      className={className}
+      style={{ '--help-right': `${20 + rightOffset}px` }}
+    >
       <div className={`rules ${isVisible ? 'show' : ''}`} style={{ position: 'relative' }}>
         <h2>Keyboard Shortcuts</h2>
         {mergedShortcuts.map(({ key, desc }) => (

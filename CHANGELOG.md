@@ -7,6 +7,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ## Unreleased
 
 ### Fixed
+- Help overlay: Ensure the quick-help box sits above plugin side panels and offsets from active panels so it remains accessible.
 - Settings dialog: Remove greyed background and raise overlay z-index so the modal sits above the nav without dimming the app.
 - Canvas & minimap: Skip nodes/edges with invalid coordinates when computing bounds or drawing so neither surface distorts after load; added regression tests covering hidden-node and invalid-node scenarios.
 - Canvas: Ensure wheel zoom stays anchored under the cursor on high-DPI displays.

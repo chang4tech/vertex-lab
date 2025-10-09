@@ -7,7 +7,7 @@ const HELP_OVERLAY_LAYOUT_KEY = 'help';
 function HelpOverlayContent({ api }) {
   const isHelpVisible = !!api?.isHelpVisible;
   const toggleHelp = api?.toggleHelp || (() => {});
-  const withPanel = !!api?.showNodeInfoPanel;
+  const overlayRightInset = Number.isFinite(api?.overlayRightInset) ? api.overlayRightInset : Number(api?.overlayRightInset) || 0;
   const overlayLayout = api?.overlayLayout;
   const setOverlayLayout = api?.setOverlayLayout;
   const isMobile = !!api?.isMobile;
@@ -33,9 +33,9 @@ function HelpOverlayContent({ api }) {
 
   const panelPortal = useMemo(() => (
     portalTarget
-      ? createPortal(<HelpPanel isVisible={isHelpVisible} withPanel={withPanel} />, portalTarget)
+      ? createPortal(<HelpPanel isVisible={isHelpVisible} overlayRightInset={overlayRightInset} />, portalTarget)
       : null
-  ), [portalTarget, isHelpVisible, withPanel]);
+  ), [portalTarget, isHelpVisible, overlayRightInset]);
 
   return (
     <React.Fragment>

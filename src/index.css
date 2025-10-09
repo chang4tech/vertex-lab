@@ -202,8 +202,8 @@ mark {
 .help {
   position: fixed;
   top: 80px;
-  right: 20px;
-  z-index: 200; /* above side panels */
+  right: calc(var(--help-right, 20px) + env(safe-area-inset-right));
+  z-index: 10130; /* above plugin panels & overlays */
   pointer-events: none;
   visibility: hidden;
   transition: visibility 0.3s ease;
@@ -215,7 +215,7 @@ mark {
 }
 
 .help.with-panel {
-  right: 360px; /* account for 320px panel + margin */
+  --help-right: 360px; /* default fallback when side panels visible */
 }
 
 .rules {
