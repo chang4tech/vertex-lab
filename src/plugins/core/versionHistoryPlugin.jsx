@@ -34,13 +34,74 @@ const writeSettings = (settings) => {
 
 const snapshotKey = (graphId) => `${SNAPSHOT_KEY_PREFIX}${graphId || 'default'}`;
 
+const IGNORED_NODE_SIGNATURE_KEYS = new Set(['createdAt', 'updatedAt']);
+
+const buildGraphSignature = (nodes, edges) => {
+  try {
+    const normalize = (value, ignoredKeys = new Set()) => {
+      if (!value || typeof value !== 'object') return null;
+      const entries = Object.entries(value)
+        .filter(([key, val]) => !ignoredKeys.has(key) && typeof val !== 'function' && val !== undefined);
+      entries.sort(([a], [b]) => {
+        if (a === b) return 0;
+        return a > b ? 1 : -1;
+      });
+      return Object.fromEntries(entries);
+    };
+
+    const safeNodes = Array.isArray(nodes) ? nodes : [];
+    const safeEdges = Array.isArray(edges) ? edges : [];
+
+    const normalizedNodes = safeNodes
+      .map((node) => normalize(node, IGNORED_NODE_SIGNATURE_KEYS))
+      .filter(Boolean)
+      .sort((a, b) => {
+        const aId = a.id ?? '';
+        const bId = b.id ?? '';
+        if (aId === bId) {
+          return JSON.stringify(a).localeCompare(JSON.stringify(b));
+        }
+        return String(aId).localeCompare(String(bId));
+      });
+
+    const normalizedEdges = safeEdges
+      .map((edge) => normalize(edge))
+      .filter(Boolean)
+      .sort((a, b) => {
+        const toKey = (edge) => {
+          const source = edge.source ?? '';
+          const target = edge.target ?? '';
+          const directed = edge.directed ? '1' : '0';
+          return `${String(source)}->${String(target)}:${directed}`;
+        };
+        const aKey = toKey(a);
+        const bKey = toKey(b);
+        if (aKey === bKey) {
+          return JSON.stringify(a).localeCompare(JSON.stringify(b));
+        }
+        return aKey.localeCompare(bKey);
+      });
+
+    return JSON.stringify({ nodes: normalizedNodes, edges: normalizedEdges });
+  } catch {
+    return null;
+  }
+};
+
+const withSnapshotSignature = (entry) => {
+  if (!entry || typeof entry !== 'object') return null;
+  if (entry.signature) return entry;
+  const signature = buildGraphSignature(entry.nodes, entry.edges);
+  return { ...entry, signature };
+};
+
 const loadSnapshots = (graphId) => {
   try {
     const raw = localStorage.getItem(snapshotKey(graphId));
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed;
+    return parsed.map(withSnapshotSignature).filter(Boolean);
   } catch {
     return [];
   }
@@ -156,6 +217,8 @@ const VersionHistoryOverlay = ({ api }) => {
 
   const captureSnapshot = useCallback((label, source = 'manual') => {
     if (!Array.isArray(api?.nodes) || !Array.isArray(api?.edges)) return;
+    const signature = buildGraphSignature(api.nodes, api.edges)
+      ?? JSON.stringify({ nodes: api.nodes, edges: api.edges });
     const { nodes, edges } = cloneGraphState(api.nodes, api.edges);
     const entry = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -165,10 +228,16 @@ const VersionHistoryOverlay = ({ api }) => {
       nodes,
       edges,
       summary: summarizeSnapshot({ nodes, edges }),
+      signature,
     };
     const maxEntries = settings.maxSnapshots || DEFAULT_SETTINGS.maxSnapshots;
-    updateSnapshots((prev) => [entry, ...prev].slice(0, maxEntries));
-    lastSignatureRef.current = JSON.stringify({ nodes: api.nodes, edges: api.edges });
+    updateSnapshots((prev) => {
+      if (source !== 'manual' && prev?.length > 0 && prev[0]?.signature === signature) {
+        return prev;
+      }
+      return [entry, ...(prev || [])].slice(0, maxEntries);
+    });
+    lastSignatureRef.current = signature;
     lastCaptureRef.current = Date.now();
   }, [api, updateSnapshots, settings.maxSnapshots]);
 
@@ -184,7 +253,8 @@ const VersionHistoryOverlay = ({ api }) => {
   useEffect(() => {
     if (!settings.autoCapture) return;
     if (!Array.isArray(api?.nodes) || !Array.isArray(api?.edges)) return;
-    const signature = JSON.stringify({ nodes: api.nodes, edges: api.edges });
+    const signature = buildGraphSignature(api.nodes, api.edges)
+      ?? JSON.stringify({ nodes: api.nodes, edges: api.edges });
     if (signature === lastSignatureRef.current) return;
     const now = Date.now();
     if (lastCaptureRef.current && now - lastCaptureRef.current < AUTO_CAPTURE_INTERVAL) {
@@ -201,6 +271,18 @@ const VersionHistoryOverlay = ({ api }) => {
       captureSnapshot('Initial state', 'initial');
     }
   }, [snapshots.length, api?.nodes, api?.edges, captureSnapshot]);
+
+  useEffect(() => {
+    if (snapshots.length === 0) return;
+    if (!Array.isArray(api?.nodes) || !Array.isArray(api?.edges)) return;
+    const signature = buildGraphSignature(api.nodes, api.edges);
+    if (!signature) return;
+    const latest = snapshots[0];
+    if (latest?.signature === signature) {
+      lastSignatureRef.current = signature;
+      lastCaptureRef.current = Date.now();
+    }
+  }, [snapshots, api?.nodes, api?.edges]);
 
   const closePanel = useCallback(() => {
     if (typeof api?.closeVersionHistory === 'function') {
