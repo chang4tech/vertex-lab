@@ -2902,7 +2902,7 @@ function App({ graphId = 'default' }) {
     },
   }), [overlayItems, slotStyles, overlayLayoutOverrides]);
 
-  const hasBlockingModal = showNodeEditor || showThemes || showSearch || showSettings || showTagManager || showPluginsManager || helpModal.open;
+  const hasBlockingModal = showNodeEditor || showThemes || showSearch || showSettings || showTagManager || showPluginsManager || helpModal?.open;
 
   const pluginAppApi = useMemo(() => ({
     nodes,
