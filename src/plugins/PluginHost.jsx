@@ -26,7 +26,7 @@ const descriptorsEqual = (a, b) => {
 };
 
 // Simple plugin host that renders plugin-provided side panels
-export function PluginHost({ plugins = [], appApi, onOverlaysChange }) {
+export function PluginHost({ plugins = [], appApi, onOverlaysChange, hideSidePanels = false }) {
   const overlayDescriptors = useMemo(() => {
     if (!plugins || plugins.length === 0) return [];
     return plugins.flatMap((plugin) => {
@@ -125,7 +125,7 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange }) {
   const isMobile = !!appApi?.isMobile;
   const menuBarBottom = appApi?.menuBarBottom ?? 80;
   const overlayRightInset = appApi?.overlayRightInset ?? 0;
-  const sidePanelContainerStyle = isMobile
+  const sidePanelContainerStyle = isMobile || hideSidePanels
     ? { display: 'none' }
     : {
         position: 'fixed',
@@ -140,7 +140,7 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange }) {
 
   return (
     <>
-      {sidePanelEntries.length > 0 && (
+      {sidePanelEntries.length > 0 && !hideSidePanels && (
         <div className="plugin-side-panels" style={sidePanelContainerStyle}>
           {sidePanelEntries.map(({ key, element }) => (
             <div key={key} className="plugin-side-panels__item">

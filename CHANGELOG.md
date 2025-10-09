@@ -52,6 +52,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Plugins: Core side panels (Graph Stats, Levels, etc.) render as fixed overlays beside the canvas instead of inline below it.
 - Node Info Panel: Clarify color chips by showing fill vs text samples and adding a colors legend for multi-selection stats.
 - Dialogs: Raised search/theme overlays above the menu bar to avoid dimming artifacts.
+- Plugins: Hide floating side panels while modals are open to keep dialogs unobstructed.
 - Mobile: Dropdown/context menus render above FABs/help (raised inline z-index in nav dropdown + higher z-index for nav and `.menu`/`.menu-dropdown`).
 - Mobile: Minimap uses safe‑area insets (`env(safe-area-inset-*)`) for bottom/right.
 - HTML: Set viewport to `viewport-fit=cover` to enable safe-area on iOS.

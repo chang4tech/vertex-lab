@@ -2908,6 +2908,8 @@ function App({ graphId = 'default' }) {
     },
   }), [overlayItems, slotStyles, overlayLayoutOverrides]);
 
+  const hasBlockingModal = showNodeEditor || showThemes || showSearch || showSettings || showTagManager || showPluginsManager || helpModal.open;
+
   const pluginAppApi = useMemo(() => ({
     nodes,
     edges,
@@ -2939,6 +2941,7 @@ function App({ graphId = 'default' }) {
     isMobile,
     menuBarBottom,
     overlayRightInset,
+    isModalActive: hasBlockingModal,
   }), [
     nodes,
     edges,
@@ -2967,6 +2970,7 @@ function App({ graphId = 'default' }) {
     isMobile,
     menuBarBottom,
     overlayRightInset,
+    hasBlockingModal,
   ]);
 
 
@@ -3102,6 +3106,7 @@ function App({ graphId = 'default' }) {
         plugins={activePlugins}
         onOverlaysChange={setPluginOverlays}
         appApi={pluginAppApi}
+        hideSidePanels={hasBlockingModal}
       />
 
       {/* Context Menu */}
