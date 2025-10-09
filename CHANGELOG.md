@@ -8,6 +8,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Fixed
 - Canvas & minimap: Skip nodes/edges with invalid coordinates when computing bounds or drawing so neither surface distorts after load; added regression tests covering hidden-node and invalid-node scenarios.
+- Canvas: Ensure wheel zoom stays anchored under the cursor on high-DPI displays.
 
 ### Added
 - Docs: `doc/DEV_SERVER.md` guiding LAN access (Vite `--host`, preview, IP lookup, firewall/VPN tips).

@@ -220,6 +220,37 @@ describe('VertexCanvas', () => {
     expect(ctx.scale).toHaveBeenCalled();
   });
 
+  it('keeps the zoom focus anchored under the cursor on high DPR displays', () => {
+    const prev = Object.getOwnPropertyDescriptor(window, 'devicePixelRatio');
+    Object.defineProperty(window, 'devicePixelRatio', { value: 2, configurable: true });
+
+    const { container } = renderWithTheme(<VertexCanvas {...mockProps} />);
+    const canvas = container.querySelector('canvas');
+
+    mockContext.translate.mockClear();
+
+    const wheelEvent = new WheelEvent('wheel', {
+      clientX: 400,
+      clientY: 300,
+      deltaY: -120,
+      bubbles: true,
+      cancelable: true,
+    });
+
+    canvas.dispatchEvent(wheelEvent);
+
+    const translateCalls = mockContext.translate.mock.calls;
+    const lastTranslate = translateCalls[translateCalls.length - 1];
+    expect(lastTranslate[0]).toBeCloseTo(-40, 1);
+    expect(lastTranslate[1]).toBeCloseTo(-30, 1);
+
+    if (prev) {
+      Object.defineProperty(window, 'devicePixelRatio', prev);
+    } else {
+      delete window.devicePixelRatio;
+    }
+  });
+
   it('pans with Space + drag and updates viewBox', () => {
     const onViewBoxChange = vi.fn();
     const { container } = renderWithTheme(

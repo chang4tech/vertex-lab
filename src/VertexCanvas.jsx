@@ -646,16 +646,15 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       // Pan with space+drag or middle mouse button
       if (isSpaceDown || e.button === 1) {
         const rect = canvas.getBoundingClientRect();
-        const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1;
         panState.current = {
           panning: true,
-          startX: (e.clientX - rect.left) / dpr, // Convert to CSS pixels
-          startY: (e.clientY - rect.top) / dpr,   // Convert to CSS pixels
+          startX: e.clientX - rect.left,
+          startY: e.clientY - rect.top,
           startOffsetX: view.current.offsetX,
           startOffsetY: view.current.offsetY
         };
         hasUserInteracted.current = true;
-        debugLog('Pan Start - clientX:', e.clientX, 'clientY:', e.clientY, 'rect.left:', rect.left, 'rect.top:', rect.top, 'dpr:', dpr, 'startX_css:', (e.clientX - rect.left) / dpr, 'startY_css:', (e.clientY - rect.top) / dpr, 'startOffsetX:', view.current.offsetX, 'startOffsetY:', view.current.offsetY);
+        debugLog('Pan Start - clientX:', e.clientX, 'clientY:', e.clientY, 'rect.left:', rect.left, 'rect.top:', rect.top, 'startX:', e.clientX - rect.left, 'startY:', e.clientY - rect.top, 'startOffsetX:', view.current.offsetX, 'startOffsetY:', view.current.offsetY);
         return;
       }
       // Shift + drag to start marquee selection
@@ -695,16 +694,15 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       // Pan
       if (panState.current.panning) {
         const rect = canvas.getBoundingClientRect();
-        const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1;
-        const currentClientX_css = (e.clientX - rect.left) / dpr; // Current mouse X in CSS pixels
-        const currentClientY_css = (e.clientY - rect.top) / dpr;   // Current mouse Y in CSS pixels
+        const currentClientX = e.clientX - rect.left;
+        const currentClientY = e.clientY - rect.top;
 
-        const dx = currentClientX_css - panState.current.startX;
-        const dy = currentClientY_css - panState.current.startY;
+        const dx = currentClientX - panState.current.startX;
+        const dy = currentClientY - panState.current.startY;
       view.current.offsetX = panState.current.startOffsetX + dx;
       view.current.offsetY = panState.current.startOffsetY + dy;
       hasUserInteracted.current = true;
-        debugLog('Pan Update - clientX:', e.clientX, 'clientY:', e.clientY, 'currentClientX_css:', currentClientX_css, 'currentClientY_css:', currentClientY_css, 'dx:', dx, 'dy:', dy, 'newOffsetX:', view.current.offsetX, 'newOffsetY:', view.current.offsetY);
+        debugLog('Pan Update - clientX:', e.clientX, 'clientY:', e.clientY, 'currentClientX:', currentClientX, 'currentClientY:', currentClientY, 'dx:', dx, 'dy:', dy, 'newOffsetX:', view.current.offsetX, 'newOffsetY:', view.current.offsetY);
         canvas.dispatchEvent(new Event('redraw'));
         return;
       }
@@ -743,11 +741,10 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       e.preventDefault();
       const scaleAmount = e.deltaY < 0 ? 1.1 : 0.9;
       const rect = canvas.getBoundingClientRect();
-      const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1;
 
       // Calculate mouse position in CSS pixels relative to the canvas
-      const mouseCanvasX = (e.clientX - rect.left) / dpr;
-      const mouseCanvasY = (e.clientY - rect.top) / dpr;
+      const mouseCanvasX = e.clientX - rect.left;
+      const mouseCanvasY = e.clientY - rect.top;
 
       // Calculate world coordinates of the mouse position before scaling
       const mx = (mouseCanvasX - view.current.offsetX) / view.current.scale;
