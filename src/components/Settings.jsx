@@ -72,7 +72,7 @@ const Settings = ({ onClose, initialTab = 'all', maxLevel, onMaxLevelChange }) =
   };
 
   return (
-    <div className="settings-overlay" onClick={handleOverlayClick}>
+    <div className="settings-overlay settings-overlay--clear" onClick={handleOverlayClick}>
       <div className="settings-modal">
         <header className="settings-header">
           <h2><FormattedMessage id="settings.shortcutsTitle" defaultMessage="Shortcuts" /></h2>
