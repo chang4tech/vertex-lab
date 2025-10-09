@@ -2044,6 +2044,25 @@ function App({ graphId = 'default' }) {
     setNodes(() => Array.isArray(newNodes) ? [...newNodes] : []);
   }, [nodes, undoStack.length, redoStack.length]);
 
+  const replaceGraph = useCallback((nextNodes, nextEdges, options = {}) => {
+    const { resetUndo = false } = options;
+    const safeNodes = cloneNodesForState(nextNodes);
+    const safeEdges = cloneEdgesForState(nextEdges);
+    if (resetUndo) {
+      setUndoStack([]);
+    } else {
+      setUndoStack(stack => [...stack, [...nodes]]);
+    }
+    setRedoStack([]);
+    setNodes(safeNodes);
+    setEdges(safeEdges);
+    setSelectedNodeId(null);
+    setSelectedNodeIds([]);
+    setHighlightedNodeIds([]);
+    setShowNodeEditor(false);
+    setEditingNodeId(null);
+  }, [nodes]);
+
   // Auto layout handler
   const handleAutoLayout = useCallback(() => {
     console.log('Applying auto layout to', nodes.length, 'nodes');
@@ -3060,6 +3079,7 @@ function App({ graphId = 'default' }) {
     graphId,
     graphUrl,
     user,
+    replaceGraph,
     isModalActive: hasBlockingModal,
   }), [
     nodes,
@@ -3095,6 +3115,7 @@ function App({ graphId = 'default' }) {
     graphId,
     graphUrl,
     user,
+    replaceGraph,
     hasBlockingModal,
   ]);
 
