@@ -511,6 +511,14 @@ mark {
   align-items: flex-start;
 }
 
+.plugin-side-panels {
+  pointer-events: none;
+}
+
+.plugin-side-panels__item {
+  pointer-events: auto;
+}
+
 
 /* --- Dialog Component --- */
 .dialog_wrapper {

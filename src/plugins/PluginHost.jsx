@@ -80,35 +80,75 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange }) {
   }, [overlayDescriptors, onOverlaysChange]);
 
   if (!plugins || plugins.length === 0) return null;
-  return (
-    <>
-      {plugins.flatMap((plugin) => {
-        const panels = Array.isArray(plugin?.slots?.sidePanels) ? plugin.slots.sidePanels : [];
-        const withPluginApi = (render) => (hostApi) => {
-          const api = {
-            ...hostApi,
-            plugin: {
-              id: plugin.id,
-              log: (message, level = 'info') => appendPluginLog({ pluginId: plugin.id, level, message: String(message) }),
-              openHub: () => {
-                try { sessionStorage.setItem('vertex_plugin_return', window.location.hash || '#/'); } catch {}
-                try { window.location.hash = `#/plugin/${encodeURIComponent(plugin.id)}`; } catch {}
-              },
-              openConfig: () => { try { window.location.hash = `#/plugin/${encodeURIComponent(plugin.id)}`; } catch {} },
-              openConsole: () => { try { window.location.hash = `#/plugin/${encodeURIComponent(plugin.id)}`; } catch {} },
-            },
-          };
-          return render(api);
-        };
 
-        return panels
-          .filter((panel) => (typeof panel.visible === 'function' ? panel.visible(appApi) : true))
-          .map((panel) => (
+  const sidePanelEntries = useMemo(() => {
+    if (!plugins || plugins.length === 0) return [];
+    const entries = [];
+    plugins.forEach((plugin) => {
+      const panels = Array.isArray(plugin?.slots?.sidePanels) ? plugin.slots.sidePanels : [];
+      const withPluginApi = (render) => (hostApi) => {
+        const api = {
+          ...hostApi,
+          plugin: {
+            id: plugin.id,
+            log: (message, level = 'info') => appendPluginLog({ pluginId: plugin.id, level, message: String(message) }),
+            openHub: () => {
+              try { sessionStorage.setItem('vertex_plugin_return', window.location.hash || '#/'); } catch {}
+              try { window.location.hash = `#/plugin/${encodeURIComponent(plugin.id)}`; } catch {}
+            },
+            openConfig: () => { try { window.location.hash = `#/plugin/${encodeURIComponent(plugin.id)}`; } catch {} },
+            openConsole: () => { try { window.location.hash = `#/plugin/${encodeURIComponent(plugin.id)}`; } catch {} },
+          },
+        };
+        return render(api);
+      };
+
+      panels
+        .filter((panel) => (typeof panel.visible === 'function' ? panel.visible(appApi) : true))
+        .forEach((panel) => {
+          const element = (
             <PluginErrorBoundary key={`${plugin.id}:${panel.id}`} pluginId={plugin.id}>
               <PanelRenderer render={withPluginApi(panel.render)} appApi={appApi} />
             </PluginErrorBoundary>
-          ));
-      })}
+          );
+          entries.push({
+            key: `${plugin.id}:${panel.id}`,
+            order: panel.order ?? 0,
+            element,
+          });
+        });
+    });
+    entries.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    return entries;
+  }, [plugins, appApi]);
+
+  const isMobile = !!appApi?.isMobile;
+  const menuBarBottom = appApi?.menuBarBottom ?? 80;
+  const overlayRightInset = appApi?.overlayRightInset ?? 0;
+  const sidePanelContainerStyle = isMobile
+    ? { display: 'none' }
+    : {
+        position: 'fixed',
+        top: `calc(${menuBarBottom + 12}px + env(safe-area-inset-top))`,
+        right: `calc(${16 + overlayRightInset}px + env(safe-area-inset-right))`,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+        pointerEvents: 'none',
+        zIndex: 10115,
+      };
+
+  return (
+    <>
+      {sidePanelEntries.length > 0 && (
+        <div className="plugin-side-panels" style={sidePanelContainerStyle}>
+          {sidePanelEntries.map(({ key, element }) => (
+            <div key={key} className="plugin-side-panels__item">
+              {element}
+            </div>
+          ))}
+        </div>
+      )}
     </>
   );
 }

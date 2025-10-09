@@ -2938,6 +2938,7 @@ function App({ graphId = 'default' }) {
     toggleHelp,
     isMobile,
     menuBarBottom,
+    overlayRightInset,
   }), [
     nodes,
     edges,
@@ -2965,6 +2966,7 @@ function App({ graphId = 'default' }) {
     toggleHelp,
     isMobile,
     menuBarBottom,
+    overlayRightInset,
   ]);
 
 
