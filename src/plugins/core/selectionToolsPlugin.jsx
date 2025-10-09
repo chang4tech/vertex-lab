@@ -1,4 +1,93 @@
 import React from 'react';
+import { useTheme } from '../../contexts/ThemeContext';
+
+function SelectionToolsAbout() {
+  const { currentTheme } = useTheme();
+  const colors = currentTheme.colors;
+  return (
+    <div style={{ color: colors.primaryText }}>
+      <ul style={{ margin: 0, paddingLeft: 18 }}>
+        <li>Appears when you select one or more nodes.</li>
+        <li>Use Edit First to open the editor for the first selected node.</li>
+        <li>Toggle Collapse expands/collapses the first selected node.</li>
+        <li>Delete Selected removes all selected nodes.</li>
+      </ul>
+    </div>
+  );
+}
+
+function ActionButton({ disabled, onClick, children }) {
+  const { currentTheme } = useTheme();
+  const colors = currentTheme.colors;
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      style={{
+        border: 'none',
+        borderRadius: 8,
+        padding: '8px 12px',
+        background: colors.primaryButton,
+        color: colors.primaryButtonText,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.5 : 1,
+        transition: 'background 150ms ease, opacity 150ms ease',
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function SelectionToolsPanel({ count, firstSelectedId, showCollapse, showDelete, api }) {
+  const { currentTheme } = useTheme();
+  const colors = currentTheme.colors;
+  return (
+    <div
+      style={{
+        width: 320,
+        padding: 16,
+        borderRadius: 12,
+        border: `1px solid ${colors.panelBorder}`,
+        background: colors.panelBackground,
+        boxShadow: `0 12px 24px ${colors.panelShadow}`,
+        color: colors.primaryText,
+        pointerEvents: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+      }}
+    >
+      <h3 style={{ margin: 0 }}>Selection Tools</h3>
+      <div style={{ color: colors.secondaryText }}>{count} selected</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <ActionButton
+          disabled={!firstSelectedId}
+          onClick={() => firstSelectedId && api?.onEditNode?.(firstSelectedId)}
+        >
+          Edit First
+        </ActionButton>
+        {showCollapse && (
+          <ActionButton
+            disabled={!firstSelectedId}
+            onClick={() => firstSelectedId && api?.onToggleCollapse?.(firstSelectedId)}
+          >
+            Toggle Collapse
+          </ActionButton>
+        )}
+        {showDelete && (
+          <ActionButton
+            disabled={count === 0}
+            onClick={() => count > 0 && api?.onDeleteNodes?.(api.selectedNodeIds)}
+          >
+            Delete Selected
+          </ActionButton>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export const selectionToolsPlugin = {
   id: 'core.selectionTools',
@@ -14,16 +103,7 @@ export const selectionToolsPlugin = {
 * Toggle Collapse expands/collapses the first selected node.
 * Delete Selected removes all selected nodes.
       `.trim(),
-      render: () => (
-        <div style={{ color: '#374151' }}>
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
-            <li>Appears when you select one or more nodes.</li>
-            <li>Use Edit First to open the editor for the first selected node.</li>
-            <li>Toggle Collapse expands/collapses the first selected node.</li>
-            <li>Delete Selected removes all selected nodes.</li>
-          </ul>
-        </div>
-      )
+      render: () => <SelectionToolsAbout />
     },
     configPage: {
       render: () => {
@@ -64,19 +144,13 @@ export const selectionToolsPlugin = {
           const showDelete = get('showDelete', true);
           const showCollapse = get('showCollapse', true);
           return (
-            <div style={{ width: 320, padding: 12, borderLeft: '1px solid #e5e7eb', background: '#fff' }}>
-              <h3 style={{ margin: '8px 0' }}>Selection Tools</h3>
-              <div style={{ color: '#4b5563', marginBottom: 8 }}>{count} selected</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <button disabled={!first} onClick={() => first && api?.onEditNode?.(first)}>Edit First</button>
-                {showCollapse && (
-                  <button disabled={!first} onClick={() => first && api?.onToggleCollapse?.(first)}>Toggle Collapse</button>
-                )}
-                {showDelete && (
-                  <button disabled={count === 0} onClick={() => count > 0 && api?.onDeleteNodes?.(api.selectedNodeIds)}>Delete Selected</button>
-                )}
-              </div>
-            </div>
+            <SelectionToolsPanel
+              count={count}
+              firstSelectedId={first}
+              showCollapse={showCollapse}
+              showDelete={showDelete}
+              api={api}
+            />
           );
         }
       }

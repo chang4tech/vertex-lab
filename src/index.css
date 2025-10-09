@@ -165,9 +165,10 @@ mark {
 /* --- Minimap --- */
 .minimap {
   z-index: 100;
-  background: rgba(255, 255, 255, 0.98);
+  background: color-mix(in srgb, var(--panel-background, #ffffff) 92%, transparent);
+  border: 1px solid var(--panel-border, #eeeeee);
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px var(--panel-shadow, rgba(0, 0, 0, 0.08));
   padding: 12px;
   display: flex;
   justify-content: center;
@@ -195,7 +196,7 @@ mark {
 
 .minimap:hover {
   transform: scale(1.02);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 16px var(--panel-shadow, rgba(0, 0, 0, 0.15));
 }
 
 /* --- Help Panel --- */
@@ -219,13 +220,15 @@ mark {
 }
 
 .rules {
-  background-color: #fff;
+  background-color: var(--panel-background, #ffffff);
+  border: 1px solid var(--panel-border, #eeeeee);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px var(--panel-shadow, rgba(0, 0, 0, 0.15));
   padding: 15px;
   transition: opacity 0.3s ease, transform 0.3s ease;
   opacity: 0;
   transform: translateY(-20px);
+  color: var(--primary-text, #333333);
 }
 
 .rules.show {
@@ -246,17 +249,18 @@ mark {
 }
 
 .key {
-  background-color: #e9ecef;
-  border: 1px solid #ced4da;
+  background-color: var(--menu-hover, #e9ecef);
+  border: 1px solid var(--menu-border, #ced4da);
   border-radius: 4px;
   padding: 2px 6px;
   margin: 0 4px;
   font-weight: 600;
-  color: #495057;
+  color: var(--primary-text, #495057);
 }
 
 .desc {
   margin-left: 10px;
+  color: var(--secondary-text, #666666);
 }
 
 

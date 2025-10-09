@@ -1,4 +1,57 @@
 import React from 'react';
+import { useTheme } from '../../contexts/ThemeContext';
+
+function GraphStatsAbout() {
+  const { currentTheme } = useTheme();
+  const colors = currentTheme.colors;
+  return (
+    <div style={{ color: colors.primaryText }}>
+      <ul style={{ margin: 0, paddingLeft: 18 }}>
+        <li>Always-on panel that summarizes your current graph.</li>
+        <li>Toggle which metrics to show under Settings.</li>
+      </ul>
+    </div>
+  );
+}
+
+function GraphStatsPanel({ nodeCount, edgeCount, selectedCount, showNodes, showEdges, showSelected }) {
+  const { currentTheme } = useTheme();
+  const colors = currentTheme.colors;
+  return (
+    <div
+      style={{
+        width: 320,
+        padding: 16,
+        borderRadius: 12,
+        border: `1px solid ${colors.panelBorder}`,
+        background: colors.panelBackground,
+        boxShadow: `0 12px 24px ${colors.panelShadow}`,
+        color: colors.primaryText,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        pointerEvents: 'auto',
+      }}
+    >
+      <h3 style={{ margin: 0, color: colors.primaryText }}>Graph Stats</h3>
+      {showNodes && (
+        <div style={{ color: colors.secondaryText }}>
+          Nodes: <strong style={{ color: colors.primaryText }}>{nodeCount}</strong>
+        </div>
+      )}
+      {showEdges && (
+        <div style={{ color: colors.secondaryText }}>
+          Edges: <strong style={{ color: colors.primaryText }}>{edgeCount}</strong>
+        </div>
+      )}
+      {showSelected && (
+        <div style={{ color: colors.secondaryText }}>
+          Selected: <strong style={{ color: colors.primaryText }}>{selectedCount}</strong>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export const graphStatsPlugin = {
   id: 'core.graphStats',
@@ -12,14 +65,7 @@ export const graphStatsPlugin = {
 * Always-on panel that summarizes your current graph.
 * Toggle which metrics to show under Settings.
       `.trim(),
-      render: () => (
-        <div style={{ color: '#374151' }}>
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
-            <li>Always-on panel that summarizes your current graph.</li>
-            <li>Toggle which metrics to show under Settings.</li>
-          </ul>
-        </div>
-      )
+      render: () => <GraphStatsAbout />
     },
     configPage: {
       render: () => {
@@ -55,12 +101,14 @@ export const graphStatsPlugin = {
           const showEdges = get('showEdges', true);
           const showSelected = get('showSelected', true);
           return (
-            <div style={{ width: 320, padding: 12, borderLeft: '1px solid #e5e7eb', background: '#fff' }}>
-              <h3 style={{ margin: '8px 0' }}>Graph Stats</h3>
-              {showNodes && <div style={{ color: '#4b5563' }}>Nodes: {nodeCount}</div>}
-              {showEdges && <div style={{ color: '#4b5563' }}>Edges: {edgeCount}</div>}
-              {showSelected && <div style={{ color: '#4b5563' }}>Selected: {selected}</div>}
-            </div>
+            <GraphStatsPanel
+              nodeCount={nodeCount}
+              edgeCount={edgeCount}
+              selectedCount={selected}
+              showNodes={showNodes}
+              showEdges={showEdges}
+              showSelected={showSelected}
+            />
           );
         }
       }

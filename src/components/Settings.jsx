@@ -109,9 +109,8 @@ const Settings = ({ onClose, initialTab = 'all', maxLevel, onMaxLevelChange }) =
                     max="999"
                     value={levelInput}
                     onChange={handleLevelInput}
-                    style={{ width: 120, padding: '6px 8px' }}
                   />
-                  <span style={{ fontSize: 12, color: '#6b7280' }}>
+                  <span style={{ fontSize: 12, color: 'var(--secondary-text, #6b7280)' }}>
                     <FormattedMessage id="settings.maxLevelHint" defaultMessage="Highest level allowed when creating nodes (default 99)." />
                   </span>
                 </label>

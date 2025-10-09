@@ -91,8 +91,8 @@ export function Minimap({ nodes, edges = [], viewBox, scale = 0.15, visible, onV
 
     // Clear canvas and set up initial styles
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#f0f0f0';
-    ctx.strokeStyle = '#666';
+    ctx.fillStyle = currentTheme.colors.panelBackground;
+    ctx.strokeStyle = currentTheme.colors.panelBorder;
     ctx.lineWidth = 1;
 
     // Apply transform to center the diagram
@@ -194,7 +194,7 @@ export function Minimap({ nodes, edges = [], viewBox, scale = 0.15, visible, onV
 
     // Draw viewport rectangle
     if (viewBox) {
-      ctx.strokeStyle = '#007bff';
+      ctx.strokeStyle = currentTheme.colors.primaryButton;
       ctx.lineWidth = 2;
       ctx.strokeRect(
         viewBox.x * finalScale,
@@ -237,10 +237,10 @@ export function Minimap({ nodes, edges = [], viewBox, scale = 0.15, visible, onV
         ref={canvasRef}
         onClick={handleClick}
         style={{
-          border: '1px solid #ccc',
-          borderRadius: '4px',
-          backgroundColor: '#fff',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+          border: `1px solid ${currentTheme.colors.panelBorder}`,
+          borderRadius: '8px',
+          backgroundColor: currentTheme.colors.panelBackground,
+          boxShadow: `0 2px 8px ${currentTheme.colors.panelShadow}`,
           maxWidth: '250px',
           maxHeight: '200px'
         }}

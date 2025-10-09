@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const SETTINGS_KEY = 'plugin_core.versionHistory.settings';
 const SNAPSHOT_KEY_PREFIX = 'plugin_core.versionHistory.snapshots.';
@@ -167,9 +168,11 @@ const formatTimestamp = (value) => {
 
 const VersionHistoryConfig = () => {
   const [settings, updateSettings] = useVersionHistorySettings();
+  const { currentTheme } = useTheme();
+  const colors = currentTheme.colors;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, color: colors.primaryText }}>
       <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <input
           type="checkbox"
@@ -186,7 +189,14 @@ const VersionHistoryConfig = () => {
           max={100}
           value={settings.maxSnapshots}
           onChange={(e) => updateSettings({ maxSnapshots: Math.max(1, Math.min(100, Number(e.target.value) || DEFAULT_SETTINGS.maxSnapshots)) })}
-          style={{ width: 80, padding: '6px 8px' }}
+          style={{
+            width: 80,
+            padding: '6px 8px',
+            background: colors.inputBackground,
+            border: `1px solid ${colors.inputBorder}`,
+            borderRadius: 6,
+            color: colors.primaryText,
+          }}
         />
       </label>
     </div>
@@ -200,6 +210,8 @@ const VersionHistoryOverlay = ({ api }) => {
   const lastSignatureRef = useRef('');
   const lastCaptureRef = useRef(0);
   const isOpen = !!api?.isVersionHistoryOpen;
+  const { currentTheme } = useTheme();
+  const colors = currentTheme.colors;
 
   useEffect(() => {
     setSnapshots(loadSnapshots(graphId));
@@ -313,25 +325,26 @@ const VersionHistoryOverlay = ({ api }) => {
           right: 'calc(24px + env(safe-area-inset-right))',
           width: 360,
           maxHeight: '70vh',
-          background: '#fff',
+          background: colors.panelBackground,
           borderRadius: 12,
-          boxShadow: '0 18px 40px rgba(15,23,42,0.18)',
-          border: '1px solid rgba(148,163,184,0.35)',
+          boxShadow: `0 18px 40px ${colors.panelShadow}`,
+          border: `1px solid ${colors.panelBorder}`,
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
           zIndex: 10200,
+          color: colors.primaryText,
         }}
       >
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(226,232,240,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.panelBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ fontWeight: 600 }}>Version History</div>
-            <div style={{ fontSize: 12, color: '#64748b' }}>{snapshots.length} snapshot{snapshots.length === 1 ? '' : 's'}</div>
+            <div style={{ fontWeight: 600, color: colors.primaryText }}>Version History</div>
+            <div style={{ fontSize: 12, color: colors.secondaryText }}>{snapshots.length} snapshot{snapshots.length === 1 ? '' : 's'}</div>
           </div>
           <button
             type="button"
             onClick={closePanel}
-            style={{ border: 'none', background: 'none', fontSize: 18, cursor: 'pointer', color: '#64748b' }}
+            style={{ border: 'none', background: 'none', fontSize: 18, cursor: 'pointer', color: colors.secondaryText }}
             aria-label="Close version history"
           >
             ×
@@ -343,55 +356,70 @@ const VersionHistoryOverlay = ({ api }) => {
             onClick={() => captureSnapshot('Manual snapshot')}
             style={{
               alignSelf: 'flex-start',
-              background: '#1f2937',
-              color: '#fff',
-              borderRadius: 6,
+              background: colors.primaryButton,
+              color: colors.primaryButtonText,
+              borderRadius: 8,
               padding: '6px 12px',
               border: 'none',
               cursor: 'pointer',
+              transition: 'background 150ms ease',
             }}
           >
             Capture snapshot
           </button>
           {snapshots.length === 0 ? (
-            <div style={{ color: '#64748b', fontSize: 13 }}>No snapshots yet.</div>
+            <div style={{ color: colors.secondaryText, fontSize: 13 }}>No snapshots yet.</div>
           ) : (
             snapshots.map((entry) => (
               <div key={entry.id} style={{
-                border: '1px solid rgba(226,232,240,0.8)',
+                border: `1px solid ${colors.panelBorder}`,
                 borderRadius: 8,
                 padding: 12,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 8,
-                background: '#f8fafc',
+                background: colors.inputBackground,
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
                   <div>
-                    <div style={{ fontWeight: 600 }}>{entry.label || 'Snapshot'}</div>
-                    <div style={{ fontSize: 12, color: '#64748b' }}>{formatTimestamp(entry.timestamp)}</div>
+                    <div style={{ fontWeight: 600, color: colors.primaryText }}>{entry.label || 'Snapshot'}</div>
+                    <div style={{ fontSize: 12, color: colors.secondaryText }}>{formatTimestamp(entry.timestamp)}</div>
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button
                       type="button"
                       onClick={() => restoreSnapshot(entry)}
-                      style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(100,116,139,0.4)', background: '#fff', cursor: 'pointer' }}
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: 6,
+                        border: `1px solid ${colors.inputBorder}`,
+                        background: colors.panelBackground,
+                        color: colors.primaryText,
+                        cursor: 'pointer',
+                      }}
                     >
                       Restore
                     </button>
                     <button
                       type="button"
                       onClick={() => removeSnapshot(entry.id)}
-                      style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(248,113,113,0.6)', color: '#dc2626', background: '#fff', cursor: 'pointer' }}
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: 6,
+                        border: `1px solid ${colors.error}`,
+                        color: colors.error,
+                        background: colors.panelBackground,
+                        cursor: 'pointer',
+                      }}
                     >
                       Delete
                     </button>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 16, fontSize: 12, color: '#475569' }}>
+                <div style={{ display: 'flex', gap: 16, fontSize: 12, color: colors.secondaryText }}>
                   <span>{entry.summary?.nodeCount ?? 0} nodes</span>
                   <span>{entry.summary?.edgeCount ?? 0} edges</span>
-                  <span style={{ color: '#94a3b8' }}>{entry.source === 'auto' ? 'Auto' : entry.source === 'initial' ? 'Initial' : 'Manual'}</span>
+                  <span style={{ color: colors.info }}>{entry.source === 'auto' ? 'Auto' : entry.source === 'initial' ? 'Initial' : 'Manual'}</span>
                 </div>
               </div>
             ))

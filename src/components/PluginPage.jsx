@@ -6,6 +6,7 @@ import { loadCustomPluginsFromStorage } from '../utils/customPluginLoader';
 import { loadPluginPrefs, savePluginPrefs } from '../utils/pluginUtils';
 import { FormattedMessage } from 'react-intl';
 import Markdown from './common/Markdown.jsx';
+import { useTheme } from '../contexts/ThemeContext';
 
 function usePlugins() {
   const [plugins, setPlugins] = React.useState(corePlugins);
@@ -22,6 +23,27 @@ export default function PluginPage({ pluginId }) {
   const plugins = usePlugins();
   const plugin = plugins.find(p => p.id === pluginId);
   const [logs, setLogs] = React.useState(() => getPluginLogsById(pluginId));
+  const { currentTheme } = useTheme();
+  const colors = currentTheme.colors;
+  const subtleTextStyle = { color: colors.secondaryText };
+  const buttonStyle = {
+    border: `1px solid ${colors.inputBorder}`,
+    background: colors.inputBackground,
+    color: colors.primaryText,
+    borderRadius: 6,
+    padding: '6px 12px',
+    cursor: 'pointer'
+  };
+  const consoleWrapperStyle = {
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+    background: colors.canvasBackground,
+    color: colors.primaryText,
+    padding: 12,
+    borderRadius: 6,
+    border: `1px solid ${colors.panelBorder}`,
+    maxHeight: 360,
+    overflow: 'auto'
+  };
 
   React.useEffect(() => {
     return subscribePluginErrors(() => setLogs(getPluginLogsById(pluginId)));
@@ -42,7 +64,7 @@ export default function PluginPage({ pluginId }) {
   const hasAbout = !!(aboutSlot && (typeof aboutSlot.render === 'function' || typeof aboutSlot.markdown === 'string'));
   const ConfigView = () => {
     if (!hasConfig) {
-      return <div style={{ color: '#6b7280' }}>This plugin does not provide a config page.</div>;
+      return <div style={subtleTextStyle}>This plugin does not provide a config page.</div>;
     }
     const defaults = loadPluginPrefs([plugin]);
     const api = {
@@ -58,18 +80,27 @@ export default function PluginPage({ pluginId }) {
   const ConsoleView = () => (
     <div>
       <div style={{ marginBottom: 8, display: 'flex', gap: 8 }}>
-        <button onClick={() => {
+        <button style={buttonStyle} onClick={() => {
           const text = logs.map(e => `[${new Date(e.time).toISOString()}] (${e.level}) ${e.message}`).join('\n');
           navigator.clipboard?.writeText(text).catch(() => {});
         }}><FormattedMessage id="plugin.hub.copy" defaultMessage="Copy" /></button>
-        <button onClick={() => { clearPluginLogsById(pluginId); setLogs([]); }}><FormattedMessage id="plugin.hub.clear" defaultMessage="Clear" /></button>
+        <button style={buttonStyle} onClick={() => { clearPluginLogsById(pluginId); setLogs([]); }}><FormattedMessage id="plugin.hub.clear" defaultMessage="Clear" /></button>
       </div>
       {logs.length === 0 ? (
-        <div style={{ color: '#6b7280' }}>No logs yet.</div>
+        <div style={subtleTextStyle}>No logs yet.</div>
       ) : (
-        <div style={{ fontFamily: 'monospace', background: '#0b1021', color: '#e5e7eb', padding: 12, borderRadius: 6 }}>
+        <div style={consoleWrapperStyle}>
           {logs.slice(-200).map((e, i) => (
-            <div key={i} style={{ color: e.level === 'error' ? '#fca5a5' : e.level === 'warn' ? '#fde68a' : '#e5e7eb' }}>
+            <div
+              key={i}
+              style={{
+                color: e.level === 'error'
+                  ? colors.error
+                  : e.level === 'warn'
+                    ? colors.warning
+                    : colors.primaryText
+              }}
+            >
               [{new Date(e.time).toLocaleTimeString()}] ({e.level}) {e.message}
             </div>
           ))}
@@ -79,16 +110,16 @@ export default function PluginPage({ pluginId }) {
   );
 
   return (
-    <div style={{ padding: 24, maxWidth: 960, margin: '0 auto' }}>
+    <div style={{ padding: 24, maxWidth: 960, margin: '0 auto', color: colors.primaryText }}>
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <h2 style={{ marginBottom: 4 }}>
             {plugin.name || plugin.id} — <FormattedMessage id="plugin.hub.title" defaultMessage="Control Hub" />
           </h2>
-          {plugin.description && <div style={{ color: '#6b7280' }}>{plugin.description}</div>}
+          {plugin.description && <div style={subtleTextStyle}>{plugin.description}</div>}
         </div>
         <nav style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => {
+          <button style={buttonStyle} onClick={() => {
             try {
               const ret = sessionStorage.getItem('vertex_plugin_return');
               if (ret) {

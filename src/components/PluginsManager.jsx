@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { FormattedMessage } from 'react-intl';
 import { corePlugins } from '../plugins';
 import '../styles/Settings.css';
 import { getPluginErrors, getPluginErrorsById, subscribePluginErrors } from '../plugins/errorLog.js';
+import { useTheme } from '../contexts/ThemeContext';
 
 const PluginsManager = ({
   onClose,
@@ -17,6 +18,37 @@ const PluginsManager = ({
   const fileInputRef = useRef(null);
   const [expanded, setExpanded] = useState({});
   const [errors, setErrors] = useState(() => getPluginErrors());
+  const { currentTheme } = useTheme();
+  const colors = currentTheme.colors;
+
+  const badgeStyle = { fontSize: 12, color: colors.secondaryText };
+  const warningBadgeStyle = { fontSize: 12, color: colors.warning };
+  const errorBadgeStyle = { fontSize: 12, color: colors.error };
+  const subtleTextStyle = { color: colors.secondaryText };
+  const detailsTextStyle = { fontSize: 12, color: colors.primaryText, marginTop: 6 };
+  const subtleButtonStyle = {
+    border: `1px solid ${colors.inputBorder}`,
+    background: colors.inputBackground,
+    color: colors.primaryText,
+    borderRadius: 6,
+    padding: '6px 12px',
+    cursor: 'pointer'
+  };
+  const pillContainerStyle = {
+    display: 'flex',
+    gap: 8,
+    alignItems: 'center'
+  };
+  const logContainerStyle = {
+    maxHeight: 120,
+    overflow: 'auto',
+    fontSize: 12,
+    background: colors.inputBackground,
+    border: `1px solid ${colors.inputBorder}`,
+    padding: 8,
+    borderRadius: 8
+  };
+
   const isIncomplete = (p) => {
     const s = p?.slots || {};
     const hasSidePanels = Array.isArray(s.sidePanels) && s.sidePanels.length > 0;
@@ -57,21 +89,24 @@ const PluginsManager = ({
               {availablePlugins.map(p => (
                 <React.Fragment key={p.id}>
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={pillContainerStyle}>
                       <strong>{p.name || p.id}</strong>
-                      <span style={{ fontSize: 12, color: '#6b7280' }}>{pluginPrefs[p.id] ?? true ? '• Enabled' : '• Disabled'}</span>
+                      <span style={badgeStyle}>{pluginPrefs[p.id] ?? true ? '• Enabled' : '• Disabled'}</span>
                       {isIncomplete(p) && (
-                        <span style={{ fontSize: 12, color: '#b45309' }}>• <FormattedMessage id="plugins.incomplete" defaultMessage="Incomplete" /></span>
+                        <span style={warningBadgeStyle}>• <FormattedMessage id="plugins.incomplete" defaultMessage="Incomplete" /></span>
                       )}
                       {getPluginErrorsById(p.id).length > 0 && (
-                        <span style={{ fontSize: 12, color: '#b91c1c' }}>• Errors: {getPluginErrorsById(p.id).length}</span>
+                        <span style={errorBadgeStyle}>• Errors: {getPluginErrorsById(p.id).length}</span>
                       )}
-                      <button style={{ marginLeft: 'auto' }} onClick={() => setExpanded(prev => ({ ...prev, [p.id]: !prev[p.id] }))}>
+                      <button
+                        style={{ ...subtleButtonStyle, marginLeft: 'auto' }}
+                        onClick={() => setExpanded(prev => ({ ...prev, [p.id]: !prev[p.id] }))}
+                      >
                         {expanded[p.id] ? 'Hide Details' : 'Details'}
                       </button>
                     </div>
                     {expanded[p.id] && (
-                      <div style={{ fontSize: 12, color: '#374151', marginTop: 6 }}>
+                      <div style={detailsTextStyle}>
                         {p.description && (
                           <div>
                             <strong>Description:</strong> {p.descriptionId
@@ -82,10 +117,10 @@ const PluginsManager = ({
                         {p.version && <div><strong>Version:</strong> {p.version}</div>}
                         {p.author && <div><strong>Author:</strong> {p.author}</div>}
                         {!p.description && !p.version && !p.author && (
-                          <div style={{ color: '#6b7280' }}>No metadata</div>
+                          <div style={subtleTextStyle}>No metadata</div>
                         )}
-                        <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                          <button onClick={() => {
+                        <div style={{ ...pillContainerStyle, marginTop: 8 }}>
+                          <button style={subtleButtonStyle} onClick={() => {
                             try { sessionStorage.setItem('vertex_plugin_return', window.location.hash || '#/'); } catch {}
                             window.location.hash = `#/plugin/${encodeURIComponent(p.id)}`;
                           }}><FormattedMessage id="plugins.controlHub" defaultMessage="Control Hub" /></button>
@@ -93,7 +128,7 @@ const PluginsManager = ({
                       </div>
                     )}
                   </div>
-                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: colors.primaryText }}>
                     <input
                       type="checkbox"
                       checked={pluginPrefs[p.id] ?? true}
@@ -109,31 +144,34 @@ const PluginsManager = ({
           <section>
             <h3 style={{ margin: '8px 0' }}><FormattedMessage id="plugins.custom" defaultMessage="Custom Plugins" /></h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-              <button onClick={triggerImport}><FormattedMessage id="plugins.import" defaultMessage="Import Plugin (.js)" /></button>
+              <button style={subtleButtonStyle} onClick={triggerImport}><FormattedMessage id="plugins.import" defaultMessage="Import Plugin (.js)" /></button>
               <input ref={fileInputRef} type="file" accept=".js,.mjs" style={{ display: 'none' }} onChange={handleFileChange} />
             </div>
             {customPlugins.length === 0 ? (
-              <div style={{ color: '#6b7280' }}><FormattedMessage id="plugins.none" defaultMessage="No custom plugins imported yet." /></div>
+              <div style={subtleTextStyle}><FormattedMessage id="plugins.none" defaultMessage="No custom plugins imported yet." /></div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', alignItems: 'center', gap: 8 }}>
                 {customPlugins.map((p) => (
                   <React.Fragment key={p.id}>
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={pillContainerStyle}>
                         <strong>{p.name || p.id}</strong>
-                        <span style={{ fontSize: 12, color: '#6b7280' }}>{pluginPrefs[p.id] ?? true ? '• Enabled' : '• Disabled'}</span>
+                        <span style={badgeStyle}>{pluginPrefs[p.id] ?? true ? '• Enabled' : '• Disabled'}</span>
                         {isIncomplete(p) && (
-                          <span style={{ fontSize: 12, color: '#b45309' }}>• <FormattedMessage id="plugins.incomplete" defaultMessage="Incomplete" /></span>
+                          <span style={warningBadgeStyle}>• <FormattedMessage id="plugins.incomplete" defaultMessage="Incomplete" /></span>
                         )}
                         {getPluginErrorsById(p.id).length > 0 && (
-                          <span style={{ fontSize: 12, color: '#b91c1c' }}>• Errors: {getPluginErrorsById(p.id).length}</span>
+                          <span style={errorBadgeStyle}>• Errors: {getPluginErrorsById(p.id).length}</span>
                         )}
-                        <button style={{ marginLeft: 'auto' }} onClick={() => setExpanded(prev => ({ ...prev, [p.id]: !prev[p.id] }))}>
+                        <button
+                          style={{ ...subtleButtonStyle, marginLeft: 'auto' }}
+                          onClick={() => setExpanded(prev => ({ ...prev, [p.id]: !prev[p.id] }))}
+                        >
                           {expanded[p.id] ? 'Hide Details' : 'Details'}
                         </button>
                     </div>
                     {expanded[p.id] && (
-                      <div style={{ fontSize: 12, color: '#374151', marginTop: 6 }}>
+                      <div style={detailsTextStyle}>
                         {p.description && (
                           <div>
                             <strong>Description:</strong> {p.descriptionId
@@ -144,10 +182,10 @@ const PluginsManager = ({
                         {p.version && <div><strong>Version:</strong> {p.version}</div>}
                         {p.author && <div><strong>Author:</strong> {p.author}</div>}
                         {!p.description && !p.version && !p.author && (
-                          <div style={{ color: '#6b7280' }}>No metadata</div>
+                          <div style={subtleTextStyle}>No metadata</div>
                         )}
-                        <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                          <button onClick={() => {
+                        <div style={{ ...pillContainerStyle, marginTop: 8 }}>
+                          <button style={subtleButtonStyle} onClick={() => {
                             try { sessionStorage.setItem('vertex_plugin_return', window.location.hash || '#/'); } catch {}
                             window.location.hash = `#/plugin/${encodeURIComponent(p.id)}`;
                           }}><FormattedMessage id="plugins.controlHub" defaultMessage="Control Hub" /></button>
@@ -155,7 +193,7 @@ const PluginsManager = ({
                       </div>
                     )}
                   </div>
-                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: colors.primaryText }}>
                       <input
                         type="checkbox"
                         checked={pluginPrefs[p.id] ?? true}
@@ -163,7 +201,7 @@ const PluginsManager = ({
                       />
                       <span><FormattedMessage id={(pluginPrefs[p.id] ?? true) ? 'plugins.enabled' : 'plugins.disabled'} defaultMessage={(pluginPrefs[p.id] ?? true) ? 'Enabled' : 'Disabled'} /></span>
                     </label>
-                    <button onClick={() => onRemoveCustomPlugin(p.id)}><FormattedMessage id="plugins.remove" defaultMessage="Remove" /></button>
+                    <button style={subtleButtonStyle} onClick={() => onRemoveCustomPlugin(p.id)}><FormattedMessage id="plugins.remove" defaultMessage="Remove" /></button>
                   </React.Fragment>
                 ))}
               </div>
@@ -173,19 +211,19 @@ const PluginsManager = ({
           <section style={{ marginTop: 16 }}>
             <h3 style={{ margin: '8px 0' }}>Plugin Errors</h3>
             {errors.length === 0 ? (
-              <div style={{ color: '#6b7280' }}>No plugin errors captured.</div>
+              <div style={subtleTextStyle}>No plugin errors captured.</div>
             ) : (
               <>
                 <div style={{ marginBottom: 8 }}>
-                  <button onClick={() => {
+                  <button style={subtleButtonStyle} onClick={() => {
                     const text = errors.map(e => `[${new Date(e.time).toISOString()}] ${e.pluginId}: ${e.message}`).join('\n');
                     navigator.clipboard?.writeText(text).catch(() => {});
                   }}>Copy</button>
                 </div>
-                <div style={{ maxHeight: 120, overflow: 'auto', fontSize: 12, background: '#f9fafb', border: '1px solid #e5e7eb', padding: 8 }}>
+                <div style={logContainerStyle}>
                   {errors.slice(-10).map((e, idx) => (
-                    <div key={idx} style={{ color: '#111827' }}>
-                      <span style={{ color: '#6b7280' }}>[{new Date(e.time).toLocaleTimeString()}]</span> <strong>{e.pluginId}</strong>: {e.message}
+                    <div key={idx} style={{ color: colors.primaryText }}>
+                      <span style={subtleTextStyle}>[{new Date(e.time).toLocaleTimeString()}]</span> <strong>{e.pluginId}</strong>: {e.message}
                     </div>
                   ))}
                 </div>

@@ -1,4 +1,69 @@
 import React from 'react';
+import { useTheme } from '../../contexts/ThemeContext';
+
+function LevelsAbout() {
+  const { currentTheme } = useTheme();
+  const colors = currentTheme.colors;
+  return (
+    <div style={{ color: colors.primaryText }}>
+      <p style={{ marginTop: 0 }}>
+        Use levels to organize your graph without relying on parent/child metadata.
+      </p>
+      <ul style={{ margin: 0, paddingLeft: 18 }}>
+        <li>Assign levels to nodes via the node context menu command.</li>
+        <li>Clear legacy hierarchy links to keep the graph purely level-based.</li>
+      </ul>
+    </div>
+  );
+}
+
+function LevelsPanel({ groupedLevels, onSelectNode }) {
+  const { currentTheme } = useTheme();
+  const colors = currentTheme.colors;
+  return (
+    <div
+      style={{
+        width: 260,
+        padding: 16,
+        borderRadius: 12,
+        border: `1px solid ${colors.panelBorder}`,
+        background: colors.panelBackground,
+        boxShadow: `0 12px 24px ${colors.panelShadow}`,
+        color: colors.primaryText,
+        pointerEvents: 'auto',
+      }}
+    >
+      <h3 style={{ margin: 0, color: colors.primaryText }}>Levels</h3>
+      {groupedLevels.length === 0 ? (
+        <p style={{ color: colors.secondaryText, marginTop: 12 }}>No levels assigned yet.</p>
+      ) : (
+        groupedLevels.map(({ level, nodes }) => (
+          <div key={level} style={{ marginTop: 12 }}>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>Level {level}</div>
+            <ul style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 4 }}>
+              {nodes.map((node) => (
+                <li key={node.id} style={{ listStyle: 'disc' }}>
+                  <button
+                    type="button"
+                    onClick={() => onSelectNode(node.id)}
+                    style={{
+                      all: 'unset',
+                      cursor: 'pointer',
+                      color: colors.primaryButton,
+                      fontWeight: 500,
+                    }}
+                  >
+                    #{node.id} {node.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
 
 export const levelsPlugin = {
   id: 'core.levels',
@@ -12,17 +77,7 @@ export const levelsPlugin = {
 * Assign a numeric level to a node from the context menu.
 * Clear legacy hierarchy links so the graph relies solely on levels.
       `.trim(),
-      render: () => (
-        <div style={{ color: '#374151' }}>
-          <p style={{ marginTop: 0 }}>
-            Use levels to organize your graph without relying on parent/child metadata.
-          </p>
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
-            <li>Assign levels to nodes via the node context menu command.</li>
-            <li>Clear legacy hierarchy links to keep the graph purely level-based.</li>
-          </ul>
-        </div>
-      )
+      render: () => <LevelsAbout />
     },
     commands: [
       {
@@ -104,33 +159,22 @@ export const levelsPlugin = {
             return acc;
           }, new Map());
 
-          const sortedLevels = Array.from(groups.keys()).sort((a, b) => a - b);
+          const groupedLevels = Array.from(groups.keys())
+            .sort((a, b) => a - b)
+            .map((level) => ({
+              level,
+              nodes: groups.get(level) ?? [],
+            }));
 
           return (
-            <div style={{ width: 260, padding: 12, borderLeft: '1px solid #e5e7eb', background: '#fff' }}>
-              <h3 style={{ margin: '8px 0' }}>Levels</h3>
-              {sortedLevels.length === 0 ? (
-                <p style={{ color: '#6b7280' }}>No levels assigned yet.</p>
-              ) : (
-                sortedLevels.map((level) => (
-                  <div key={level} style={{ marginBottom: 12 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 4 }}>Level {level}</div>
-                    <ul style={{ margin: 0, paddingLeft: 18 }}>
-                      {groups.get(level).map((node) => (
-                        <li key={node.id} style={{ cursor: 'pointer', color: '#2563eb' }}
-                          onClick={() => {
-                            api.selectNodes?.([node.id], { center: true });
-                            api.setHighlightedNodes?.([node.id]);
-                          }}
-                        >
-                          #{node.id} {node.label}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))
-              )}
-            </div>
+            <LevelsPanel
+              groupedLevels={groupedLevels}
+              onSelectNode={(id) => {
+                if (id == null) return;
+                api.selectNodes?.([id], { center: true });
+                api.setHighlightedNodes?.([id]);
+              }}
+            />
           );
         }
       }
