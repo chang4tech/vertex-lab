@@ -182,6 +182,7 @@ const MenuBar = React.forwardRef(({
   onOpenDocs,
   onOpenCommunity,
   onOpenFeedback,
+  onOpenReport,
   onShowHelpModal,
 }, ref) => {
   const isMobile = useIsMobile();
@@ -235,15 +236,6 @@ const MenuBar = React.forwardRef(({
     window.location.hash = '#/docs/community';
   };
 
-  const openCommunity = () => {
-    if (typeof onOpenCommunity === 'function') {
-      onOpenCommunity();
-      return;
-    }
-    try { sessionStorage.setItem('vertex_help_return', window.location.hash || '#/'); } catch {}
-    window.location.hash = '#/docs/community';
-  };
-
   const openFeedback = () => {
     if (typeof onOpenFeedback === 'function') {
       onOpenFeedback();
@@ -251,6 +243,15 @@ const MenuBar = React.forwardRef(({
     }
     try { sessionStorage.setItem('vertex_help_return', window.location.hash || '#/'); } catch {}
     window.location.hash = '#/docs/feedback';
+  };
+
+  const openReport = () => {
+    if (typeof onOpenReport === 'function') {
+      onOpenReport();
+      return;
+    }
+    try { sessionStorage.setItem('vertex_help_return', window.location.hash || '#/'); } catch {}
+    window.location.hash = '#/docs/report';
   };
   const accountChipBaseStyle = {
     display: 'flex',
@@ -1162,7 +1163,7 @@ const MenuBar = React.forwardRef(({
               className="menu-item"
               onClick={(e) => {
                 e.preventDefault(); e.stopPropagation();
-                onShowHelpModal?.('help.report', 'help.report.desc');
+                openReport();
                 setOpenMenu(null);
               }}
             >
@@ -2053,6 +2054,11 @@ function App({ graphId = 'default' }) {
   const handleOpenFeedback = useCallback(() => {
     try { sessionStorage.setItem('vertex_help_return', window.location.hash || '#/'); } catch {}
     window.location.hash = '#/docs/feedback';
+  }, []);
+
+  const handleOpenReport = useCallback(() => {
+    try { sessionStorage.setItem('vertex_help_return', window.location.hash || '#/'); } catch {}
+    window.location.hash = '#/docs/report';
   }, []);
 
   // Context menu actions
@@ -3127,6 +3133,7 @@ function App({ graphId = 'default' }) {
         onOpenDocs={handleOpenDocs}
         onOpenCommunity={handleOpenCommunity}
         onOpenFeedback={handleOpenFeedback}
+        onOpenReport={handleOpenReport}
         onShowHelpModal={(titleId, messageId) => setHelpModal({ open: true, titleId, messageId })}
       />
       <div style={{ height: 80 }} />

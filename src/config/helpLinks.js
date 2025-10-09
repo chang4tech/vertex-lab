@@ -33,3 +33,19 @@ export const helpFeedbackContacts = {
   },
   note: 'Include screenshots or exports when possible to help us reproduce issues quickly.',
 };
+
+export const helpReportContacts = {
+  critical: {
+    email: 'incidents@vertexlab.app',
+    description: 'Critical outages, security events, or data loss',
+  },
+  functional: {
+    email: 'bugs@vertexlab.app',
+    description: 'Functional bugs with steps to reproduce and expected vs actual behavior',
+  },
+  customer: {
+    email: 'support@vertexlab.app',
+    description: 'Customer-impacting problems requiring fast follow-up',
+  },
+  note: 'Attach logs, screenshots, and environment details (browser, OS, build SHA) whenever possible.',
+};
