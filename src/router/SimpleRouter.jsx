@@ -4,6 +4,7 @@ import PluginPage from '../components/PluginPage.jsx';
 import AuthPage from '../pages/AuthPage.jsx';
 import ProfilePage from '../pages/ProfilePage.jsx';
 import DocumentationPage from '../pages/DocumentationPage.jsx';
+import HelpCommunityPage from '../pages/HelpCommunityPage.jsx';
 import { FormattedMessage } from 'react-intl';
 
 function parseHash() {
@@ -28,7 +29,7 @@ function parseHash() {
     return { route: 'profile' };
   }
   if (segments[0] === 'docs') {
-    return { route: 'docs' };
+    return { route: 'docs', page: segments[1] || 'main' };
   }
   return { route: 'landing' };
 }
@@ -55,6 +56,9 @@ export function SimpleRouter() {
     return <ProfilePage />;
   }
   if (state.route === 'docs') {
+    if (state.page === 'community') {
+      return <HelpCommunityPage />;
+    }
     return <DocumentationPage />;
   }
   return <Landing />;

@@ -179,6 +179,8 @@ const MenuBar = React.forwardRef(({
   onOpenSettings,
   onOpenPluginsManager,
   onOpenTagManager,
+  onOpenDocs,
+  onOpenCommunity,
   onShowHelpModal,
 }, ref) => {
   const isMobile = useIsMobile();
@@ -214,9 +216,27 @@ const MenuBar = React.forwardRef(({
     border: `1px solid ${currentTheme.colors.warningBorder ?? 'rgba(245, 158, 11, 0.36)'}`,
   };
 
-  const handleOpenDocs = () => {
+  const openDocs = () => {
+    if (typeof onOpenDocs === 'function') {
+      onOpenDocs();
+      return;
+    }
     try { sessionStorage.setItem('vertex_help_return', window.location.hash || '#/'); } catch {}
     window.location.hash = '#/docs';
+  };
+
+  const openCommunity = () => {
+    if (typeof onOpenCommunity === 'function') {
+      onOpenCommunity();
+      return;
+    }
+    try { sessionStorage.setItem('vertex_help_return', window.location.hash || '#/'); } catch {}
+    window.location.hash = '#/docs/community';
+  };
+
+  const handleOpenCommunity = () => {
+    try { sessionStorage.setItem('vertex_help_return', window.location.hash || '#/'); } catch {}
+    window.location.hash = '#/docs/community';
   };
   const accountChipBaseStyle = {
     display: 'flex',
@@ -1097,7 +1117,7 @@ const MenuBar = React.forwardRef(({
               className="menu-item"
               onClick={(e) => {
                 e.preventDefault(); e.stopPropagation();
-                handleOpenDocs();
+                openDocs();
                 setOpenMenu(null);
               }}
             >
@@ -1108,7 +1128,7 @@ const MenuBar = React.forwardRef(({
               className="menu-item"
               onClick={(e) => {
                 e.preventDefault(); e.stopPropagation();
-                onShowHelpModal?.('help.community', 'help.community.desc');
+                openCommunity();
                 setOpenMenu(null);
               }}
             >
@@ -3075,6 +3095,8 @@ function App({ graphId = 'default' }) {
         onOpenSettings={handleOpenSettings}
         onOpenPluginsManager={handleOpenPluginsManager}
         onOpenTagManager={handleOpenTagManager}
+        onOpenDocs={handleOpenDocs}
+        onOpenCommunity={handleOpenCommunity}
         onShowHelpModal={(titleId, messageId) => setHelpModal({ open: true, titleId, messageId })}
       />
       <div style={{ height: 80 }} />
