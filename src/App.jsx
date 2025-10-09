@@ -180,6 +180,7 @@ const MenuBar = React.forwardRef(({
   onOpenPluginsManager,
   onOpenTagManager,
   onOpenDocs,
+  onOpenAbout,
   onOpenCommunity,
   onOpenFeedback,
   onOpenReport,
@@ -225,6 +226,15 @@ const MenuBar = React.forwardRef(({
     }
     try { sessionStorage.setItem('vertex_help_return', window.location.hash || '#/'); } catch {}
     window.location.hash = '#/docs';
+  };
+
+  const openAbout = () => {
+    if (typeof onOpenAbout === 'function') {
+      onOpenAbout();
+      return;
+    }
+    try { sessionStorage.setItem('vertex_help_return', window.location.hash || '#/'); } catch {}
+    window.location.hash = '#/about';
   };
 
   const openCommunity = () => {
@@ -1151,6 +1161,16 @@ const MenuBar = React.forwardRef(({
               }}
             >
               <FormattedMessage id="help.documentation" defaultMessage="Documentation" />
+            </div>
+            <div
+              className="menu-item"
+              onClick={(e) => {
+                e.preventDefault(); e.stopPropagation();
+                openAbout();
+                setOpenMenu(null);
+              }}
+            >
+              <FormattedMessage id="help.about" defaultMessage="About" />
             </div>
             <div className="menu-separator" />
             <div
@@ -2133,6 +2153,11 @@ function App({ graphId = 'default' }) {
   const handleOpenReport = useCallback(() => {
     try { sessionStorage.setItem('vertex_help_return', window.location.hash || '#/'); } catch {}
     window.location.hash = '#/docs/report';
+  }, []);
+
+  const handleOpenAbout = useCallback(() => {
+    try { sessionStorage.setItem('vertex_help_return', window.location.hash || '#/'); } catch {}
+    window.location.hash = '#/about';
   }, []);
 
   // Context menu actions
@@ -3228,6 +3253,7 @@ function App({ graphId = 'default' }) {
         onOpenPluginsManager={handleOpenPluginsManager}
         onOpenTagManager={handleOpenTagManager}
         onOpenDocs={handleOpenDocs}
+        onOpenAbout={handleOpenAbout}
         onOpenCommunity={handleOpenCommunity}
         onOpenFeedback={handleOpenFeedback}
         onOpenReport={handleOpenReport}

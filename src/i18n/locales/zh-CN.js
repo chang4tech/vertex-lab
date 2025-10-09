@@ -278,6 +278,7 @@ export default {
 
   // Help menu items
   'help.documentation': '文档',
+  'help.about': '关于 Vertex Lab',
   'help.community': '帮助社区',
   'help.feedback': '发送反馈',
   'help.report': '报告问题',

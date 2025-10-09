@@ -278,6 +278,7 @@ export default {
 
   // Help menu items
   'help.documentation': 'Documentation',
+  'help.about': 'About Vertex Lab',
   'help.community': 'Help Community',
   'help.feedback': 'Send Feedback',
   'help.report': 'Report a Problem',
