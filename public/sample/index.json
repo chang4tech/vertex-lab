@@ -13,5 +13,15 @@
     "id": "chronicles-of-narnia",
     "name": "The Chronicles of Narnia",
     "file": "/sample/chronicles-of-narnia.json"
+  },
+  {
+    "id": "rpg-skill-tree",
+    "name": "RPG Skill Tree",
+    "file": "/sample/rpg-skill-tree.json"
+  },
+  {
+    "id": "taxonomy-overview",
+    "name": "Animal Taxonomy Overview",
+    "file": "/sample/taxonomy-overview.json"
   }
 ]
