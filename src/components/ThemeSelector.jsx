@@ -23,7 +23,7 @@ const ThemeSelector = ({ onClose }) => {
       right: 0,
       bottom: 0,
       backgroundColor: currentTheme.colors.overlayBackground,
-      zIndex: 1000,
+      zIndex: 10200,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center'
