@@ -5,6 +5,7 @@ import AuthPage from '../pages/AuthPage.jsx';
 import ProfilePage from '../pages/ProfilePage.jsx';
 import DocumentationPage from '../pages/DocumentationPage.jsx';
 import HelpCommunityPage from '../pages/HelpCommunityPage.jsx';
+import HelpFeedbackPage from '../pages/HelpFeedbackPage.jsx';
 import { FormattedMessage } from 'react-intl';
 
 function parseHash() {
@@ -58,6 +59,9 @@ export function SimpleRouter() {
   if (state.route === 'docs') {
     if (state.page === 'community') {
       return <HelpCommunityPage />;
+    }
+    if (state.page === 'feedback') {
+      return <HelpFeedbackPage />;
     }
     return <DocumentationPage />;
   }

@@ -17,3 +17,19 @@ export const helpCommunityLinks = {
   },
   note: 'We usually respond within one to two business days. Expect faster replies in Slack.',
 };
+
+export const helpFeedbackContacts = {
+  ideas: {
+    email: 'ideas@vertexlab.app',
+    description: 'Product ideas, UX suggestions, and workflow improvements',
+  },
+  bugs: {
+    email: 'bugs@vertexlab.app',
+    description: 'Bug reports with reproduction steps and environment details',
+  },
+  security: {
+    email: 'security@vertexlab.app',
+    description: 'Security concerns or vulnerability disclosures',
+  },
+  note: 'Include screenshots or exports when possible to help us reproduce issues quickly.',
+};

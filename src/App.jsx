@@ -181,6 +181,7 @@ const MenuBar = React.forwardRef(({
   onOpenTagManager,
   onOpenDocs,
   onOpenCommunity,
+  onOpenFeedback,
   onShowHelpModal,
 }, ref) => {
   const isMobile = useIsMobile();
@@ -234,9 +235,22 @@ const MenuBar = React.forwardRef(({
     window.location.hash = '#/docs/community';
   };
 
-  const handleOpenCommunity = () => {
+  const openCommunity = () => {
+    if (typeof onOpenCommunity === 'function') {
+      onOpenCommunity();
+      return;
+    }
     try { sessionStorage.setItem('vertex_help_return', window.location.hash || '#/'); } catch {}
     window.location.hash = '#/docs/community';
+  };
+
+  const openFeedback = () => {
+    if (typeof onOpenFeedback === 'function') {
+      onOpenFeedback();
+      return;
+    }
+    try { sessionStorage.setItem('vertex_help_return', window.location.hash || '#/'); } catch {}
+    window.location.hash = '#/docs/feedback';
   };
   const accountChipBaseStyle = {
     display: 'flex',
@@ -1138,7 +1152,7 @@ const MenuBar = React.forwardRef(({
               className="menu-item"
               onClick={(e) => {
                 e.preventDefault(); e.stopPropagation();
-                onShowHelpModal?.('help.feedback', 'help.feedback.desc');
+                openFeedback();
                 setOpenMenu(null);
               }}
             >
@@ -2024,6 +2038,21 @@ function App({ graphId = 'default' }) {
 
   const handleOpenTagManager = useCallback(() => {
     setShowTagManager(true);
+  }, []);
+
+  const handleOpenDocs = useCallback(() => {
+    try { sessionStorage.setItem('vertex_help_return', window.location.hash || '#/'); } catch {}
+    window.location.hash = '#/docs';
+  }, []);
+
+  const handleOpenCommunity = useCallback(() => {
+    try { sessionStorage.setItem('vertex_help_return', window.location.hash || '#/'); } catch {}
+    window.location.hash = '#/docs/community';
+  }, []);
+
+  const handleOpenFeedback = useCallback(() => {
+    try { sessionStorage.setItem('vertex_help_return', window.location.hash || '#/'); } catch {}
+    window.location.hash = '#/docs/feedback';
   }, []);
 
   // Context menu actions
@@ -3097,6 +3126,7 @@ function App({ graphId = 'default' }) {
         onOpenTagManager={handleOpenTagManager}
         onOpenDocs={handleOpenDocs}
         onOpenCommunity={handleOpenCommunity}
+        onOpenFeedback={handleOpenFeedback}
         onShowHelpModal={(titleId, messageId) => setHelpModal({ open: true, titleId, messageId })}
       />
       <div style={{ height: 80 }} />

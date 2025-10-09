@@ -53,6 +53,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Node Info Panel: Clarify color chips by showing fill vs text samples and adding a colors legend for multi-selection stats.
 - Dialogs: Raised search/theme/help overlays above the menu bar to avoid dimming artifacts.
 - Help menu: The Documentation entry now opens a dedicated docs page instead of an inline modal.
+- Help menu: The Help Community and Send Feedback entries now navigate to configurable long-form pages (links/emails set in config/templates).
 - Plugins: Hide floating side panels while modals are open to keep dialogs unobstructed.
 - Mobile: Dropdown/context menus render above FABs/help (raised inline z-index in nav dropdown + higher z-index for nav and `.menu`/`.menu-dropdown`).
 - Mobile: Minimap uses safe‑area insets (`env(safe-area-inset-*)`) for bottom/right.
