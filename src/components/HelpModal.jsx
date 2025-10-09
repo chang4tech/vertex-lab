@@ -10,7 +10,7 @@ export default function HelpModal({ open, titleId, messageId, onClose }) {
       role="dialog"
       aria-modal="true"
       style={{
-        position: 'fixed', inset: 0, zIndex: 3000,
+        position: 'fixed', inset: 0, zIndex: 10500,
         background: currentTheme.colors.overlayBackground,
         display: 'flex', alignItems: 'center', justifyContent: 'center'
       }}
@@ -62,4 +62,3 @@ export default function HelpModal({ open, titleId, messageId, onClose }) {
     </div>
   );
 }
-
