@@ -1447,8 +1447,9 @@ function App({ graphId = 'default' }) {
   const [highlightedNodeIds, setHighlightedNodeIds] = useState([]);
   const altNavigationStateRef = useRef(createAltNavigationState());
 
-  // Theme state
+  // Theme / overlay state
   const [showThemes, setShowThemes] = useState(false);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
 
   // Node editor state
   const [showNodeEditor, setShowNodeEditor] = useState(false);
@@ -1804,6 +1805,13 @@ function App({ graphId = 'default' }) {
     [allPlugins, pluginPrefs]
   );
   const pluginCommands = React.useMemo(() => collectPluginCommands(activePlugins), [activePlugins]);
+
+  useEffect(() => {
+    const enabled = activePlugins.some(plugin => plugin.id === 'core.versionHistory');
+    if (!enabled && showVersionHistory) {
+      setShowVersionHistory(false);
+    }
+  }, [activePlugins, showVersionHistory]);
 
   // Show a one-time tip when a plugin gets enabled (after activePlugins is defined)
   useEffect(() => {
@@ -2291,13 +2299,30 @@ function App({ graphId = 'default' }) {
     window.location.hash = `#/g/${newGraphId}`;
   }, [nodes, edges, graphTitle, intl]);
 
+  const openVersionHistory = useCallback(() => {
+    setShowVersionHistory(true);
+  }, []);
+
+  const closeVersionHistory = useCallback(() => {
+    setShowVersionHistory(false);
+  }, []);
+
+  const toggleVersionHistory = useCallback(() => {
+    setShowVersionHistory(prev => !prev);
+  }, []);
+
   const handleShowVersionHistory = useCallback(() => {
-    const message = intl.formatMessage({
-      id: 'file.versionHistoryUnavailable',
-      defaultMessage: 'Version history is not available yet.'
-    });
-    alert(message);
-  }, [intl]);
+    const pluginEnabled = activePlugins.some(plugin => plugin.id === 'core.versionHistory');
+    if (!pluginEnabled) {
+      const message = intl.formatMessage({
+        id: 'file.versionHistoryUnavailable',
+        defaultMessage: 'Version history is not available yet.'
+      });
+      alert(message);
+      return;
+    }
+    openVersionHistory();
+  }, [activePlugins, intl, openVersionHistory]);
 
   // Node info panel handlers
   const handleToggleNodeInfoPanel = useCallback(() => {
@@ -3095,6 +3120,10 @@ function App({ graphId = 'default' }) {
     resetOverlayLayout,
     isHelpVisible,
     toggleHelp,
+    isVersionHistoryOpen: showVersionHistory,
+    openVersionHistory,
+    closeVersionHistory,
+    toggleVersionHistory,
     isMobile,
     menuBarBottom,
     overlayRightInset,
@@ -3131,6 +3160,10 @@ function App({ graphId = 'default' }) {
     resetOverlayLayout,
     isHelpVisible,
     toggleHelp,
+    showVersionHistory,
+    openVersionHistory,
+    closeVersionHistory,
+    toggleVersionHistory,
     isMobile,
     menuBarBottom,
     overlayRightInset,

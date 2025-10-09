@@ -136,9 +136,9 @@ const VersionHistoryOverlay = ({ api }) => {
   const graphId = api?.graphId || 'default';
   const [settings] = useVersionHistorySettings();
   const [snapshots, setSnapshots] = useState(() => loadSnapshots(graphId));
-  const [open, setOpen] = useState(false);
   const lastSignatureRef = useRef('');
   const lastCaptureRef = useRef(0);
+  const isOpen = !!api?.isVersionHistoryOpen;
 
   useEffect(() => {
     setSnapshots(loadSnapshots(graphId));
@@ -202,123 +202,125 @@ const VersionHistoryOverlay = ({ api }) => {
     }
   }, [snapshots.length, api?.nodes, api?.edges, captureSnapshot]);
 
-  const panel = open ? createPortal(
-    <div
-      style={{
-        position: 'fixed',
-        top: 'calc(80px + env(safe-area-inset-top))',
-        right: 'calc(24px + env(safe-area-inset-right))',
-        width: 360,
-        maxHeight: '70vh',
-        background: '#fff',
-        borderRadius: 12,
-        boxShadow: '0 18px 40px rgba(15,23,42,0.18)',
-        border: '1px solid rgba(148,163,184,0.35)',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        zIndex: 10200,
-      }}
-    >
-      <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(226,232,240,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div>
-          <div style={{ fontWeight: 600 }}>Version History</div>
-          <div style={{ fontSize: 12, color: '#64748b' }}>{snapshots.length} snapshot{snapshots.length === 1 ? '' : 's'}</div>
-        </div>
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          style={{ border: 'none', background: 'none', fontSize: 18, cursor: 'pointer', color: '#64748b' }}
-          aria-label="Close version history"
-        >
-          ×
-        </button>
-      </div>
-      <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
-        <button
-          type="button"
-          onClick={() => captureSnapshot('Manual snapshot')}
-          style={{
-            alignSelf: 'flex-start',
-            background: '#1f2937',
-            color: '#fff',
-            borderRadius: 6,
-            padding: '6px 12px',
-            border: 'none',
-            cursor: 'pointer',
-          }}
-        >
-          Capture snapshot
-        </button>
-        {snapshots.length === 0 ? (
-          <div style={{ color: '#64748b', fontSize: 13 }}>No snapshots yet.</div>
-        ) : (
-          snapshots.map((entry) => (
-            <div key={entry.id} style={{
-              border: '1px solid rgba(226,232,240,0.8)',
-              borderRadius: 8,
-              padding: 12,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
-              background: '#f8fafc',
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-                <div>
-                  <div style={{ fontWeight: 600 }}>{entry.label || 'Snapshot'}</div>
-                  <div style={{ fontSize: 12, color: '#64748b' }}>{formatTimestamp(entry.timestamp)}</div>
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button
-                    type="button"
-                    onClick={() => restoreSnapshot(entry)}
-                    style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(100,116,139,0.4)', background: '#fff', cursor: 'pointer' }}
-                  >
-                    Restore
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => removeSnapshot(entry.id)}
-                    style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(248,113,113,0.6)', color: '#dc2626', background: '#fff', cursor: 'pointer' }}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 16, fontSize: 12, color: '#475569' }}>
-                <span>{entry.summary?.nodeCount ?? 0} nodes</span>
-                <span>{entry.summary?.edgeCount ?? 0} edges</span>
-                <span style={{ color: '#94a3b8' }}>{entry.source === 'auto' ? 'Auto' : entry.source === 'initial' ? 'Initial' : 'Manual'}</span>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </div>, document.body)
-  ) : null;
+  const closePanel = useCallback(() => {
+    if (typeof api?.closeVersionHistory === 'function') {
+      api.closeVersionHistory();
+    }
+  }, [api]);
 
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
+  useEffect(() => {
+    if (!isOpen || typeof window === 'undefined') return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.stopPropagation();
+        closePanel();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, closePanel]);
+
+  const canRenderPortal = typeof document !== 'undefined' && document.body;
+
+  const panel = isOpen && canRenderPortal
+    ? createPortal(
+      <div
         style={{
-          padding: '8px 14px',
-          borderRadius: 8,
-          border: '1px solid rgba(148,163,184,0.4)',
-          background: '#ffffff',
-          color: '#1e293b',
-          fontSize: 13,
-          fontWeight: 600,
-          cursor: 'pointer',
-          boxShadow: '0 4px 12px rgba(15,23,42,0.12)',
+          position: 'fixed',
+          top: 'calc(80px + env(safe-area-inset-top))',
+          right: 'calc(24px + env(safe-area-inset-right))',
+          width: 360,
+          maxHeight: '70vh',
+          background: '#fff',
+          borderRadius: 12,
+          boxShadow: '0 18px 40px rgba(15,23,42,0.18)',
+          border: '1px solid rgba(148,163,184,0.35)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          zIndex: 10200,
         }}
       >
-        History
-      </button>
-      {panel}
-    </>
-  );
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(226,232,240,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontWeight: 600 }}>Version History</div>
+            <div style={{ fontSize: 12, color: '#64748b' }}>{snapshots.length} snapshot{snapshots.length === 1 ? '' : 's'}</div>
+          </div>
+          <button
+            type="button"
+            onClick={closePanel}
+            style={{ border: 'none', background: 'none', fontSize: 18, cursor: 'pointer', color: '#64748b' }}
+            aria-label="Close version history"
+          >
+            ×
+          </button>
+        </div>
+        <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
+          <button
+            type="button"
+            onClick={() => captureSnapshot('Manual snapshot')}
+            style={{
+              alignSelf: 'flex-start',
+              background: '#1f2937',
+              color: '#fff',
+              borderRadius: 6,
+              padding: '6px 12px',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            Capture snapshot
+          </button>
+          {snapshots.length === 0 ? (
+            <div style={{ color: '#64748b', fontSize: 13 }}>No snapshots yet.</div>
+          ) : (
+            snapshots.map((entry) => (
+              <div key={entry.id} style={{
+                border: '1px solid rgba(226,232,240,0.8)',
+                borderRadius: 8,
+                padding: 12,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+                background: '#f8fafc',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                  <div>
+                    <div style={{ fontWeight: 600 }}>{entry.label || 'Snapshot'}</div>
+                    <div style={{ fontSize: 12, color: '#64748b' }}>{formatTimestamp(entry.timestamp)}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      type="button"
+                      onClick={() => restoreSnapshot(entry)}
+                      style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(100,116,139,0.4)', background: '#fff', cursor: 'pointer' }}
+                    >
+                      Restore
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeSnapshot(entry.id)}
+                      style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(248,113,113,0.6)', color: '#dc2626', background: '#fff', cursor: 'pointer' }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 16, fontSize: 12, color: '#475569' }}>
+                  <span>{entry.summary?.nodeCount ?? 0} nodes</span>
+                  <span>{entry.summary?.edgeCount ?? 0} edges</span>
+                  <span style={{ color: '#94a3b8' }}>{entry.source === 'auto' ? 'Auto' : entry.source === 'initial' ? 'Initial' : 'Manual'}</span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>,
+      document.body,
+    )
+    : null;
+
+  return panel;
 };
 
 export const versionHistoryPlugin = {
