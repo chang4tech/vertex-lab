@@ -7,6 +7,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ## Unreleased
 
 ### Fixed
+- Library menu: Allow Library Graphs list to scroll inside the dropdown so long catalogs stay accessible.
 - Canvas: Recompute viewport using live menu height and plugin panel width so the canvas no longer overlaps navigation or plugin panels.
 - Help overlay: Ensure the quick-help box sits above plugin side panels and offsets from active panels so it remains accessible.
 - Settings dialog: Remove greyed background and raise overlay z-index so the modal sits above the nav without dimming the app.

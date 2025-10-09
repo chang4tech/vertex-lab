@@ -345,16 +345,30 @@ const MenuBar = React.forwardRef(({
   const handleDropdownWheel = useCallback((event) => {
     // Prevent the wheel event from bubbling to the canvas/page which can zoom/scroll the diagram.
     event.stopPropagation?.();
-    const target = event.currentTarget;
-    if (!target) return;
+    const container = event.currentTarget;
+    if (!container) return;
+
+    const findScrollable = (node) => {
+      let current = node;
+      while (current && current !== container) {
+        if (current.scrollHeight > current.clientHeight + 1) {
+          return current;
+        }
+        current = current.parentElement;
+      }
+      return container;
+    };
+
+    const candidate = event.target instanceof HTMLElement ? event.target : container;
+    const scroller = findScrollable(candidate);
     const { deltaY } = event;
-    const canScroll = target.scrollHeight > target.clientHeight;
+    const canScroll = scroller.scrollHeight > scroller.clientHeight + 1;
     if (!canScroll) {
       event.preventDefault?.();
       return;
     }
-    const atTop = target.scrollTop <= 0;
-    const atBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 1;
+    const atTop = scroller.scrollTop <= 0;
+    const atBottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 1;
     if ((deltaY < 0 && atTop) || (deltaY > 0 && atBottom)) {
       event.preventDefault?.();
     }
