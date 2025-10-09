@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useTheme } from '../contexts/ThemeContext';
-import { 
-  NODE_COLORS, 
-  NODE_COLOR_INFO, 
-  NODE_SHAPES, 
-  NODE_ICONS, 
+import {
+  NODE_COLORS,
+  NODE_COLOR_INFO,
+  NODE_SHAPES,
+  NODE_ICONS,
   updateNode,
   addTag,
   removeTag,
-  hasTag
+  hasTag,
+  getNodeTextColor
 } from '../utils/nodeUtils';
 import { loadTags } from '../utils/tagUtils';
 
@@ -391,7 +392,7 @@ const StyleTab = ({ editedNode, setEditedNode, currentTheme }) => {
         <div style={cardStyle}>
           <label style={{
             display: 'block',
-          marginBottom: '12px',
+            marginBottom: '12px',
             color: currentTheme.colors.primaryText,
             fontSize: '14px',
             fontWeight: '600'
@@ -399,9 +400,45 @@ const StyleTab = ({ editedNode, setEditedNode, currentTheme }) => {
             <FormattedMessage id="nodeEditor.color" defaultMessage="Color" />
           </label>
           <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '12px',
+            color: currentTheme.colors.secondaryText,
+            fontSize: '12px'
+          }}>
+            <span><FormattedMessage id="nodeEditor.colorHint" defaultMessage="Pick the node fill. Text adjusts automatically for contrast." /></span>
+            {editedNode?.color && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: 4,
+                    border: `1px solid ${currentTheme.colors.panelBorder}`,
+                    backgroundColor: editedNode.color || '#ffffff'
+                  }} />
+                  <span><FormattedMessage id="nodeEditor.colorFill" defaultMessage="Fill" /></span>
+                </div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '2px 8px',
+                  borderRadius: 12,
+                  border: `1px solid ${currentTheme.colors.inputBorder}`,
+                  backgroundColor: currentTheme.colors.inputBackground
+                }}>
+                  <span style={{ color: getNodeTextColor(editedNode, { colors: currentTheme.colors }), fontWeight: 600 }}>Aa</span>
+                  <span><FormattedMessage id="nodeEditor.colorText" defaultMessage="Text" /></span>
+                </div>
+              </div>
+            )}
+          </div>
+          <div style={{
             display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))',
-          gap: '8px'
+            gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))',
+            gap: '8px'
           }}>
             {Object.entries(NODE_COLORS).map(([key, color]) => (
               <button
