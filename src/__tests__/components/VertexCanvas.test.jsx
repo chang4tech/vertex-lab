@@ -525,4 +525,40 @@ describe('VertexCanvas', () => {
     const afterFillCalls = ctx.fill.mock.calls.length;
     expect(afterFillCalls).toBeGreaterThan(beforeFillCalls);
   });
+
+  it('skips nodes and edges with invalid coordinates during draw', () => {
+    const nodes = [
+      { id: 1, label: 'Valid A', x: 0, y: 0 },
+      { id: 2, label: 'Invalid X', x: Number.NaN, y: 50 },
+      { id: 3, label: 'Invalid Y', x: 50, y: Number.POSITIVE_INFINITY },
+      { id: 4, label: 'Valid B', x: 120, y: 80 },
+    ];
+    const edges = [
+      { source: 1, target: 4, directed: false },
+      { source: 1, target: 2, directed: false },
+      { source: 3, target: 4, directed: false },
+    ];
+
+    const { container } = renderWithTheme(
+      <VertexCanvas nodes={nodes} edges={edges} selectedNodeIds={[]} onSelectionChange={() => {}} />
+    );
+    const canvas = container.querySelector('canvas');
+    canvas.dispatchEvent(new Event('redraw'));
+
+    expect(mockContext.arc.mock.calls.length).toBeGreaterThan(0);
+    mockContext.arc.mock.calls.forEach(([x, y]) => {
+      expect(Number.isFinite(x)).toBe(true);
+      expect(Number.isFinite(y)).toBe(true);
+    });
+
+    expect(mockContext.moveTo.mock.calls.length).toBeGreaterThan(0);
+    mockContext.moveTo.mock.calls.forEach(([x, y]) => {
+      expect(Number.isFinite(x)).toBe(true);
+      expect(Number.isFinite(y)).toBe(true);
+    });
+    mockContext.lineTo.mock.calls.forEach(([x, y]) => {
+      expect(Number.isFinite(x)).toBe(true);
+      expect(Number.isFinite(y)).toBe(true);
+    });
+  });
 });

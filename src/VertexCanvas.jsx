@@ -54,10 +54,29 @@ const debugLog = (...args) => {
  *   onNodeClick: function(nodeId)
  */
 
+const isFiniteNumber = (value) => Number.isFinite(value);
+
+const hasFinitePosition = (entity) => (
+  entity &&
+  isFiniteNumber(entity.x) &&
+  isFiniteNumber(entity.y)
+);
+
+const getFiniteVisibleNodes = (nodes, edges) => {
+  const visible = getVisibleNodes(nodes, edges);
+  return Array.isArray(visible) ? visible.filter(hasFinitePosition) : [];
+};
+
 function drawNode(ctx, node, theme, isSelected = false, isHighlighted = false) {
+  if (!hasFinitePosition(node)) {
+    return;
+  }
   const { colors } = theme;
   const enhancedNode = upgradeNode(node); // Ensure node has enhanced properties
   const nodeRadius = colors.nodeRadius;
+  if (!isFiniteNumber(nodeRadius) || nodeRadius <= 0) {
+    return;
+  }
   const shape = enhancedNode.shape || NODE_SHAPES.CIRCLE;
   const nodeColor = getThemeNodeColor(enhancedNode, theme);
   const borderColor = getNodeBorderColor(enhancedNode, theme);
@@ -201,6 +220,9 @@ function drawNodeShape(ctx, node, radius, fillColor, shape, isGlow = false, stro
 }
 
 function drawTagsIndicator(ctx, node, nodeRadius, theme) {
+  if (!hasFinitePosition(node) || !isFiniteNumber(nodeRadius)) {
+    return;
+  }
   ctx.save();
   ctx.fillStyle = theme.colors.warning;
   ctx.beginPath();
@@ -210,6 +232,9 @@ function drawTagsIndicator(ctx, node, nodeRadius, theme) {
 }
 
 function drawCollapsedIndicator(ctx, node, nodeRadius, theme) {
+  if (!hasFinitePosition(node) || !isFiniteNumber(nodeRadius)) {
+    return;
+  }
   ctx.save();
   ctx.fillStyle = theme.colors.primaryButton;
   ctx.strokeStyle = theme.colors.nodeBackground;
@@ -232,12 +257,19 @@ function drawCollapsedIndicator(ctx, node, nodeRadius, theme) {
 }
 
 function drawEdge(ctx, from, to, theme) {
+  if (!hasFinitePosition(from) || !hasFinitePosition(to)) {
+    return;
+  }
   const { colors } = theme;
+  const edgeWidth = colors.edgeWidth;
+  if (!isFiniteNumber(edgeWidth) || edgeWidth <= 0) {
+    return;
+  }
   ctx.beginPath();
   ctx.moveTo(from.x, from.y);
   ctx.lineTo(to.x, to.y);
   ctx.strokeStyle = colors.edgeColor;
-  ctx.lineWidth = colors.edgeWidth;
+  ctx.lineWidth = edgeWidth;
   ctx.stroke();
 }
 
@@ -260,6 +292,9 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
   const getHalfExtents = (node) => {
     const enhanced = upgradeNode(node);
     const r = currentTheme.colors.nodeRadius;
+    if (!isFiniteNumber(r) || r <= 0) {
+      return { hw: 0, hh: 0 };
+    }
     const shape = enhanced.shape || NODE_SHAPES.CIRCLE;
     switch (shape) {
       case NODE_SHAPES.RECTANGLE:
@@ -278,17 +313,22 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       hasUserInteracted.current = true;
       // Center the graph content within the canvas at current zoom
       const canvas = canvasRef.current;
-      const visibleNodes = getVisibleNodes(nodes, propsEdges);
-      if (!visibleNodes || visibleNodes.length === 0) return;
+      const finiteNodes = getFiniteVisibleNodes(nodes, propsEdges);
+      if (finiteNodes.length === 0) return;
       // Include node extents for better centering
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      for (const n of visibleNodes) {
+      for (const n of finiteNodes) {
         const { hw, hh } = getHalfExtents(n);
-        minX = Math.min(minX, n.x - hw);
-        maxX = Math.max(maxX, n.x + hw);
-        minY = Math.min(minY, n.y - hh);
-        maxY = Math.max(maxY, n.y + hh);
+        const left = n.x - hw;
+        const right = n.x + hw;
+        const top = n.y - hh;
+        const bottom = n.y + hh;
+        if (Number.isFinite(left) && left < minX) minX = left;
+        if (Number.isFinite(right) && right > maxX) maxX = right;
+        if (Number.isFinite(top) && top < minY) minY = top;
+        if (Number.isFinite(bottom) && bottom > maxY) maxY = bottom;
       }
+      if (!Number.isFinite(minX) || !Number.isFinite(maxX) || !Number.isFinite(minY) || !Number.isFinite(maxY)) return;
       const cx = (minX + maxX) / 2;
       const cy = (minY + maxY) / 2;
       // Keep current scale; position offsets so that (cx, cy) maps to canvas center
@@ -319,16 +359,23 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
         hasUserInteracted.current = true;
       }
       const canvas = canvasRef.current;
-      const visibleNodes = getVisibleNodes(nodes, propsEdges);
-      if (!visibleNodes || visibleNodes.length === 0) return;
+      const finiteNodes = getFiniteVisibleNodes(nodes, propsEdges);
+      if (finiteNodes.length === 0) return;
       // Bounds including node shape extents
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      for (const n of visibleNodes) {
+      for (const n of finiteNodes) {
         const { hw, hh } = getHalfExtents(n);
-        minX = Math.min(minX, n.x - hw);
-        maxX = Math.max(maxX, n.x + hw);
-        minY = Math.min(minY, n.y - hh);
-        maxY = Math.max(maxY, n.y + hh);
+        const left = n.x - hw;
+        const right = n.x + hw;
+        const top = n.y - hh;
+        const bottom = n.y + hh;
+        if (Number.isFinite(left) && left < minX) minX = left;
+        if (Number.isFinite(right) && right > maxX) maxX = right;
+        if (Number.isFinite(top) && top < minY) minY = top;
+        if (Number.isFinite(bottom) && bottom > maxY) maxY = bottom;
+      }
+      if (!Number.isFinite(minX) || !Number.isFinite(maxX) || !Number.isFinite(minY) || !Number.isFinite(maxY)) {
+        return;
       }
       const contentW = Math.max(1, maxX - minX);
       const contentH = Math.max(1, maxY - minY);
@@ -459,7 +506,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
     },
     focusOnNode: (nodeId) => {
       const node = nodes.find(n => n.id === nodeId);
-      if (!node) return;
+      if (!node || !hasFinitePosition(node)) return;
       
       view.current.offsetX = width / 2 - node.x * view.current.scale;
       view.current.offsetY = height / 2 - node.y * view.current.scale;
@@ -509,7 +556,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
     ctx.scale(view.current.scale, view.current.scale);
     
     // Get visible nodes (considering collapsed state)
-    const visibleNodes = getVisibleNodes(nodes, propsEdges);
+    const finiteVisibleNodes = getFiniteVisibleNodes(nodes, propsEdges);
     
   // Draw edges
   if (Array.isArray(propsEdges) && propsEdges.length > 0) {
@@ -518,14 +565,14 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       const a = nodes.find(n => n.id === edge.source);
       const b = nodes.find(n => n.id === edge.target);
       if (!a || !b) return;
-      if (!visibleNodes.includes(a) || !visibleNodes.includes(b)) return;
+      if (!finiteVisibleNodes.includes(a) || !finiteVisibleNodes.includes(b)) return;
       drawEdge(ctx, a, b, currentTheme);
       // Future: if (edge.directed) draw arrowhead
     });
   }
     
     // Draw visible nodes with selection and highlighting
-    visibleNodes.forEach(node => {
+    finiteVisibleNodes.forEach(node => {
       const isSelected = selectedNodeIds.includes(node.id);
       const isHighlighted = highlightedNodeIds.includes(node.id);
       
@@ -621,6 +668,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       // Node drag
       const { x, y } = getTransformed(e.clientX, e.clientY);
       for (const node of nodes) {
+        if (!hasFinitePosition(node)) continue;
         const dx = node.x - x;
         const dy = node.y - y;
         const nodeRadius = currentTheme.colors.nodeRadius;
@@ -678,7 +726,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
         const maxY = Math.max(startY, currentY);
         // Only trigger if dragged more than a tiny threshold
         if (Math.abs(maxX - minX) > 2 && Math.abs(maxY - minY) > 2) {
-          const visibleNodes = getVisibleNodes(nodes, propsEdges);
+          const visibleNodes = getFiniteVisibleNodes(nodes, propsEdges);
           const inRect = visibleNodes
             .filter(n => n.x >= minX && n.x <= maxX && n.y >= minY && n.y <= maxY)
             .map(n => n.id);
@@ -737,7 +785,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       ctx.scale(view.current.scale, view.current.scale);
       
       // Get visible nodes
-      const visibleNodes = getVisibleNodes(nodes, propsEdges);
+      const visibleNodes = getFiniteVisibleNodes(nodes, propsEdges);
       
     // Draw edges
     if (Array.isArray(propsEdges) && propsEdges.length > 0) {
@@ -803,7 +851,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
       e.preventDefault();
       const { x, y } = getTransformed(e.clientX, e.clientY);
       // Check visible nodes only
-      const visibleNodes = getVisibleNodes(nodes, propsEdges);
+      const visibleNodes = getFiniteVisibleNodes(nodes, propsEdges);
       let clickedNodeId = null;
       const nodeRadius = currentTheme.colors.nodeRadius;
       for (const node of visibleNodes) {
@@ -861,7 +909,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
           const worldX = (e.clientX - rect.left - view.current.offsetX) / view.current.scale;
           const worldY = (e.clientY - rect.top - view.current.offsetY) / view.current.scale;
           // Hit test visible nodes
-          const visibleNodes = getVisibleNodes(nodes, propsEdges);
+          const visibleNodes = getFiniteVisibleNodes(nodes, propsEdges);
           const nodeRadius = currentTheme.colors.nodeRadius;
           let clickedNodeId = null;
           for (const node of visibleNodes) {
@@ -981,7 +1029,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
     const y = (e.clientY - rect.top - view.current.offsetY) / view.current.scale;
     
     // Check visible nodes only
-    const visibleNodes = getVisibleNodes(nodes, propsEdges);
+    const visibleNodes = getFiniteVisibleNodes(nodes, propsEdges);
     let clickedNodeId = null;
     
     for (const node of visibleNodes) {
@@ -1027,7 +1075,7 @@ const VertexCanvas = forwardRef(({ nodes, edges: propsEdges = [], onNodeClick, o
     const y = (e.clientY - rect.top - view.current.offsetY) / view.current.scale;
     
     // Check visible nodes only
-    const visibleNodes = getVisibleNodes(nodes, propsEdges);
+    const visibleNodes = getFiniteVisibleNodes(nodes, propsEdges);
     for (const node of visibleNodes) {
       const dx = node.x - x;
       const dy = node.y - y;
