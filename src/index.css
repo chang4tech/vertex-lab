@@ -488,7 +488,7 @@ mark {
   display: flex;
   gap: 12px;
   pointer-events: none;
-  z-index: 10120;
+  z-index: 10160;
 }
 
 .overlay-slot__item {
