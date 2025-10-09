@@ -20,8 +20,8 @@
     "file": "/sample/rpg-skill-tree.json"
   },
   {
-    "id": "taxonomy-overview",
-    "name": "Animal Taxonomy Overview",
-    "file": "/sample/taxonomy-overview.json"
+    "id": "business-taxonomy",
+    "name": "Business Taxonomy Overview",
+    "file": "/sample/business-taxonomy.json"
   }
 ]
