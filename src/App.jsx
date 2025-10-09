@@ -213,6 +213,11 @@ const MenuBar = React.forwardRef(({
     color: currentTheme.colors.warningText ?? currentTheme.colors.primaryText,
     border: `1px solid ${currentTheme.colors.warningBorder ?? 'rgba(245, 158, 11, 0.36)'}`,
   };
+
+  const handleOpenDocs = () => {
+    try { sessionStorage.setItem('vertex_help_return', window.location.hash || '#/'); } catch {}
+    window.location.hash = '#/docs';
+  };
   const accountChipBaseStyle = {
     display: 'flex',
     alignItems: 'center',
@@ -1092,7 +1097,7 @@ const MenuBar = React.forwardRef(({
               className="menu-item"
               onClick={(e) => {
                 e.preventDefault(); e.stopPropagation();
-                onShowHelpModal?.('help.documentation', 'help.documentation.desc');
+                handleOpenDocs();
                 setOpenMenu(null);
               }}
             >

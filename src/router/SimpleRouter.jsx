@@ -3,6 +3,7 @@ import App from '../App.jsx';
 import PluginPage from '../components/PluginPage.jsx';
 import AuthPage from '../pages/AuthPage.jsx';
 import ProfilePage from '../pages/ProfilePage.jsx';
+import DocumentationPage from '../pages/DocumentationPage.jsx';
 import { FormattedMessage } from 'react-intl';
 
 function parseHash() {
@@ -25,6 +26,9 @@ function parseHash() {
   }
   if (segments[0] === 'profile') {
     return { route: 'profile' };
+  }
+  if (segments[0] === 'docs') {
+    return { route: 'docs' };
   }
   return { route: 'landing' };
 }
@@ -49,6 +53,9 @@ export function SimpleRouter() {
   }
   if (state.route === 'profile') {
     return <ProfilePage />;
+  }
+  if (state.route === 'docs') {
+    return <DocumentationPage />;
   }
   return <Landing />;
 }
