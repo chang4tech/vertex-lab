@@ -31,36 +31,43 @@ export function Minimap({ nodes, edges = [], viewBox, scale = 0.15, visible, onV
     if (sourceNodes.length === 0) return defaultBounds;
 
     const visibleNodes = getVisibleNodes(sourceNodes, edges);
-    const nodesToMeasure = visibleNodes.length > 0 ? visibleNodes : sourceNodes;
+    const pool = visibleNodes.length > 0 ? visibleNodes : sourceNodes;
 
-    const [firstNode, ...rest] = nodesToMeasure;
-    if (!firstNode) {
-      return defaultBounds;
-    }
-    const firstExtents = getHalfExtents(firstNode);
-    let bounds = {
-      minX: firstNode.x - firstExtents.hw,
-      maxX: firstNode.x + firstExtents.hw,
-      minY: firstNode.y - firstExtents.hh,
-      maxY: firstNode.y + firstExtents.hh,
-    };
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
 
-    rest.forEach(node => {
+    pool.forEach(node => {
       if (!node) return;
-      const { hw, hh } = getHalfExtents(node);
-      bounds = {
-        minX: Math.min(bounds.minX, node.x - hw),
-        maxX: Math.max(bounds.maxX, node.x + hw),
-        minY: Math.min(bounds.minY, node.y - hh),
-        maxY: Math.max(bounds.maxY, node.y + hh),
-      };
+      const enhanced = upgradeNode(node);
+      const x = Number(enhanced?.x);
+      const y = Number(enhanced?.y);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        return;
+      }
+      const { hw, hh } = getHalfExtents(enhanced);
+      if (!Number.isFinite(hw) || !Number.isFinite(hh)) {
+        return;
+      }
+      const left = x - hw;
+      const right = x + hw;
+      const top = y - hh;
+      const bottom = y + hh;
+      if (!Number.isFinite(left) || !Number.isFinite(right) || !Number.isFinite(top) || !Number.isFinite(bottom)) {
+        return;
+      }
+      if (left < minX) minX = left;
+      if (right > maxX) maxX = right;
+      if (top < minY) minY = top;
+      if (bottom > maxY) maxY = bottom;
     });
 
-    if (!Number.isFinite(bounds.minX) || !Number.isFinite(bounds.maxX) || !Number.isFinite(bounds.minY) || !Number.isFinite(bounds.maxY)) {
+    if (!Number.isFinite(minX) || !Number.isFinite(maxX) || !Number.isFinite(minY) || !Number.isFinite(maxY)) {
       return defaultBounds;
     }
 
-    return bounds;
+    return { minX, maxX, minY, maxY };
   }, [nodes, edges, getHalfExtents]);
 
   useEffect(() => {
@@ -96,9 +103,15 @@ export function Minimap({ nodes, edges = [], viewBox, scale = 0.15, visible, onV
     const visibleNodes = getVisibleNodes(nodes, edges);
     visibleNodes.forEach(node => {
       const enhanced = upgradeNode(node);
-      const x = enhanced.x * finalScale;
-      const y = enhanced.y * finalScale;
-      const r = currentTheme.colors.nodeRadius * finalScale;
+      const nodeX = Number(enhanced?.x);
+      const nodeY = Number(enhanced?.y);
+      const baseRadius = Number(currentTheme?.colors?.nodeRadius);
+      if (!Number.isFinite(nodeX) || !Number.isFinite(nodeY) || !Number.isFinite(baseRadius) || baseRadius <= 0) {
+        return;
+      }
+      const x = nodeX * finalScale;
+      const y = nodeY * finalScale;
+      const r = baseRadius * finalScale;
       const shape = enhanced.shape || NODE_SHAPES.CIRCLE;
       const fillColor = getThemeNodeColor(enhanced, currentTheme);
       const strokeColor = getNodeBorderColor(enhanced, currentTheme);

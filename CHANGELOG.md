@@ -7,7 +7,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ## Unreleased
 
 ### Fixed
-- Minimap: Prevent infinite canvas dimensions by falling back to default bounds when all nodes are hidden; added regression test covering hidden-node scenario.
+- Minimap: Prevent infinite canvas dimensions and skip nodes with invalid coordinates so the minimap no longer distorts after load; added regression tests covering hidden-node and invalid-node scenarios.
 
 ### Added
 - Docs: `doc/DEV_SERVER.md` guiding LAN access (Vite `--host`, preview, IP lookup, firewall/VPN tips).

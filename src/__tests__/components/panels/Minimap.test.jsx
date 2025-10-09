@@ -69,4 +69,38 @@ describe('Minimap', () => {
 
     visibleSpy.mockRestore();
   });
+
+  it('ignores nodes without coordinates when deriving bounds', async () => {
+    const mockCtx = createMockContext();
+    HTMLCanvasElement.prototype.getContext = vi.fn(() => mockCtx);
+    HTMLCanvasElement.prototype.getBoundingClientRect = vi.fn(() => ({
+      left: 0,
+      top: 0,
+      width: 800,
+      height: 600,
+    }));
+
+    const nodes = [
+      { id: 1, label: 'Invalid node' },
+      { id: 2, x: 480, y: 360, label: 'Valid node' },
+    ];
+
+    const visibleSpy = vi.spyOn(nodeUtils, 'getVisibleNodes').mockReturnValue(nodes);
+
+    render(
+      <ThemeProvider>
+        <Minimap nodes={nodes} edges={[]} visible viewBox={{ x: 0, y: 0, width: 100, height: 100 }} />
+      </ThemeProvider>
+    );
+
+    await waitFor(() => {
+      expect(mockCtx.translate.mock.calls.length).toBeGreaterThanOrEqual(2);
+    });
+
+    const [, translateCall] = mockCtx.translate.mock.calls;
+    expect(translateCall[0]).toBeLessThan(0);
+    expect(translateCall[1]).toBeLessThan(0);
+
+    expect(visibleSpy).toHaveBeenCalled();
+  });
 });
