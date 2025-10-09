@@ -1,9 +1,10 @@
 import React from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useTheme } from '../contexts/ThemeContext';
-import { 
-  getNodeDisplayText, 
+import {
+  getNodeDisplayText,
   getThemeNodeColor,
+  getNodeTextColor,
   NODE_SHAPES,
   NODE_COLOR_INFO,
   PRIORITY_LEVELS
@@ -257,6 +258,11 @@ const NodeInfoPanel = ({
               }}>
                 <FormattedMessage id="nodeInfo.colors" defaultMessage="Colors" />
               </h4>
+              {Object.entries(stats.colors).length > 0 && (
+                <div style={{ fontSize: '12px', color: currentTheme.colors.secondaryText, marginBottom: 6 }}>
+                  <FormattedMessage id="nodeInfo.colorsHint" defaultMessage="Swatches show node fill colors." />
+                </div>
+              )}
               {Object.entries(stats.colors).map(([color, count]) => (
                 <div key={color} style={{
                   display: 'flex',
@@ -386,16 +392,37 @@ const NodeInfoPanel = ({
                   <span>{getShapeName(singleNode.shape || NODE_SHAPES.CIRCLE)}</span>
                 </div>
                 
-                <div style={{ marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                   <strong><FormattedMessage id="nodeInfo.color" defaultMessage="Color" />:</strong>
-                  <div style={{
-                    width: '16px',
-                    height: '16px',
-                    backgroundColor: getThemeNodeColor(singleNode, currentTheme),
-                    border: `1px solid ${currentTheme.colors.panelBorder}`,
-                    borderRadius: '3px'
-                  }} />
-                  <span>{getColorName(singleNode.color || '#ffffff')}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{
+                        width: '16px',
+                        height: '16px',
+                        backgroundColor: getThemeNodeColor(singleNode, currentTheme),
+                        border: `1px solid ${currentTheme.colors.panelBorder}`,
+                        borderRadius: '3px'
+                      }} />
+                      <span style={{ color: currentTheme.colors.secondaryText, fontSize: '12px' }}>
+                        <FormattedMessage id="nodeInfo.colorFill" defaultMessage="Fill" />
+                      </span>
+                    </div>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '2px 8px',
+                      borderRadius: 12,
+                      border: `1px solid ${currentTheme.colors.inputBorder}`,
+                      backgroundColor: currentTheme.colors.inputBackground
+                    }}>
+                      <span style={{ color: getNodeTextColor(singleNode, currentTheme), fontWeight: 600 }}>Aa</span>
+                      <span style={{ color: currentTheme.colors.secondaryText, fontSize: '12px' }}>
+                        <FormattedMessage id="nodeInfo.colorText" defaultMessage="Text" />
+                      </span>
+                    </div>
+                    <span>{getColorName(singleNode.color || '#ffffff')}</span>
+                  </div>
                 </div>
 
                 {singleNode.fontSize && (
