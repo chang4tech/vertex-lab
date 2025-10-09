@@ -18,6 +18,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Added
 - Export pipeline: Expose plugin hook to decorate PNG exports (graph/user metadata provided to decorators).
+- Plugins: Export Watermark plugin adds optional text or QR code watermark to PNG exports.
 - Docs: `doc/DEV_SERVER.md` guiding LAN access (Vite `--host`, preview, IP lookup, firewall/VPN tips).
 - README: “Access from other devices” quick steps.
 - Mobile: Suppress iOS long‑press callout/selection on the canvas (CSS no‑callout + touch `pointerdown` preventDefault).
