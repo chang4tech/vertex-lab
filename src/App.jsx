@@ -176,6 +176,9 @@ const MenuBar = React.forwardRef(({
   onShowProfile,
   onRequestLogin,
   onRequestSignup,
+  onOpenSettings,
+  onOpenPluginsManager,
+  onOpenTagManager,
 }, ref) => {
   const isMobile = useIsMobile();
   const localMenuBarRef = useRef(null);
@@ -192,10 +195,6 @@ const MenuBar = React.forwardRef(({
   };
   const [openMenu, setOpenMenu] = useState(null); // 'file' | 'edit' | 'view' | 'settings' | null
   const [alignRight, setAlignRight] = useState({});
-  const [showSettings, setShowSettings] = useState(false);
-  const [settingsTab, setSettingsTab] = useState('all');
-  const [showTagManager, setShowTagManager] = useState(false);
-  const [showPluginsManager, setShowPluginsManager] = useState(false);
   const intl = useIntl();
   const { currentTheme, toggleTheme } = useTheme();
   const isOffline = userStatus === 'offline';
@@ -408,28 +407,6 @@ const MenuBar = React.forwardRef(({
   };
   return (
     <>
-      {showSettings && (
-        <Settings
-          onClose={() => setShowSettings(false)}
-          pluginPrefs={pluginPrefs}
-          onTogglePlugin={onTogglePlugin}
-          initialTab={settingsTab}
-          maxLevel={maxLevel}
-          onMaxLevelChange={onChangeMaxLevel}
-        />
-      )}
-      {showTagManager && <TagManager onClose={() => setShowTagManager(false)} />}
-      {showPluginsManager && (
-        <PluginsManager
-          onClose={() => setShowPluginsManager(false)}
-          pluginPrefs={pluginPrefs}
-          onTogglePlugin={onTogglePlugin}
-          availablePlugins={availablePlugins}
-          customPlugins={customPlugins}
-          onImportCustomPlugin={onImportCustomPlugin}
-          onRemoveCustomPlugin={onRemoveCustomPlugin}
-        />
-      )}
       <HelpModal
         open={helpModal.open}
         titleId={helpModal.titleId}
@@ -1051,8 +1028,7 @@ const MenuBar = React.forwardRef(({
                 e.preventDefault();
                 e.stopPropagation();
                 console.log('Keyboard Shortcuts clicked');
-                setSettingsTab('all');
-                setShowSettings(true);
+                onOpenSettings?.('all');
                 setOpenMenu(null);
               }}
             >
@@ -1065,7 +1041,7 @@ const MenuBar = React.forwardRef(({
                 e.preventDefault();
                 e.stopPropagation();
                 console.log('Plugins clicked');
-                setShowPluginsManager(true);
+                onOpenPluginsManager?.();
                 setOpenMenu(null);
               }}
             >
@@ -1077,7 +1053,7 @@ const MenuBar = React.forwardRef(({
                 e.preventDefault();
                 e.stopPropagation();
                 console.log('Tag Manager clicked');
-                setShowTagManager(true);
+                onOpenTagManager?.();
                 setOpenMenu(null);
               }}
             >
@@ -1409,6 +1385,11 @@ function App({ graphId = 'default' }) {
   // Node editor state
   const [showNodeEditor, setShowNodeEditor] = useState(false);
   const [editingNodeId, setEditingNodeId] = useState(null);
+
+  const [showSettings, setShowSettings] = useState(false);
+  const [settingsTab, setSettingsTab] = useState('all');
+  const [showTagManager, setShowTagManager] = useState(false);
+  const [showPluginsManager, setShowPluginsManager] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -2010,6 +1991,19 @@ function App({ graphId = 'default' }) {
 
   const handleCloseThemes = useCallback(() => {
     setShowThemes(false);
+  }, []);
+
+  const handleOpenSettings = useCallback((tab = 'all') => {
+    setSettingsTab(tab);
+    setShowSettings(true);
+  }, []);
+
+  const handleOpenPluginsManager = useCallback(() => {
+    setShowPluginsManager(true);
+  }, []);
+
+  const handleOpenTagManager = useCallback(() => {
+    setShowTagManager(true);
   }, []);
 
   // Context menu actions
@@ -2908,7 +2902,7 @@ function App({ graphId = 'default' }) {
     },
   }), [overlayItems, slotStyles, overlayLayoutOverrides]);
 
-  const hasBlockingModal = showNodeEditor || showThemes || showSearch || showTagManager || showPluginsManager || helpModal.open;
+  const hasBlockingModal = showNodeEditor || showThemes || showSearch || showSettings || showTagManager || showPluginsManager || helpModal.open;
 
   const pluginAppApi = useMemo(() => ({
     nodes,
@@ -2976,6 +2970,28 @@ function App({ graphId = 'default' }) {
 
   return (
     <React.Fragment>
+      {showSettings && (
+        <Settings
+          onClose={() => setShowSettings(false)}
+          pluginPrefs={pluginPrefs}
+          onTogglePlugin={setPluginEnabled}
+          initialTab={settingsTab}
+          maxLevel={maxLevel}
+          onMaxLevelChange={setMaxLevel}
+        />
+      )}
+      {showTagManager && <TagManager onClose={() => setShowTagManager(false)} />}
+      {showPluginsManager && (
+        <PluginsManager
+          onClose={() => setShowPluginsManager(false)}
+          pluginPrefs={pluginPrefs}
+          onTogglePlugin={setPluginEnabled}
+          availablePlugins={corePlugins}
+          customPlugins={customPlugins}
+          onImportCustomPlugin={importCustomPlugin}
+          onRemoveCustomPlugin={removeCustomPlugin}
+        />
+      )}
       <MenuBar
         ref={menuBarRef}
         onExport={handleExport}
@@ -3050,6 +3066,9 @@ function App({ graphId = 'default' }) {
         onShowProfile={() => { window.location.hash = '#/profile'; }}
         onRequestLogin={() => { window.location.hash = '#/login'; }}
         onRequestSignup={() => { window.location.hash = '#/signup'; }}
+        onOpenSettings={handleOpenSettings}
+        onOpenPluginsManager={handleOpenPluginsManager}
+        onOpenTagManager={handleOpenTagManager}
       />
       <div style={{ height: 80 }} />
       <MainHeader />
