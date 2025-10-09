@@ -26,7 +26,7 @@ const descriptorsEqual = (a, b) => {
 };
 
 // Simple plugin host that renders plugin-provided side panels
-export function PluginHost({ plugins = [], appApi, onOverlaysChange, hideSidePanels = false }) {
+export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanelWidthChange, hideSidePanels = false }) {
   const overlayDescriptors = useMemo(() => {
     if (!plugins || plugins.length === 0) return [];
     return plugins.flatMap((plugin) => {
@@ -69,6 +69,7 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, hideSidePan
   }, [plugins, appApi]);
 
   const lastDescriptorsRef = useRef();
+  const containerRef = useRef(null);
 
   useEffect(() => {
     if (typeof onOverlaysChange === 'function') {
@@ -124,13 +125,15 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, hideSidePan
 
   const isMobile = !!appApi?.isMobile;
   const menuBarBottom = appApi?.menuBarBottom ?? 80;
-  const overlayRightInset = appApi?.overlayRightInset ?? 0;
+  const corePanelOffset = Number.isFinite(appApi?.corePanelOffset)
+    ? appApi.corePanelOffset
+    : (isMobile ? 8 : 16);
   const sidePanelContainerStyle = isMobile || hideSidePanels
     ? { display: 'none' }
     : {
         position: 'fixed',
         top: `calc(${menuBarBottom + 12}px + env(safe-area-inset-top))`,
-        right: `calc(${16 + overlayRightInset}px + env(safe-area-inset-right))`,
+        right: `calc(${corePanelOffset}px + env(safe-area-inset-right))`,
         display: 'flex',
         flexDirection: 'column',
         gap: 12,
@@ -138,10 +141,48 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, hideSidePan
         zIndex: 10115,
       };
 
+  useEffect(() => {
+    if (typeof onSidePanelWidthChange !== 'function') return undefined;
+    if (hideSidePanels || sidePanelEntries.length === 0) {
+      onSidePanelWidthChange(0);
+      return undefined;
+    }
+    const el = containerRef.current;
+    if (!el) {
+      onSidePanelWidthChange(0);
+      return undefined;
+    }
+
+    const measure = () => {
+      const rect = el.getBoundingClientRect();
+      onSidePanelWidthChange(Math.max(0, Math.round(rect?.width || 0)));
+    };
+
+    measure();
+
+    let resizeObserver;
+    const hasResizeObserver = typeof ResizeObserver !== 'undefined';
+    if (hasResizeObserver) {
+      resizeObserver = new ResizeObserver(() => measure());
+      resizeObserver.observe(el);
+    } else if (typeof window !== 'undefined') {
+      window.addEventListener('resize', measure);
+    }
+
+    return () => {
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      } else if (typeof window !== 'undefined') {
+        window.removeEventListener('resize', measure);
+      }
+      onSidePanelWidthChange(0);
+    };
+  }, [onSidePanelWidthChange, hideSidePanels, sidePanelEntries.length]);
+
   return (
     <>
       {sidePanelEntries.length > 0 && !hideSidePanels && (
-        <div className="plugin-side-panels" style={sidePanelContainerStyle}>
+        <div ref={containerRef} className="plugin-side-panels" style={sidePanelContainerStyle}>
           {sidePanelEntries.map(({ key, element }) => (
             <div key={key} className="plugin-side-panels__item">
               {element}

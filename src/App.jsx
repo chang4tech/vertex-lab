@@ -1639,6 +1639,7 @@ function App({ graphId = 'default' }) {
       return false;
     }
   });
+  const [pluginSidePanelWidth, setPluginSidePanelWidth] = useState(0);
 
   const nodeInfoPluginEnabled = pluginPrefs?.['core.nodeInfo'] ?? true;
   const edgeInfoPluginEnabled = pluginPrefs?.['core.edgeInfo'] ?? true;
@@ -1647,7 +1648,10 @@ function App({ graphId = 'default' }) {
 
   const panelWidth = isMobile ? 280 : 320;
   const totalSidePanelWidth = (nodeInfoPanelVisible ? panelWidth : 0) + (edgeInfoPanelVisible ? panelWidth : 0);
-  const overlayRightInset = totalSidePanelWidth > 0 ? totalSidePanelWidth + (isMobile ? 8 : 16) : 0;
+  const sidePanelMargin = isMobile ? 8 : 16;
+  const combinedSidePanelWidth = totalSidePanelWidth + pluginSidePanelWidth;
+  const overlayRightInset = combinedSidePanelWidth > 0 ? combinedSidePanelWidth + sidePanelMargin : 0;
+  const corePanelOffset = totalSidePanelWidth > 0 ? totalSidePanelWidth + sidePanelMargin : sidePanelMargin;
 
   const initialCanvasSize = () => {
     if (typeof window === 'undefined') {
@@ -1657,8 +1661,8 @@ function App({ graphId = 'default' }) {
       };
     }
     const sidePadding = 0;
-    const rightPanel = totalSidePanelWidth;
-    const topNav = menuBarRef.current?.offsetHeight || 0;
+    const rightPanel = combinedSidePanelWidth;
+    const topNav = menuBarBottom;
     const width = Math.max(isMobile ? 320 : 600, window.innerWidth - sidePadding - rightPanel);
     const height = Math.max(isMobile ? 300 : 400, window.innerHeight - topNav);
     return { width, height };
@@ -1671,8 +1675,8 @@ function App({ graphId = 'default' }) {
       const W = window.innerWidth;
       const H = window.innerHeight;
       const sidePadding = 0;
-      const rightPanel = totalSidePanelWidth;
-      const topNav = menuBarRef.current?.offsetHeight || 0;
+      const rightPanel = combinedSidePanelWidth;
+      const topNav = menuBarBottom;
       const verticalMargin = 0;
       const width = Math.max(isMobile ? 320 : 600, W - sidePadding - rightPanel);
       const height = Math.max(isMobile ? 300 : 400, H - topNav - verticalMargin);
@@ -1681,7 +1685,7 @@ function App({ graphId = 'default' }) {
     compute();
     window.addEventListener('resize', compute);
     return () => window.removeEventListener('resize', compute);
-  }, [isMobile, totalSidePanelWidth]);
+  }, [isMobile, combinedSidePanelWidth, menuBarBottom]);
 
   useEffect(() => {
     initialFitDoneRef.current = false;
@@ -2731,6 +2735,15 @@ function App({ graphId = 'default' }) {
     boxShadow: 'none',
   };
 
+  const handlePluginPanelWidthChange = useCallback((width) => {
+    if (!Number.isFinite(width)) {
+      setPluginSidePanelWidth(0);
+      return;
+    }
+    const next = Math.max(0, Math.round(width));
+    setPluginSidePanelWidth(prev => (Math.abs(prev - next) <= 1 ? prev : next));
+  }, []);
+
   const baseOverlayItems = useMemo(() => {
     const items = {
       help: { slot: 'top-right', order: isMobile ? 40 : 10 },
@@ -2990,6 +3003,8 @@ function App({ graphId = 'default' }) {
     isMobile,
     menuBarBottom,
     overlayRightInset,
+    corePanelOffset,
+    pluginSidePanelWidth,
     isModalActive: hasBlockingModal,
   }), [
     nodes,
@@ -3019,6 +3034,8 @@ function App({ graphId = 'default' }) {
     isMobile,
     menuBarBottom,
     overlayRightInset,
+    corePanelOffset,
+    pluginSidePanelWidth,
     hasBlockingModal,
   ]);
 
@@ -3190,6 +3207,7 @@ function App({ graphId = 'default' }) {
       <PluginHost
         plugins={activePlugins}
         onOverlaysChange={setPluginOverlays}
+        onSidePanelWidthChange={handlePluginPanelWidthChange}
         appApi={pluginAppApi}
         hideSidePanels={hasBlockingModal}
       />
