@@ -2632,28 +2632,19 @@ function App({ graphId = 'default' }) {
     return () => window.removeEventListener('resize', updateMenuMetrics);
   }, [isMobile]);
 
-  const floatingHelpAllowance = isMobile ? 64 : 0;
-  const pluginTipTop = menuBarBottom + 12 + floatingHelpAllowance;
   const mobileTipWidth = 'min(440px, calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)))';
   const pluginTipContainerStyle = {
-    position: 'fixed',
-    top: `calc(${pluginTipTop}px + env(safe-area-inset-top))`,
-    zIndex: 10020,
     display: 'flex',
     flexDirection: 'column',
     gap: 8,
+    width: '100%',
     ...(isMobile
       ? {
           alignItems: 'stretch',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: mobileTipWidth,
-          maxWidth: mobileTipWidth,
+          gap: 12,
         }
       : {
           alignItems: 'flex-end',
-          right: `calc(24px + env(safe-area-inset-right))`,
-          maxWidth: 360,
         }),
   };
 
@@ -2706,6 +2697,16 @@ function App({ graphId = 'default' }) {
 
   const overlayItems = useMemo(() => {
     const merged = { ...baseOverlayItems };
+    if (pluginTips.length > 0) {
+      merged.pluginTips = {
+        slot: 'top-right',
+        order: isMobile ? 35 : 15,
+        style: {
+          width: isMobile ? mobileTipWidth : 'auto',
+          maxWidth: isMobile ? mobileTipWidth : 360,
+        },
+      };
+    }
     const overrides = overlayLayoutOverrides.items || {};
     Object.entries(overrides).forEach(([key, value]) => {
       if (value === null) {
@@ -2724,7 +2725,7 @@ function App({ graphId = 'default' }) {
       merged[key] = { ...current, ...value };
     });
     return merged;
-  }, [baseOverlayItems, overlayLayoutOverrides.items]);
+  }, [baseOverlayItems, overlayLayoutOverrides.items, pluginTips.length, isMobile, mobileTipWidth]);
 
   const topOffsetPx = Math.max(menuBarBottom + (isMobile ? 12 : 8), isMobile ? 96 : 48);
 
@@ -2775,25 +2776,60 @@ function App({ graphId = 'default' }) {
     return merged;
   }, [baseSlotStyles, overlayLayoutOverrides.slots]);
 
-  const overlayRenderers = useMemo(() => ({
-    controls: () => (
-      <MobileCanvasControls
-        onZoomIn={() => canvasRef.current?.zoom?.(1.1)}
-        onZoomOut={() => canvasRef.current?.zoom?.(0.9)}
-        onResetZoom={() => canvasRef.current?.resetZoom?.()}
-        onCenter={() => canvasRef.current?.fitToView?.()}
-      />
-    ),
-    minimap: () => (
-      <Minimap
-        nodes={nodes}
-        edges={edges}
-        viewBox={viewBox}
-        visible={showMinimap}
-        onViewportChange={handleMinimapViewportChange}
-      />
-    ),
-  }), [nodes, edges, viewBox, showMinimap, handleMinimapViewportChange]);
+  const overlayRenderers = useMemo(() => {
+    const renderers = {
+      controls: () => (
+        <MobileCanvasControls
+          onZoomIn={() => canvasRef.current?.zoom?.(1.1)}
+          onZoomOut={() => canvasRef.current?.zoom?.(0.9)}
+          onResetZoom={() => canvasRef.current?.resetZoom?.()}
+          onCenter={() => canvasRef.current?.fitToView?.()}
+        />
+      ),
+      minimap: () => (
+        <Minimap
+          nodes={nodes}
+          edges={edges}
+          viewBox={viewBox}
+          visible={showMinimap}
+          onViewportChange={handleMinimapViewportChange}
+        />
+      ),
+    };
+    if (pluginTips.length > 0) {
+      renderers.pluginTips = () => (
+        <div style={pluginTipContainerStyle}>
+          {pluginTips.map(t => (
+            <div key={t.id} style={pluginTipCardStyle}>
+              <span style={{ fontSize: 12, lineHeight: 1.4 }}>
+                <FormattedMessage id="plugin.hub.tip" defaultMessage="{name} enabled: explore its Control Hub" values={{ name: t.name }} />
+              </span>
+              <button
+                style={pluginTipPrimaryButtonStyle}
+                onClick={() => {
+                  try { localStorage.setItem('vertex_plugin_seen_' + t.id, 'true'); } catch {}
+                  window.location.hash = `#/plugin/${encodeURIComponent(t.id)}`;
+                  setPluginTips(arr => arr.filter(x => x.id !== t.id));
+                }}
+              >
+                <FormattedMessage id="plugin.hub.open" defaultMessage="Open Control Hub" />
+              </button>
+              <button
+                style={pluginTipDismissButtonStyle}
+                onClick={() => {
+                  try { localStorage.setItem('vertex_plugin_seen_' + t.id, 'true'); } catch {}
+                  setPluginTips(arr => arr.filter(x => x.id !== t.id));
+                }}
+              >
+                <FormattedMessage id="plugin.hub.dismiss" defaultMessage="Dismiss" />
+              </button>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return renderers;
+  }, [nodes, edges, viewBox, showMinimap, handleMinimapViewportChange, pluginTips, pluginTipContainerStyle, pluginTipCardStyle, pluginTipPrimaryButtonStyle, pluginTipDismissButtonStyle, setPluginTips]);
 
   const combinedOverlayEntries = useMemo(() => {
     const entries = [];
@@ -3011,38 +3047,6 @@ function App({ graphId = 'default' }) {
       />
       <div style={{ height: 80 }} />
       <MainHeader />
-
-      {/* Plugin tips */}
-      {pluginTips.length > 0 && (
-        <div style={pluginTipContainerStyle}>
-          {pluginTips.map(t => (
-            <div key={t.id} style={pluginTipCardStyle}>
-              <span style={{ fontSize: 12, lineHeight: 1.4 }}>
-                <FormattedMessage id="plugin.hub.tip" defaultMessage="{name} enabled: explore its Control Hub" values={{ name: t.name }} />
-              </span>
-              <button
-                style={pluginTipPrimaryButtonStyle}
-                onClick={() => {
-                  try { localStorage.setItem('vertex_plugin_seen_' + t.id, 'true'); } catch {}
-                  window.location.hash = `#/plugin/${encodeURIComponent(t.id)}`;
-                  setPluginTips(arr => arr.filter(x => x.id !== t.id));
-                }}
-              >
-                <FormattedMessage id="plugin.hub.open" defaultMessage="Open Control Hub" />
-              </button>
-              <button
-                style={pluginTipDismissButtonStyle}
-                onClick={() => {
-                  try { localStorage.setItem('vertex_plugin_seen_' + t.id, 'true'); } catch {}
-                  setPluginTips(arr => arr.filter(x => x.id !== t.id));
-                }}
-              >
-                <FormattedMessage id="plugin.hub.dismiss" defaultMessage="Dismiss" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
 
       {overlaySlotElements}
 
