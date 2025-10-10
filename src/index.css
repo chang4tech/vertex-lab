@@ -164,7 +164,7 @@ mark {
   z-index: 10120;
   /* Ensure long menus remain usable on mobile */
   max-height: calc(100vh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-  overflow: auto;
+  overflow: visible;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   /* Prevent iOS text selection / callout over custom menus */
