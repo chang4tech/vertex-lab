@@ -517,7 +517,7 @@ function ReminderOverlay({ appApi }) {
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <span role="img" aria-label="Reminder">⏰</span>
         <strong>{intl.formatMessage(
-          { id: 'plugin.followUpReminders.overlayLabel', defaultMessage: '{count} follow-ups due soon' },
+          { id: 'plugin.followUpReminders.overlayLabel', defaultMessage: '{count, plural, one {# follow-up due soon} other {# follow-ups due soon}}' },
           { count }
         )}</strong>
       </div>
