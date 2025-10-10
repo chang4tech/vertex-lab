@@ -312,6 +312,7 @@ export default {
   'nodeInfo.multiSelection': '已选择 {count} 个节点',
   'nodeInfo.noSelection': '未选择',
   'nodeInfo.selectPrompt': '选择一个节点以查看其详情',
+  'nodeInfo.resetView': '重置视图',
   'nodeInfo.summary': '摘要',
   'nodeInfo.totalNodes': '总节点数: {count}',
   'nodeInfo.withTags': '带标签: {count}',

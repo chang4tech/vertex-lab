@@ -125,13 +125,14 @@ export const levelsPlugin = {
             return;
           }
 
-          const raw = window.prompt(t('plugin.levels.prompt', 'Enter level for node:'), '0');
+          const promptLabel = 'Enter level for node:';
+          const raw = window.prompt(promptLabel, '0');
           if (raw == null) return;
           const value = raw.trim();
           if (value === '') return;
           const level = Number(value);
           if (!Number.isFinite(level)) {
-            window.alert?.(t('plugin.levels.invalid', 'Level must be a valid number.'));
+            window.alert?.('Level must be a valid number.');
             return;
           }
 

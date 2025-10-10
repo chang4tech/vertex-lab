@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, beforeEach, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { IntlProvider } from 'react-intl';
 let PluginHost;
 let ThemeProvider;
@@ -43,8 +43,11 @@ describe('followUpRemindersPlugin', () => {
 
   it('renders follow-up panel for the selected node', () => {
     renderPlugin();
-    expect(screen.getByText('Follow-up Reminders')).toBeInTheDocument();
-    expect(screen.getByText('Reminder for: Alpha')).toBeInTheDocument();
+    const headings = screen.getAllByText('Follow-up Reminders');
+    const panelHeading = headings[headings.length - 1];
+    const panelContent = panelHeading.closest('.plugin-side-panels__content');
+    expect(panelContent).toBeTruthy();
+    expect(within(panelContent).getByText('Reminder for: Alpha')).toBeInTheDocument();
     expect(screen.getByLabelText('Follow-up date')).toBeInTheDocument();
   });
 

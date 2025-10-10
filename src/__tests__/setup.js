@@ -24,6 +24,8 @@ if (typeof global.PointerEvent === 'undefined') {
 const mockCanvas = {
   getContext: () => ({
     clearRect: vi.fn(),
+    fillRect: vi.fn(),
+    strokeRect: vi.fn(),
     save: vi.fn(),
     restore: vi.fn(),
     translate: vi.fn(),
@@ -35,6 +37,8 @@ const mockCanvas = {
     moveTo: vi.fn(),
     lineTo: vi.fn(),
     fillText: vi.fn(),
+    closePath: vi.fn(),
+    measureText: vi.fn(() => ({ width: 0 })),
   }),
   addEventListener: vi.fn(),
   removeEventListener: vi.fn(),
@@ -46,6 +50,20 @@ const mockCanvas = {
     height: 600,
   }),
 };
+
+if (typeof HTMLCanvasElement !== 'undefined') {
+  const canvasProto = HTMLCanvasElement.prototype;
+  Object.defineProperty(canvasProto, 'getContext', {
+    value: mockCanvas.getContext,
+    configurable: true,
+    writable: true,
+  });
+  Object.defineProperty(canvasProto, 'toDataURL', {
+    value: vi.fn(() => 'data:image/png;base64,mock'),
+    configurable: true,
+    writable: true,
+  });
+}
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
