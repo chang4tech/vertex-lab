@@ -108,10 +108,13 @@ function applyThemeToDocument(theme) {
   root.style.setProperty('--primary-button-hover', colors.primaryButtonHover);
   root.style.setProperty('--primary-button-text', colors.primaryButtonText);
   root.style.setProperty('--plugin-panel-text', colors.primaryText);
-  root.style.setProperty('--plugin-panel-background-glass', hexToRgba(colors.panelBackground, 0.42));
+  root.style.setProperty('--plugin-panel-chrome-bg', colors.panelBackground);
   root.style.setProperty('--plugin-panel-border', hexToRgba(colors.panelBorder || colors.menuBorder || '#94a3b8', 0.35));
-  root.style.setProperty('--plugin-panel-summary-glass', hexToRgba(colors.menuBackground || colors.panelBackground, 0.24));
-  root.style.setProperty('--plugin-panel-surface-glass', hexToRgba(colors.inputBackground || colors.panelBackground, 0.16));
+  root.style.setProperty('--plugin-panel-summary-bg', colors.menuBackground || colors.panelBackground);
+  root.style.setProperty('--plugin-panel-surface-bg', colors.inputBackground || colors.panelBackground);
+  root.style.setProperty('--plugin-panel-opacity', '0.55');
+  root.style.setProperty('--plugin-panel-summary-opacity', '0.45');
+  root.style.setProperty('--plugin-panel-surface-opacity', '0.25');
   root.style.setProperty('--plugin-panel-shadow-color', colors.panelShadow || 'rgba(15, 23, 42, 0.2)');
   
   // Update body background

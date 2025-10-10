@@ -623,13 +623,13 @@ mark {
   display: block;
   width: var(--plugin-panel-width);
   max-width: min(90vw, var(--plugin-panel-width));
-  background: var(--plugin-panel-background-glass, rgba(15, 23, 42, 0.78));
-  border: 1px solid var(--plugin-panel-border, rgba(148, 163, 184, 0.55));
+  border: 1px solid var(--plugin-panel-border, rgba(148, 163, 184, 0.35));
   border-radius: 18px;
   color: var(--plugin-panel-text, var(--primary-text, #0f172a));
   box-shadow: 0 24px 38px var(--plugin-panel-shadow-color, rgba(15, 23, 42, 0.28));
   backdrop-filter: blur(18px);
   overflow: hidden;
+  position: relative;
 }
 
 .plugin-side-panels__item:not(.plugin-side-panels__item--collapsible) > * {
@@ -645,6 +645,24 @@ mark {
   box-shadow: 0 28px 44px var(--plugin-panel-shadow-color, rgba(15, 23, 42, 0.32));
 }
 
+.plugin-side-panels__item::before,
+.plugin-side-panels__item--collapsible::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--plugin-panel-chrome-bg, rgba(15, 23, 42, 1));
+  opacity: var(--plugin-panel-opacity, 0.55);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.plugin-side-panels__item > *,
+.plugin-side-panels__item--collapsible > * {
+  position: relative;
+  z-index: 1;
+}
+
 .plugin-side-panels__summary {
   display: flex;
   align-items: center;
@@ -656,7 +674,20 @@ mark {
   cursor: pointer;
   list-style: none;
   color: inherit;
-  background: var(--plugin-panel-summary-glass, rgba(15, 23, 42, 0.45));
+  background: transparent;
+  position: relative;
+  z-index: 1;
+}
+
+.plugin-side-panels__summary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--plugin-panel-summary-bg, rgba(15, 23, 42, 1));
+  opacity: var(--plugin-panel-summary-opacity, 0.45);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .plugin-side-panels__summary:focus-visible {
@@ -693,10 +724,24 @@ mark {
 .plugin-side-panels__content {
   padding: 0 16px 16px;
   overflow: visible;
+  position: relative;
 }
 
 .plugin-side-panels__content > * {
   width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.plugin-side-panels__content::before {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border-radius: 14px;
+  background: var(--plugin-panel-surface-bg, rgba(15, 23, 42, 1));
+  opacity: var(--plugin-panel-surface-opacity, 0.25);
+  pointer-events: none;
+  z-index: 0;
 }
 
 
