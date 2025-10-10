@@ -293,7 +293,7 @@ const MenuBar = React.forwardRef(({
     try { sessionStorage.setItem('vertex_help_return', window.location.hash || '#/'); } catch {}
     window.location.hash = '#/about';
   };
-  const appVersion = import.meta.env.VITE_APP_VERSION ?? import.meta.env.PACKAGE_VERSION ?? '0.0.0';
+  const appVersion = import.meta.env.VITE_APP_VERSION ?? import.meta.env.PACKAGE_VERSION ?? (packageJson?.version ?? '0.0.0');
 
   const openCommunity = () => {
     if (typeof onOpenCommunity === 'function') {
