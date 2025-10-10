@@ -190,7 +190,11 @@ export default {
   'header.userLoading': '加载中…',
   'header.signIn': '登录',
   'header.signUp': '注册',
-  'header.account': '你的账号',
+    'graphId.copy': '复制图 ID 到剪贴板',
+  'graphId.copied': '图 ID 已复制到剪贴板',
+  'graphId.copiedShort': 'ID 已复制',
+  'graphId.label': 'ID：{id}',
+'header.account': '你的账号',
   'status.offline': '离线模式',
 
   // Node labels

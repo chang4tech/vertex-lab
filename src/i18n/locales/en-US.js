@@ -190,7 +190,11 @@ export default {
   'header.userLoading': 'Loading…',
   'header.signIn': 'Sign in',
   'header.signUp': 'Sign up',
-  'header.account': 'Your account',
+    'graphId.copy': 'Copy graph ID to clipboard',
+  'graphId.copied': 'Graph ID copied to clipboard',
+  'graphId.copiedShort': 'ID copied',
+  'graphId.label': 'ID: {id}',
+'header.account': 'Your account',
   'status.offline': 'Offline mode',
 
   // Node labels
