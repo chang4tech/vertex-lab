@@ -502,6 +502,46 @@ function ReminderPanel({ appApi }) {
                 <FormattedMessage id="plugin.followUpReminders.clear" defaultMessage="Clear" />
               </button>
             </div>
+            {existingReminder && (
+              <div
+                style={{
+                  borderRadius: 10,
+                  border: `1px solid ${currentTheme.colors.panelBorder}`,
+                  background: currentTheme.colors.menuBackground,
+                  padding: 12,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 6,
+                  marginTop: 4,
+                }}
+              >
+                <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.4, color: currentTheme.colors.secondaryText }}>
+                  <FormattedMessage id="plugin.followUpReminders.currentSummary" defaultMessage="Saved reminder" />
+                </div>
+                <div style={{ fontSize: 13, color: currentTheme.colors.primaryText }}>
+                  <FormattedMessage
+                    id="plugin.followUpReminders.currentDue"
+                    defaultMessage="Due {date}"
+                    values={{
+                      date: intl.formatDate(new Date(existingReminder.dueAt), { dateStyle: 'medium', timeStyle: 'short' }),
+                    }}
+                  />
+                </div>
+                {existingReminder.note ? (
+                  <div style={{ fontSize: 13, color: currentTheme.colors.secondaryText, whiteSpace: 'pre-wrap' }}>
+                    <FormattedMessage
+                      id="plugin.followUpReminders.currentNote"
+                      defaultMessage="Notes: {note}"
+                      values={{ note: existingReminder.note }}
+                    />
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 12, color: currentTheme.colors.secondaryText }}>
+                    <FormattedMessage id="plugin.followUpReminders.currentNoNote" defaultMessage="No notes added." />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </section>

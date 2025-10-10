@@ -63,6 +63,7 @@ describe('followUpRemindersPlugin', () => {
     const noteInstances = await screen.findAllByText('Call back client');
     expect(noteInstances.some((node) => node.tagName === 'DIV')).toBe(true);
     expect(screen.getByText('Reminder saved.')).toBeInTheDocument();
+    expect(screen.getAllByText('Saved reminder').length).toBeGreaterThan(0);
     expect(screen.getByText('Mark done')).toBeInTheDocument();
   });
 
@@ -82,6 +83,7 @@ describe('followUpRemindersPlugin', () => {
 
     const hydratedNotes = await screen.findAllByText('Check status');
     expect(hydratedNotes.some((node) => node.tagName === 'DIV')).toBe(true);
+    expect(screen.getAllByText('Saved reminder').length).toBeGreaterThan(0);
     expect(screen.getByText('Mark done')).toBeInTheDocument();
   });
 });
