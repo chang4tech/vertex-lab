@@ -3,6 +3,7 @@ import React from 'react';
 export const showcasePlugin = {
   id: 'example.showcase',
   name: 'Plugin Showcase',
+  nameMessageId: 'plugin.showcase.name',
   description: 'Demonstrates overlays and context commands',
   descriptionId: 'plugin.example.showcase.desc',
   version: '1.0.0',
