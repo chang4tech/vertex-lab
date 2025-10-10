@@ -4,6 +4,7 @@ import EdgeInfoPanel from '../../components/EdgeInfoPanel.jsx';
 export const edgeInfoPlugin = {
   id: 'core.edgeInfo',
   name: 'Edge Info',
+  nameMessageId: 'plugin.edgeInfo.name',
   description: 'Shows details for edges, including metadata.',
   version: '1.0.0',
   author: 'Vertex Lab Core',

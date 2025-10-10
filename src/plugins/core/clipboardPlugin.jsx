@@ -3,6 +3,7 @@ import React from 'react';
 export const clipboardPlugin = {
   id: 'core.clipboard',
   name: 'Clipboard Tools',
+  nameMessageId: 'plugin.clipboard.name',
   description: 'Commands to copy selection or node ids',
   version: '1.0.0',
   author: 'Vertex Lab Core',

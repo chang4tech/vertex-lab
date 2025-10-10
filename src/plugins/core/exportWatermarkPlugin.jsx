@@ -199,6 +199,7 @@ const WatermarkConfigurator = () => {
 export const exportWatermarkPlugin = {
   id: 'core.exportWatermark',
   name: 'Export Watermark',
+  nameMessageId: 'plugin.exportWatermark.name',
   description: 'Adds an optional watermark to exported PNG files.',
   version: '1.0.0',
   author: 'Vertex Lab Core',

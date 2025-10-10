@@ -74,6 +74,7 @@ function HelpOverlayContent({ api }) {
 export const helpOverlayPlugin = {
   id: 'core.helpOverlay',
   name: 'Help Overlay',
+  nameMessageId: 'plugin.helpOverlay.name',
   slots: {
     canvasOverlays: [
       {

@@ -96,6 +96,7 @@ function LevelsPanel({ groupedLevels, onSelectNode }) {
 export const levelsPlugin = {
   id: 'core.levels',
   name: 'Node Levels',
+  nameMessageId: 'plugin.levels.title',
   description: 'Manage level assignments without parent/child relationships.',
   version: '1.0.0',
   author: 'Vertex Lab Core',

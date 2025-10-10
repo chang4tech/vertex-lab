@@ -489,6 +489,7 @@ const VersionHistoryOverlay = ({ api }) => {
 export const versionHistoryPlugin = {
   id: 'core.versionHistory',
   name: 'Version History',
+  nameMessageId: 'plugin.versionHistory.title',
   description: 'Capture and restore snapshots of your graph.',
   version: '1.0.0',
   author: 'Vertex Lab Core',

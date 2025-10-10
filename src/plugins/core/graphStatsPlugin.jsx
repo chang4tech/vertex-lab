@@ -139,6 +139,7 @@ function GraphStatsConfig() {
 export const graphStatsPlugin = {
   id: 'core.graphStats',
   name: 'Graph Stats',
+  nameMessageId: 'plugin.graphStats.title',
   description: 'Shows counts for nodes, edges, and selection',
   version: '1.0.0',
   author: 'Vertex Lab Core',

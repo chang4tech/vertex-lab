@@ -3,6 +3,7 @@ import React from 'react';
 export const neighborsHighlighterPlugin = {
   id: 'core.neighborsHighlighter',
   name: 'Neighbors Highlighter',
+  nameMessageId: 'plugin.neighborsHighlighter.name',
   description: 'Commands to highlight neighbors and clear highlights',
   version: '1.0.0',
   author: 'Vertex Lab Core',

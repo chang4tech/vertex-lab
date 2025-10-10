@@ -3,6 +3,7 @@ import React from 'react';
 export const randomNodeSelectorPlugin = {
   id: 'core.randomNodeSelector',
   name: 'Random Node Selector',
+  nameMessageId: 'plugin.randomNodeSelector.name',
   description: 'Pick a random node and select it instantly.',
   version: '1.0.0',
   author: 'Vertex Lab Core',

@@ -153,6 +153,7 @@ function SelectionToolsConfig() {
 export const selectionToolsPlugin = {
   id: 'core.selectionTools',
   name: 'Selection Tools',
+  nameMessageId: 'plugin.selectionTools.title',
   description: 'Quick actions for selected nodes',
   version: '1.0.0',
   author: 'Vertex Lab Core',

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { corePlugins } from '../plugins';
 import '../styles/Settings.css';
 import { getPluginErrors, getPluginErrorsById, subscribePluginErrors } from '../plugins/errorLog.js';
@@ -19,6 +19,7 @@ const PluginsManager = ({
   const [expanded, setExpanded] = useState({});
   const [errors, setErrors] = useState(() => getPluginErrors());
   const { currentTheme } = useTheme();
+  const intl = useIntl();
   const colors = currentTheme.colors;
 
   const badgeStyle = { fontSize: 12, color: colors.secondaryText };
@@ -47,6 +48,15 @@ const PluginsManager = ({
     border: `1px solid ${colors.inputBorder}`,
     padding: 8,
     borderRadius: 8
+  };
+
+  const getPluginName = (plugin) => {
+    if (plugin?.nameMessageId) {
+      return intl.formatMessage(
+        { id: plugin.nameMessageId, defaultMessage: plugin.name || plugin.id },
+      );
+    }
+    return plugin?.name || plugin?.id;
   };
 
   const isIncomplete = (p) => {
@@ -90,19 +100,25 @@ const PluginsManager = ({
                 <React.Fragment key={p.id}>
                   <div>
                     <div style={pillContainerStyle}>
-                      <strong>{p.name || p.id}</strong>
-                      <span style={badgeStyle}>{pluginPrefs[p.id] ?? true ? '• Enabled' : '• Disabled'}</span>
+                      <strong>{getPluginName(p)}</strong>
+                      <span style={badgeStyle}>
+                        {`• ${intl.formatMessage({ id: (pluginPrefs[p.id] ?? true) ? 'plugins.enabled' : 'plugins.disabled', defaultMessage: (pluginPrefs[p.id] ?? true) ? 'Enabled' : 'Disabled' })}`}
+                      </span>
                       {isIncomplete(p) && (
                         <span style={warningBadgeStyle}>• <FormattedMessage id="plugins.incomplete" defaultMessage="Incomplete" /></span>
                       )}
                       {getPluginErrorsById(p.id).length > 0 && (
-                        <span style={errorBadgeStyle}>• Errors: {getPluginErrorsById(p.id).length}</span>
+                        <span style={errorBadgeStyle}>
+                          {`• ${intl.formatMessage({ id: 'plugins.errors', defaultMessage: 'Errors' })}: ${getPluginErrorsById(p.id).length}`}
+                        </span>
                       )}
                       <button
                         style={{ ...subtleButtonStyle, marginLeft: 'auto' }}
                         onClick={() => setExpanded(prev => ({ ...prev, [p.id]: !prev[p.id] }))}
                       >
-                        {expanded[p.id] ? 'Hide Details' : 'Details'}
+                        {expanded[p.id]
+                          ? intl.formatMessage({ id: 'plugins.hideDetails', defaultMessage: 'Hide Details' })
+                          : intl.formatMessage({ id: 'plugins.showDetails', defaultMessage: 'Details' })}
                       </button>
                     </div>
                     {expanded[p.id] && (
@@ -114,10 +130,12 @@ const PluginsManager = ({
                               : p.description}
                           </div>
                         )}
-                        {p.version && <div><strong>Version:</strong> {p.version}</div>}
-                        {p.author && <div><strong>Author:</strong> {p.author}</div>}
+                        {p.version && <div><strong><FormattedMessage id="plugins.version" defaultMessage="Version:" /></strong> {p.version}</div>}
+                        {p.author && <div><strong><FormattedMessage id="plugins.author" defaultMessage="Author:" /></strong> {p.author}</div>}
                         {!p.description && !p.version && !p.author && (
-                          <div style={subtleTextStyle}>No metadata</div>
+                          <div style={subtleTextStyle}>
+                            <FormattedMessage id="plugins.noMetadata" defaultMessage="No metadata" />
+                          </div>
                         )}
                         <div style={{ ...pillContainerStyle, marginTop: 8 }}>
                           <button style={subtleButtonStyle} onClick={() => {
@@ -155,20 +173,26 @@ const PluginsManager = ({
                   <React.Fragment key={p.id}>
                     <div>
                       <div style={pillContainerStyle}>
-                        <strong>{p.name || p.id}</strong>
-                        <span style={badgeStyle}>{pluginPrefs[p.id] ?? true ? '• Enabled' : '• Disabled'}</span>
+                        <strong>{getPluginName(p)}</strong>
+                        <span style={badgeStyle}>
+                          {`• ${intl.formatMessage({ id: (pluginPrefs[p.id] ?? true) ? 'plugins.enabled' : 'plugins.disabled', defaultMessage: (pluginPrefs[p.id] ?? true) ? 'Enabled' : 'Disabled' })}`}
+                        </span>
                         {isIncomplete(p) && (
                           <span style={warningBadgeStyle}>• <FormattedMessage id="plugins.incomplete" defaultMessage="Incomplete" /></span>
                         )}
                         {getPluginErrorsById(p.id).length > 0 && (
-                          <span style={errorBadgeStyle}>• Errors: {getPluginErrorsById(p.id).length}</span>
-                        )}
-                        <button
-                          style={{ ...subtleButtonStyle, marginLeft: 'auto' }}
-                          onClick={() => setExpanded(prev => ({ ...prev, [p.id]: !prev[p.id] }))}
-                        >
-                          {expanded[p.id] ? 'Hide Details' : 'Details'}
-                        </button>
+                        <span style={errorBadgeStyle}>
+                          {`• ${intl.formatMessage({ id: 'plugins.errors', defaultMessage: 'Errors' })}: ${getPluginErrorsById(p.id).length}`}
+                        </span>
+                      )}
+                      <button
+                        style={{ ...subtleButtonStyle, marginLeft: 'auto' }}
+                        onClick={() => setExpanded(prev => ({ ...prev, [p.id]: !prev[p.id] }))}
+                      >
+                        {expanded[p.id]
+                          ? intl.formatMessage({ id: 'plugins.hideDetails', defaultMessage: 'Hide Details' })
+                          : intl.formatMessage({ id: 'plugins.showDetails', defaultMessage: 'Details' })}
+                      </button>
                     </div>
                     {expanded[p.id] && (
                       <div style={detailsTextStyle}>
@@ -179,10 +203,12 @@ const PluginsManager = ({
                               : p.description}
                           </div>
                         )}
-                        {p.version && <div><strong>Version:</strong> {p.version}</div>}
-                        {p.author && <div><strong>Author:</strong> {p.author}</div>}
+                        {p.version && <div><strong><FormattedMessage id="plugins.version" defaultMessage="Version:" /></strong> {p.version}</div>}
+                        {p.author && <div><strong><FormattedMessage id="plugins.author" defaultMessage="Author:" /></strong> {p.author}</div>}
                         {!p.description && !p.version && !p.author && (
-                          <div style={subtleTextStyle}>No metadata</div>
+                          <div style={subtleTextStyle}>
+                            <FormattedMessage id="plugins.noMetadata" defaultMessage="No metadata" />
+                          </div>
                         )}
                         <div style={{ ...pillContainerStyle, marginTop: 8 }}>
                           <button style={subtleButtonStyle} onClick={() => {
@@ -199,7 +225,7 @@ const PluginsManager = ({
                         checked={pluginPrefs[p.id] ?? true}
                         onChange={(e) => onTogglePlugin(p.id, e.target.checked)}
                       />
-                      <span><FormattedMessage id={(pluginPrefs[p.id] ?? true) ? 'plugins.enabled' : 'plugins.disabled'} defaultMessage={(pluginPrefs[p.id] ?? true) ? 'Enabled' : 'Disabled'} /></span>
+                    <span><FormattedMessage id={(pluginPrefs[p.id] ?? true) ? 'plugins.enabled' : 'plugins.disabled'} defaultMessage={(pluginPrefs[p.id] ?? true) ? 'Enabled' : 'Disabled'} /></span>
                     </label>
                     <button style={subtleButtonStyle} onClick={() => onRemoveCustomPlugin(p.id)}><FormattedMessage id="plugins.remove" defaultMessage="Remove" /></button>
                   </React.Fragment>

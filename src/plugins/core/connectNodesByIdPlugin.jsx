@@ -1,6 +1,7 @@
 export const connectNodesByIdPlugin = {
   id: 'core.connectNodesById',
   name: 'Connect Nodes by ID',
+  nameMessageId: 'plugin.connectNodesById.name',
   description: 'Quickly connect or disconnect a node by entering another node\'s ID.',
   version: '1.0.0',
   author: 'Vertex Lab Core',

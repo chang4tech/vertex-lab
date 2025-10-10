@@ -4,7 +4,7 @@ import { mergePlugins } from '../plugins/registry.js';
 import { getPluginLogsById, subscribePluginErrors, clearPluginLogsById } from '../plugins/errorLog.js';
 import { loadCustomPluginsFromStorage } from '../utils/customPluginLoader';
 import { loadPluginPrefs, savePluginPrefs } from '../utils/pluginUtils';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import Markdown from './common/Markdown.jsx';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -24,6 +24,7 @@ export default function PluginPage({ pluginId }) {
   const plugin = plugins.find(p => p.id === pluginId);
   const [logs, setLogs] = React.useState(() => getPluginLogsById(pluginId));
   const { currentTheme } = useTheme();
+  const intl = useIntl();
   const colors = currentTheme.colors;
   const subtleTextStyle = { color: colors.secondaryText };
   const buttonStyle = {
@@ -109,14 +110,22 @@ export default function PluginPage({ pluginId }) {
     </div>
   );
 
+  const pluginDisplayName = plugin.nameMessageId
+    ? intl.formatMessage({ id: plugin.nameMessageId, defaultMessage: plugin.name || plugin.id })
+    : (plugin.name || plugin.id);
+
+  const pluginDescription = plugin.descriptionId
+    ? intl.formatMessage({ id: plugin.descriptionId, defaultMessage: plugin.description })
+    : plugin.description;
+
   return (
     <div style={{ padding: 24, maxWidth: 960, margin: '0 auto', color: colors.primaryText }}>
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <h2 style={{ marginBottom: 4 }}>
-            {plugin.name || plugin.id} — <FormattedMessage id="plugin.hub.title" defaultMessage="Control Hub" />
+            {pluginDisplayName} — <FormattedMessage id="plugin.hub.title" defaultMessage="Control Hub" />
           </h2>
-          {plugin.description && <div style={subtleTextStyle}>{plugin.description}</div>}
+          {pluginDescription && <div style={subtleTextStyle}>{pluginDescription}</div>}
         </div>
         <nav style={{ display: 'flex', gap: 8 }}>
           <button style={buttonStyle} onClick={() => {

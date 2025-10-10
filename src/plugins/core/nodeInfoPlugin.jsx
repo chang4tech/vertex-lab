@@ -4,6 +4,7 @@ import NodeInfoPanel from '../../components/NodeInfoPanel';
 export const nodeInfoPlugin = {
   id: 'core.nodeInfo',
   name: 'Node Info',
+  nameMessageId: 'plugin.nodeInfo.name',
   description: 'Shows details for the selected node or a summary for multiple selections.',
   version: '1.0.0',
   author: 'Vertex Lab Core',
