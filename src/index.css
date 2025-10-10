@@ -117,6 +117,12 @@ mark {
   cursor: pointer;
 }
 
+.menu-item > span:first-child {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Mobile/touch-friendly menus */
 @media (pointer: coarse), (max-width: 768px) {
   .menu,
