@@ -1,3 +1,39 @@
+
+function LanguageMenu({ locales, activeLocale, onSelect }) {
+  return (
+    <div className="menu-section">
+      <FormattedMessage id="settings.language" defaultMessage="Language" />
+      <div style={{ display: 'flex', flexDirection: 'column', marginTop: 8 }}>
+        {locales.map((locale) => (
+          <button
+            key={locale.value}
+            type="button"
+            onClick={() => onSelect(locale.value)}
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '8px 14px',
+              marginBottom: 4,
+              background: locale.value === activeLocale
+                ? 'var(--menu-hover, rgba(96, 165, 250, 0.18))'
+                : 'transparent',
+              border: 'none',
+              borderRadius: 6,
+              color: 'var(--menu-text, #1f2937)',
+              cursor: 'pointer',
+              fontSize: 14,
+            }}
+          >
+            <span>{locale.label}</span>
+            {locale.value === activeLocale && <span style={{ fontSize: 12 }}>✓</span>}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import VertexCanvas from './VertexCanvas.jsx';
@@ -18,7 +54,7 @@ import { mergePlugins } from './plugins/registry.js';
 import { loadPluginPrefs, savePluginPrefs } from './utils/pluginUtils';
 import { loadCustomPluginsFromStorage, addCustomPluginCode, removeStoredCustomPluginCodeById } from './utils/customPluginLoader';
 import { collectPluginCommands, filterCommandsForContext } from './plugins/commands.js';
-import { LocaleSelector } from './i18n/LocaleProvider';
+import { useLocaleOptions } from './i18n/LocaleProvider';
 import { useTheme } from './contexts/ThemeContext';
 import { organizeLayout, detectCollisions } from './utils/layoutUtils';
 import { APP_SHORTCUTS, formatShortcut } from './utils/shortcutUtils';
@@ -203,6 +239,7 @@ const MenuBar = React.forwardRef(({
   const [alignRight, setAlignRight] = useState({});
   const intl = useIntl();
   const { currentTheme, toggleTheme } = useTheme();
+  const { options: localeOptions, changeLocale, locale: currentLocale } = useLocaleOptions();
   const isOffline = userStatus === 'offline';
   const offlineBadgeStyle = {
     display: 'inline-flex',
@@ -1119,10 +1156,14 @@ const MenuBar = React.forwardRef(({
               <span><FormattedMessage id="settings.tagsManager" defaultMessage="Tag Manager" /></span>
             </div>
             <div className="menu-separator" />
-            <div className="menu-section">
-              <FormattedMessage id="settings.language" defaultMessage="Language" />
-              <LocaleSelector />
-            </div>
+            <LanguageMenu
+              locales={localeOptions}
+              activeLocale={currentLocale}
+              onSelect={(code) => {
+                changeLocale(code);
+                setOpenMenu(null);
+              }}
+            />
             <div
               className="menu-item"
               onClick={(e) => {

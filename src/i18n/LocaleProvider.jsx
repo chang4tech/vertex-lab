@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useCallback } from 'react';
+import React, { createContext, useState, useContext, useCallback, useMemo } from 'react';
 import { IntlProvider } from 'react-intl';
 import { LOCALES, getInitialLocale } from './index';
 
@@ -20,7 +20,7 @@ export function LocaleProvider({ children }) {
     }
   }, []);
 
-  const value = React.useMemo(() => ({
+  const value = useMemo(() => ({
     locale,
     locales: LOCALES,
     changeLocale,
@@ -47,28 +47,14 @@ export function useLocale() {
   return context;
 }
 
-export const LocaleSelector = () => {
-  const { locale, locales, changeLocale } = useLocale();
-  
-  return (
-    <div style={{ padding: '8px 20px', cursor: 'pointer' }}>
-      <select 
-        value={locale}
-        onChange={(e) => changeLocale(e.target.value)}
-        style={{
-          padding: '4px 8px',
-          borderRadius: '4px',
-          border: '1px solid #eee',
-          fontSize: '14px',
-          width: '100%'
-        }}
-      >
-        {Object.entries(locales).map(([key, value]) => (
-          <option key={key} value={key}>
-            {value.name}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-};
+export function useLocaleOptions() {
+  const { locale, changeLocale } = useLocale();
+  return useMemo(() => ({
+    locale,
+    changeLocale,
+    options: Object.entries(LOCALES).map(([value, config]) => ({
+      value,
+      label: config.name,
+    })),
+  }), [locale, changeLocale]);
+}
