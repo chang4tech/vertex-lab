@@ -174,6 +174,18 @@ function ReminderPanel({ appApi }) {
   const existingReminder = selectedId ? reminders[selectedId] : null;
   const [dueInput, setDueInput] = React.useState(() => formatForInput(existingReminder?.dueAt));
   const [noteInput, setNoteInput] = React.useState(existingReminder?.note ?? '');
+  const findNodeById = React.useCallback(
+    (id) => nodes.find((node) => node?.id === id) || null,
+    [nodes]
+  );
+  const logEvent = React.useCallback(
+    (id, defaultMessage, values = {}, level = 'info') => {
+      if (!appApi?.plugin?.log) return;
+      const message = intl.formatMessage({ id, defaultMessage }, values);
+      appApi.plugin.log(message, level);
+    },
+    [appApi, intl]
+  );
 
   React.useEffect(() => {
     const reminder = selectedId ? reminders[selectedId] : null;
@@ -186,6 +198,12 @@ function ReminderPanel({ appApi }) {
     const parsed = parseDateInput(dueInput);
     if (!parsed) {
       alert(intl.formatMessage({ id: 'plugin.followUpReminders.invalidDate', defaultMessage: 'Enter a valid follow-up date and time.' }));
+      logEvent(
+        'plugin.followUpReminders.log.invalid',
+        'Skipped reminder save for {name}: invalid date.',
+        { name: getNodeKey(findNodeById(selectedId)) },
+        'warn'
+      );
       return;
     }
     const iso = parsed.toISOString();
@@ -198,7 +216,16 @@ function ReminderPanel({ appApi }) {
         createdAt: prev[selectedId]?.createdAt ?? new Date().toISOString(),
       },
     }));
-  }, [dueInput, noteInput, selectedId, intl, setReminders]);
+    const node = findNodeById(selectedId);
+    logEvent(
+      'plugin.followUpReminders.log.saved',
+      'Saved reminder for {name} due {date}.',
+      {
+        name: getNodeKey(node),
+        date: intl.formatDate(parsed, { dateStyle: 'medium', timeStyle: 'short' }),
+      }
+    );
+  }, [dueInput, noteInput, selectedId, intl, setReminders, logEvent, findNodeById]);
 
   const handleClear = React.useCallback((targetId) => {
     const nodeIdToRemove = targetId ?? selectedId;
@@ -209,7 +236,13 @@ function ReminderPanel({ appApi }) {
       delete next[nodeIdToRemove];
       return next;
     });
-  }, [selectedId, setReminders]);
+    const node = findNodeById(nodeIdToRemove);
+    logEvent(
+      'plugin.followUpReminders.log.cleared',
+      'Cleared reminder for {name}.',
+      { name: getNodeKey(node) }
+    );
+  }, [selectedId, setReminders, logEvent, findNodeById]);
 
   const now = Date.now();
   const sortedReminders = React.useMemo(() => {
@@ -239,17 +272,33 @@ function ReminderPanel({ appApi }) {
   const handleBulkSelect = React.useCallback(() => {
     if (!appApi?.selectNodes || dueSoonIds.length === 0) return;
     appApi.selectNodes(dueSoonIds, { center: true });
-  }, [appApi, dueSoonIds]);
+    logEvent(
+      'plugin.followUpReminders.log.selectDue',
+      'Selected {count, plural, one {# due node} other {# due nodes}}.',
+      { count: dueSoonIds.length }
+    );
+  }, [appApi, dueSoonIds, logEvent]);
 
   const handleSelectNode = React.useCallback((nodeId) => {
     if (!nodeId || !appApi?.selectNode) return;
     appApi.selectNode(nodeId, { center: true });
-  }, [appApi]);
+    const node = findNodeById(nodeId);
+    logEvent(
+      'plugin.followUpReminders.log.focus',
+      'Focused reminder node {name}.',
+      { name: getNodeKey(node) }
+    );
+  }, [appApi, findNodeById, logEvent]);
 
   const handleHighlightDue = React.useCallback(() => {
     if (!appApi?.onHighlightNodes) return;
     appApi.onHighlightNodes(dueSoonIds);
-  }, [appApi, dueSoonIds]);
+    logEvent(
+      'plugin.followUpReminders.log.highlightDue',
+      'Highlighted {count, plural, one {# due node} other {# due nodes}}.',
+      { count: dueSoonIds.length }
+    );
+  }, [appApi, dueSoonIds, logEvent]);
 
   const panelStyle = {
     width: 320,
@@ -489,6 +538,11 @@ function ReminderOverlay({ appApi }) {
       }))
       .filter((reminder) => reminder.status === REMINDER_STATUS.OVERDUE || reminder.status === REMINDER_STATUS.UPCOMING)
   ), [reminders, now]);
+  const logEvent = React.useCallback((id, defaultMessage, values = {}, level = 'info') => {
+    if (!appApi?.plugin?.log) return;
+    const message = intl.formatMessage({ id, defaultMessage }, values);
+    appApi.plugin.log(message, level);
+  }, [appApi, intl]);
 
   const count = entries.length;
   if (count === 0) return null;
@@ -500,6 +554,11 @@ function ReminderOverlay({ appApi }) {
       appApi?.selectNodes?.(ids, { center: true });
     }
     appApi?.plugin?.openHub?.();
+    logEvent(
+      'plugin.followUpReminders.log.openHub',
+      'Opened reminder list from overlay.',
+      { count }
+    );
   };
 
   return (
