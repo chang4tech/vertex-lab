@@ -1,7 +1,9 @@
 import React from 'react';
 import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import PluginHost from '../../plugins/PluginHost.jsx';
+import { IntlProvider } from 'react-intl';
+let PluginHost;
+let ThemeProvider;
 
 describe('followUpRemindersPlugin', () => {
   let followUpRemindersPlugin;
@@ -19,7 +21,13 @@ describe('followUpRemindersPlugin', () => {
 
   const renderPlugin = (appApiOverrides = {}) => {
     const appApi = { ...baseAppApi, ...appApiOverrides };
-    return render(<PluginHost plugins={[followUpRemindersPlugin]} appApi={appApi} />);
+    return render(
+      <IntlProvider locale="en">
+        <ThemeProvider>
+          <PluginHost plugins={[followUpRemindersPlugin]} appApi={appApi} />
+        </ThemeProvider>
+      </IntlProvider>
+    );
   };
 
   beforeEach(async () => {
@@ -28,6 +36,8 @@ describe('followUpRemindersPlugin', () => {
     localStorage.setItem.mockReset();
     localStorage.removeItem?.mockReset?.();
     localStorage.getItem.mockImplementation(() => null);
+    ({ ThemeProvider } = await import('../../contexts/ThemeContext.jsx'));
+    ({ default: PluginHost } = await import('../../plugins/PluginHost.jsx'));
     ({ followUpRemindersPlugin } = await import('../../plugins/examples/followUpRemindersPlugin.jsx'));
   });
 
@@ -47,11 +57,11 @@ describe('followUpRemindersPlugin', () => {
     fireEvent.change(noteInput, { target: { value: 'Call back client' } });
     fireEvent.click(screen.getByText('Save reminder'));
 
-    expect(localStorage.setItem).toHaveBeenCalled();
-    const lastCall = localStorage.setItem.mock.calls.at(-1);
-    expect(lastCall?.[0]).toBe(STORAGE_KEY);
-    expect(lastCall?.[1]).toContain('"a"');
-    expect(await screen.findByText('Call back client')).toBeInTheDocument();
+    const reminderCalls = localStorage.setItem.mock.calls.filter(([key]) => key === STORAGE_KEY);
+    expect(reminderCalls.length).toBeGreaterThan(0);
+    expect(reminderCalls.at(-1)?.[1]).toContain('"a"');
+    const noteInstances = await screen.findAllByText('Call back client');
+    expect(noteInstances.some((node) => node.tagName === 'DIV')).toBe(true);
     expect(screen.getByText('Mark done')).toBeInTheDocument();
   });
 
@@ -69,7 +79,8 @@ describe('followUpRemindersPlugin', () => {
 
     renderPlugin();
 
-    expect(await screen.findByText('Check status')).toBeInTheDocument();
+    const hydratedNotes = await screen.findAllByText('Check status');
+    expect(hydratedNotes.some((node) => node.tagName === 'DIV')).toBe(true);
     expect(screen.getByText('Mark done')).toBeInTheDocument();
   });
 });
