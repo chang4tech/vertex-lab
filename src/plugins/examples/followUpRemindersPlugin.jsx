@@ -172,7 +172,7 @@ const useReminderStore = (nodes = []) => {
   return [reminders, update];
 };
 
-function ReminderPanel({ appApi }) {
+function ReminderPanel({ appApi, layout = 'floating' }) {
   const { currentTheme } = useTheme();
   const intl = useIntl();
   const nodes = Array.isArray(appApi?.nodes) ? appApi.nodes : [];
@@ -393,11 +393,15 @@ function ReminderPanel({ appApi }) {
     );
   }, [appApi, dueSoonNodeIds, logEvent, showStatus]);
 
+  const isInlineLayout = layout === 'inline';
+
+  const glassSurface = 'var(--plugin-panel-surface-glass, rgba(15, 23, 42, 0.45))';
+  const panelBorderVar = 'var(--plugin-panel-border, rgba(148, 163, 184, 0.35))';
   const panelStyle = {
-    width: 320,
-    background: currentTheme.colors.panelBackground,
+    width: isInlineLayout ? '100%' : 320,
+    background: 'var(--plugin-panel-background-glass, rgba(15, 23, 42, 0.7))',
     color: currentTheme.colors.primaryText,
-    border: `1px solid ${currentTheme.colors.panelBorder}`,
+    border: `1px solid ${panelBorderVar}`,
     borderRadius: 12,
     boxShadow: `0 12px 24px ${currentTheme.colors.panelShadow}`,
     padding: 16,
@@ -406,13 +410,14 @@ function ReminderPanel({ appApi }) {
     display: 'flex',
     flexDirection: 'column',
     gap: 12,
+    position: isInlineLayout ? 'relative' : 'static',
   };
 
   const buttonStyle = {
     borderRadius: 6,
     padding: '8px 12px',
-    border: `1px solid ${currentTheme.colors.inputBorder}`,
-    background: currentTheme.colors.menuBackground,
+    border: `1px solid ${panelBorderVar}`,
+    background: glassSurface,
     color: currentTheme.colors.primaryText,
     cursor: 'pointer',
   };
@@ -782,9 +787,13 @@ How to use:
     sidePanels: [
       {
         id: 'followUpRemindersPanel',
+        title: 'Follow-up Reminders',
+        allowCollapse: true,
+        mobileBehavior: 'drawer',
         visible: () => true,
         order: 25,
-        render: (api) => <ReminderPanel appApi={api} />,
+        render: (api) => <ReminderPanel appApi={api} layout="floating" />,
+        renderMobile: (api) => <ReminderPanel appApi={api} layout="inline" />,
       },
     ],
     canvasOverlays: [

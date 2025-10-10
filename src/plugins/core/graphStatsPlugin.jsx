@@ -157,6 +157,8 @@ export const graphStatsPlugin = {
     sidePanels: [
       {
         id: 'graphStatsPanel',
+        title: 'Graph Stats',
+        allowCollapse: true,
         visible: () => true,
         render: (api) => {
           const nodeCount = api?.nodes?.length ?? 0;

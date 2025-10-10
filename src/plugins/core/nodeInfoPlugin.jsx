@@ -43,6 +43,9 @@ Tips:
     sidePanels: [
       {
         id: 'nodeInfoPanel',
+        title: 'Node Info',
+        allowCollapse: true,
+        mobileBehavior: 'drawer',
         visible: (api) => !!api.showNodeInfoPanel,
         render: (api) => (
           <NodeInfoPanel
@@ -54,6 +57,20 @@ Tips:
             onToggleCollapse={api.onToggleCollapse}
             topOffset={api.menuBarBottom}
             onResetView={api.resetView}
+            layout="floating"
+          />
+        ),
+        renderMobile: (api) => (
+          <NodeInfoPanel
+            selectedNodes={api.selectedNodes || []}
+            visible={api.showNodeInfoPanel}
+            onClose={api.hideNodeInfoPanel}
+            onEditNode={api.onEditNode}
+            onDeleteNodes={api.onDeleteNodes}
+            onToggleCollapse={api.onToggleCollapse}
+            topOffset={api.menuBarBottom}
+            onResetView={api.resetView}
+            layout="inline"
           />
         )
       }

@@ -50,6 +50,9 @@ Tips:
     sidePanels: [
       {
         id: 'edgeInfoPanel',
+        title: 'Edge Info',
+        allowCollapse: true,
+        mobileBehavior: 'drawer',
         visible: (api) => !!api?.showEdgeInfoPanel,
         render: (api) => (
           <EdgeInfoPanel
@@ -61,6 +64,19 @@ Tips:
             topOffset={api?.menuBarBottom}
             rightOffset={api?.showNodeInfoPanel ? (api?.isMobile ? 280 : 320) : 0}
             onResetView={api.resetView}
+            layout="floating"
+          />
+        ),
+        renderMobile: (api) => (
+          <EdgeInfoPanel
+            edges={Array.isArray(api?.edges) ? api.edges : []}
+            nodes={Array.isArray(api?.nodes) ? api.nodes : []}
+            selectedNodeIds={Array.isArray(api?.selectedNodeIds) ? api.selectedNodeIds : []}
+            visible={api?.showEdgeInfoPanel}
+            onClose={api?.hideEdgeInfoPanel}
+            topOffset={api?.menuBarBottom}
+            onResetView={api.resetView}
+            layout="inline"
           />
         )
       }

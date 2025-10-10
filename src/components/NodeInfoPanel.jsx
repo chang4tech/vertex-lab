@@ -20,11 +20,14 @@ const NodeInfoPanel = ({
   onToggleCollapse,
   topOffset = 80,
   onResetView,
+  layout = 'floating',
 }) => {
   const { currentTheme } = useTheme();
   const intl = useIntl();
   const isMobile = useIsMobile();
-  const panelWidth = isMobile ? 280 : 320;
+  const layoutMode = layout === 'inline' ? 'inline' : 'floating';
+  const isInlineLayout = layoutMode === 'inline';
+  const panelWidth = isInlineLayout ? '100%' : (isMobile ? 280 : 320);
 
   const isMultiSelection = selectedNodes.length > 1;
   const singleNode = selectedNodes.length === 1 ? selectedNodes[0] : null;
@@ -100,23 +103,43 @@ const NodeInfoPanel = ({
   const safeTop = typeof topOffset === 'number' && Number.isFinite(topOffset) ? topOffset : 80;
   const topStyle = `calc(${safeTop}px + env(safe-area-inset-top, 0px))`;
   const heightStyle = `calc(100vh - ${safeTop}px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))`;
+  const glassBackground = 'var(--plugin-panel-background-glass, rgba(15, 23, 42, 0.7))';
+  const surfaceGlass = 'var(--plugin-panel-surface-glass, rgba(15, 23, 42, 0.45))';
+  const panelBorderVar = 'var(--plugin-panel-border, rgba(148, 163, 184, 0.35))';
+  const glassBorder = `1px solid ${panelBorderVar}`;
+  const inlineContainerStyle = {
+    position: 'relative',
+    width: '100%',
+    backgroundColor: glassBackground,
+    border: glassBorder,
+    borderRadius: 18,
+    boxShadow: `0 12px 24px ${currentTheme.colors.panelShadow}`,
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+    maxHeight: '100%',
+  };
+
+  const floatingContainerStyle = {
+    position: 'fixed',
+    top: topStyle,
+    right: 0,
+    width: typeof panelWidth === 'number' ? `${panelWidth}px` : panelWidth,
+    height: heightStyle,
+    backgroundColor: glassBackground,
+    borderLeft: glassBorder,
+    borderBottom: glassBorder,
+    boxShadow: `-2px 0 8px ${currentTheme.colors.panelShadow}`,
+    zIndex: 100,
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden'
+  };
+
+  const containerStyle = isInlineLayout ? inlineContainerStyle : floatingContainerStyle;
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: topStyle,
-      right: 0,
-      width: panelWidth + 'px',
-      height: heightStyle,
-      backgroundColor: currentTheme.colors.panelBackground,
-      borderLeft: `1px solid ${currentTheme.colors.panelBorder}`,
-      borderBottom: `1px solid ${currentTheme.colors.panelBorder}`,
-      boxShadow: `-2px 0 8px ${currentTheme.colors.panelShadow}`,
-      zIndex: 100,
-      display: 'flex',
-      flexDirection: 'column',
-      overflow: 'hidden'
-    }}>
+    <div style={containerStyle}>
       {/* Header */}
       <div style={{
         padding: '16px',
@@ -124,7 +147,9 @@ const NodeInfoPanel = ({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: currentTheme.colors.menuBackground
+        backgroundColor: 'var(--plugin-panel-summary-glass, rgba(15, 23, 42, 0.18))',
+        borderTopLeftRadius: isInlineLayout ? 18 : 0,
+        borderTopRightRadius: isInlineLayout ? 18 : 0,
       }}>
         <h3 style={{
           margin: 0,
@@ -150,8 +175,8 @@ const NodeInfoPanel = ({
               type="button"
               onClick={onResetView}
               style={{
-                border: `1px solid ${currentTheme.colors.inputBorder}`,
-                background: currentTheme.colors.panelBackground,
+                border: `1px solid ${panelBorderVar}`,
+                background: surfaceGlass,
                 color: currentTheme.colors.primaryText,
                 borderRadius: 6,
                 padding: '4px 10px',
@@ -201,9 +226,9 @@ const NodeInfoPanel = ({
           <div>
             {/* Summary */}
             <div style={{
-              backgroundColor: currentTheme.colors.inputBackground,
-              border: `1px solid ${currentTheme.colors.inputBorder}`,
-              borderRadius: '8px',
+              backgroundColor: surfaceGlass,
+              border: `1px solid ${panelBorderVar}`,
+              borderRadius: '10px',
               padding: '12px',
               marginBottom: '16px'
             }}>
@@ -370,8 +395,8 @@ const NodeInfoPanel = ({
           <div>
             {/* Node Preview */}
             <div style={{
-              backgroundColor: currentTheme.colors.inputBackground,
-              border: `1px solid ${currentTheme.colors.inputBorder}`,
+              backgroundColor: surfaceGlass,
+              border: `1px solid ${panelBorderVar}`,
               borderRadius: '8px',
               padding: '12px',
               marginBottom: '16px',
@@ -433,8 +458,8 @@ const NodeInfoPanel = ({
                       gap: 6,
                       padding: '2px 8px',
                       borderRadius: 12,
-                      border: `1px solid ${currentTheme.colors.inputBorder}`,
-                      backgroundColor: currentTheme.colors.inputBackground
+                      border: `1px solid ${panelBorderVar}`,
+                      backgroundColor: surfaceGlass
                     }}>
                       <span style={{ color: getNodeTextColor(singleNode, currentTheme), fontWeight: 600 }}>Aa</span>
                       <span style={{ color: currentTheme.colors.secondaryText, fontSize: '12px' }}>

@@ -25,9 +25,11 @@ Tips:
     sidePanels: [
       {
         id: 'helloPanel',
+        title: 'Hello Panel',
+        allowCollapse: true,
         visible: () => true,
         render: (api) => (
-          <div style={{ width: 320, padding: 12, borderLeft: '1px solid #e5e7eb', background: '#fff' }}>
+          <div style={{ width: 320, padding: 12, border: '1px solid var(--plugin-panel-border, rgba(148, 163, 184, 0.45))', background: 'var(--plugin-panel-background-glass, rgba(15, 23, 42, 0.7))', borderRadius: 14 }}>
             <h3 style={{ margin: '8px 0' }}>Hello</h3>
             <div style={{ color: '#4b5563' }}>
               {`Selected: ${api.selectedNodeIds?.length ?? 0}`}

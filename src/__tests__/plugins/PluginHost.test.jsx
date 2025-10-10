@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect } from 'vitest';
-import { render, screen, cleanup, rerender } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import PluginHost from '../../plugins/PluginHost.jsx';
 import { corePlugins } from '../../plugins/index.js';
 import { ThemeProvider } from '../../contexts/ThemeContext.jsx';
@@ -17,6 +17,7 @@ describe('PluginHost', () => {
   it('renders side panel from a simple plugin', () => {
     const simplePlugin = {
       id: 'test.simple',
+      name: 'Simple Panel',
       slots: {
         sidePanels: [
           {
@@ -28,6 +29,15 @@ describe('PluginHost', () => {
     };
     render(<PluginHost plugins={[simplePlugin]} appApi={{}} />);
     expect(screen.getByTestId('simple-panel')).toHaveTextContent('Hello from plugin');
+    const summaryLabel = screen.getByText(/Simple Panel/i);
+    const summary = summaryLabel.closest('summary');
+    const details = summary?.closest('details');
+    expect(summary).toBeTruthy();
+    expect(details).toBeTruthy();
+    fireEvent.click(summary);
+    expect(details?.open).toBe(false);
+    fireEvent.click(summary);
+    expect(details?.open).toBe(true);
   });
 
   it('respects panel visible() predicate', () => {
@@ -78,5 +88,17 @@ describe('Core Plugins', () => {
     // Default header text when nothing is selected
     expect(screen.getByText(/No Selection/i)).toBeInTheDocument();
   });
-});
 
+  it('exposes mobile drawer fallback on mobile', () => {
+    renderWithProviders(
+      <PluginHost plugins={corePlugins} appApi={{ showNodeInfoPanel: true, selectedNodes: [], isMobile: true }} />
+    );
+    const toggle = screen.getByRole('button', { name: /Node Info/i });
+    expect(toggle).toBeInTheDocument();
+    fireEvent.click(toggle);
+    const drawer = screen.getByRole('dialog');
+    expect(drawer).toHaveClass('plugin-mobile-drawer--open');
+    fireEvent.click(screen.getByRole('button', { name: /Close panel drawer/i }));
+    expect(drawer).not.toHaveClass('plugin-mobile-drawer--open');
+  });
+});

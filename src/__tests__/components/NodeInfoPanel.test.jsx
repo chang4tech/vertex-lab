@@ -200,4 +200,17 @@ describe('NodeInfoPanel', () => {
 
     expect(screen.getByText(/Delete Selected \(2\)/i)).toBeInTheDocument();
   });
+
+  it('supports inline layout without fixed positioning', () => {
+    const { container } = render(
+      <TestWrapper>
+        <NodeInfoPanel {...defaultProps} selectedNodes={[]} layout="inline" />
+      </TestWrapper>
+    );
+
+    const root = container.firstChild;
+    expect(root).toBeTruthy();
+    expect(root.style.position).toBe('relative');
+    expect(root.style.width).toBe('100%');
+  });
 });

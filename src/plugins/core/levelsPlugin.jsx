@@ -178,6 +178,8 @@ export const levelsPlugin = {
       {
         id: 'levelsInspector',
         order: 50,
+        title: 'Levels',
+        allowCollapse: true,
         visible: () => true,
         render: (api) => {
           const nodes = Array.isArray(api?.nodes) ? api.nodes : [];

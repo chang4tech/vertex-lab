@@ -102,11 +102,17 @@ const EdgeInfoPanel = ({
   topOffset = 80,
   rightOffset = 0,
   onResetView,
+  layout = 'floating',
 }) => {
   const { currentTheme } = useTheme();
   const intl = useIntl();
   const isMobile = useIsMobile();
   const panelWidth = isMobile ? 280 : 320;
+  const glassBackground = 'var(--plugin-panel-background-glass, rgba(15, 23, 42, 0.7))';
+  const surfaceGlass = 'var(--plugin-panel-surface-glass, rgba(15, 23, 42, 0.45))';
+  const panelBorderVar = 'var(--plugin-panel-border, rgba(148, 163, 184, 0.35))';
+  const layoutMode = layout === 'inline' ? 'inline' : 'floating';
+  const isInlineLayout = layoutMode === 'inline';
 
   const nodeMap = React.useMemo(() => {
     const map = new Map();
@@ -188,26 +194,42 @@ const EdgeInfoPanel = ({
   if (!visible) return null;
 
   const safeTop = typeof topOffset === 'number' && Number.isFinite(topOffset) ? topOffset : 80;
-  const safeRight = typeof rightOffset === 'number' && Number.isFinite(rightOffset) ? rightOffset : 0;
   const topStyle = `calc(${safeTop}px + env(safe-area-inset-top, 0px))`;
   const heightStyle = `calc(100vh - ${safeTop}px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))`;
+  const safeRight = isInlineLayout ? 0 : (Number.isFinite(rightOffset) ? rightOffset : 0);
   const rightStyle = `calc(${safeRight}px + env(safe-area-inset-right, 0px))`;
 
-  const panelStyle = {
-    position: 'fixed',
-    top: topStyle,
-    right: rightStyle,
-    width: `${panelWidth}px`,
-    height: heightStyle,
-    backgroundColor: currentTheme.colors.panelBackground,
-    borderLeft: `1px solid ${currentTheme.colors.panelBorder}`,
-    borderBottom: `1px solid ${currentTheme.colors.panelBorder}`,
-    boxShadow: `-2px 0 8px ${currentTheme.colors.panelShadow}`,
-    zIndex: 99,
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-  };
+  const glassBorder = `1px solid ${panelBorderVar}`;
+  const panelStyle = isInlineLayout
+    ? {
+        position: 'relative',
+        width: '100%',
+        maxHeight: '100%',
+        backgroundColor: glassBackground,
+        border: glassBorder,
+        borderRadius: 18,
+        boxShadow: `0 12px 24px ${currentTheme.colors.panelShadow}`,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        pointerEvents: 'auto',
+      }
+    : {
+        position: 'fixed',
+        top: topStyle,
+        right: rightStyle,
+        width: `${panelWidth}px`,
+        height: heightStyle,
+        backgroundColor: glassBackground,
+        borderLeft: glassBorder,
+        borderBottom: glassBorder,
+        boxShadow: `-2px 0 8px ${currentTheme.colors.panelShadow}`,
+        zIndex: 99,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        pointerEvents: 'auto',
+      };
 
   const headerStyle = {
     padding: '16px',
@@ -215,7 +237,9 @@ const EdgeInfoPanel = ({
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: currentTheme.colors.menuBackground,
+    backgroundColor: 'var(--plugin-panel-summary-glass, rgba(15, 23, 42, 0.18))',
+    borderTopLeftRadius: isInlineLayout ? 18 : 0,
+    borderTopRightRadius: isInlineLayout ? 18 : 0,
   };
 
   const contentStyle = {
@@ -228,8 +252,8 @@ const EdgeInfoPanel = ({
   };
 
   const cardStyle = {
-    backgroundColor: currentTheme.colors.inputBackground,
-    border: `1px solid ${currentTheme.colors.inputBorder}`,
+    backgroundColor: surfaceGlass,
+    border: `1px solid ${panelBorderVar}`,
     borderRadius: 8,
     padding: '12px',
   };

@@ -1797,7 +1797,7 @@ function App({ graphId = 'default' }) {
       };
     }
     const sidePadding = 0;
-    const rightPanel = combinedSidePanelWidth;
+    const rightPanel = 0; // keep canvas width full; plugin panels float above the canvas
     const topNav = menuBarBottom;
     const width = Math.max(isMobile ? 320 : 600, window.innerWidth - sidePadding - rightPanel);
     const height = Math.max(isMobile ? 300 : 400, window.innerHeight - topNav);
@@ -1811,7 +1811,7 @@ function App({ graphId = 'default' }) {
       const W = window.innerWidth;
       const H = window.innerHeight;
       const sidePadding = 0;
-      const rightPanel = combinedSidePanelWidth;
+      const rightPanel = 0; // canvas stays full width regardless of plugin panels
       const topNav = menuBarBottom;
       const verticalMargin = 0;
       const width = Math.max(isMobile ? 320 : 600, W - sidePadding - rightPanel);

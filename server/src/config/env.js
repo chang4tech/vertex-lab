@@ -5,7 +5,7 @@ import { existsSync, mkdirSync } from 'node:fs';
 const envResult = dotenv.config();
 
 if (envResult.error && process.env.NODE_ENV !== 'production') {
-  // eslint-disable-next-line no-console
+   
   console.warn('No .env file found; relying on process environment variables.');
 }
 
