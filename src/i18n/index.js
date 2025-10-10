@@ -1,6 +1,7 @@
 import { createIntl, createIntlCache } from 'react-intl';
 import enUS from './locales/en-US';
 import zhCN from './locales/zh-CN';
+import esES from './locales/es-ES';
 
 export const LOCALES = {
   'en-US': {
@@ -10,6 +11,10 @@ export const LOCALES = {
   'zh-CN': {
     name: '中文',
     messages: zhCN,
+  },
+  'es-ES': {
+    name: 'Español',
+    messages: esES,
   },
 };
 
