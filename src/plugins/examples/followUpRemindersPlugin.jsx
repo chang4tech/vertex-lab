@@ -7,17 +7,23 @@ const STORAGE_KEY = 'plugin_followUpReminders_v1';
 const listeners = new Set();
 let reminderState = null;
 
-const sanitizeReminderMap = (value) => {
+const sanitizeReminderMap = (value, knownNodeIds) => {
   if (!value || typeof value !== 'object') return {};
   const result = {};
-  Object.entries(value).forEach(([nodeId, reminder]) => {
-    if (!nodeId || !reminder || typeof reminder !== 'object') return;
-    const { dueAt, note, createdAt } = reminder;
+  const allow = Array.isArray(knownNodeIds) && knownNodeIds.length > 0
+    ? new Set(knownNodeIds.map((id) => String(id)))
+    : null;
+  Object.entries(value).forEach(([nodeKey, reminder]) => {
+    if (!nodeKey || !reminder || typeof reminder !== 'object') return;
+    const strKey = String(nodeKey);
+    if (allow && !allow.has(strKey)) return;
+    const { dueAt, note, createdAt, nodeId } = reminder;
     if (!dueAt) return;
     const ts = Date.parse(dueAt);
     if (Number.isNaN(ts)) return;
-    result[nodeId] = {
-      nodeId,
+    if (allow && !allow.has(String(nodeId ?? nodeKey))) return;
+    result[strKey] = {
+      nodeId: strKey,
       dueAt: new Date(ts).toISOString(),
       note: typeof note === 'string' ? note : '',
       createdAt: Number.isNaN(Date.parse(createdAt)) ? new Date().toISOString() : new Date(createdAt).toISOString(),
@@ -26,13 +32,13 @@ const sanitizeReminderMap = (value) => {
   return result;
 };
 
-const loadReminderState = () => {
+const loadReminderState = (knownNodeIds) => {
   if (typeof window === 'undefined') return {};
   try {
     const raw = window.localStorage?.getItem?.(STORAGE_KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw);
-    return sanitizeReminderMap(parsed);
+    return sanitizeReminderMap(parsed, knownNodeIds);
   } catch (error) {
     console.warn('[followUpReminders] Failed to parse storage', error);
     return {};
@@ -48,15 +54,15 @@ const persistReminderState = (value) => {
   }
 };
 
-const getReminderState = () => {
+const getReminderState = (knownNodeIds) => {
   if (reminderState === null) {
-    reminderState = loadReminderState();
+    reminderState = loadReminderState(knownNodeIds);
   }
   return reminderState;
 };
 
-const setReminderState = (next) => {
-  reminderState = sanitizeReminderMap(next);
+const setReminderState = (next, knownNodeIds) => {
+  reminderState = sanitizeReminderMap(next, knownNodeIds);
   persistReminderState(reminderState);
   listeners.forEach((listener) => {
     try {
@@ -67,10 +73,10 @@ const setReminderState = (next) => {
   });
 };
 
-const updateReminderState = (updater) => {
-  const current = getReminderState();
+const updateReminderState = (updater, knownNodeIds) => {
+  const current = getReminderState(knownNodeIds);
   const next = typeof updater === 'function' ? updater({ ...current }) : updater;
-  setReminderState(next || {});
+  setReminderState(next || {}, knownNodeIds);
 };
 
 const subscribeToReminders = (listener) => {
@@ -107,11 +113,12 @@ const parseDateInput = (value) => {
 
 const filterRemindersForNodes = (reminders, nodes = []) => {
   if (!reminders || typeof reminders !== 'object') return {};
-  const nodeIds = new Set(nodes.map((node) => node?.id).filter(Boolean));
+  const nodeIds = new Set(nodes.map((node) => (node?.id != null ? String(node.id) : null)).filter(Boolean));
   const filtered = {};
   Object.entries(reminders).forEach(([nodeId, reminder]) => {
-    if (nodeIds.has(nodeId)) {
-      filtered[nodeId] = reminder;
+    const key = String(nodeId);
+    if (nodeIds.has(key)) {
+      filtered[key] = { ...reminder, nodeId: key };
     }
   });
   return filtered;
@@ -135,7 +142,8 @@ const getReminderStatus = (dueAt, now = Date.now()) => {
 
 const useReminderStore = (nodes = []) => {
   const nodeKey = React.useMemo(() => nodes.map((node) => node?.id).filter(Boolean).sort().join(','), [nodes]);
-  const [reminders, setReminders] = React.useState(() => filterRemindersForNodes(getReminderState(), nodes));
+  const nodeIds = React.useMemo(() => nodes.map((node) => node?.id).filter((id) => id != null), [nodeKey, nodes]);
+  const [reminders, setReminders] = React.useState(() => filterRemindersForNodes(getReminderState(nodeIds), nodes));
 
   React.useEffect(() => {
     return subscribeToReminders((next) => {
@@ -144,21 +152,22 @@ const useReminderStore = (nodes = []) => {
   }, [nodeKey, nodes]);
 
   React.useEffect(() => {
-    const current = getReminderState();
+    const current = getReminderState(nodeIds);
     const filtered = filterRemindersForNodes(current, nodes);
     if (Object.keys(filtered).length !== Object.keys(current).length) {
-      setReminderState(filtered);
+      setReminderState(filtered, nodeIds);
       setReminders(filtered);
     }
-  }, [nodeKey, nodes]);
+  }, [nodeKey, nodes, nodeIds]);
 
   const update = React.useCallback((updater) => {
     updateReminderState((prev) => {
       const scoped = filterRemindersForNodes(prev, nodes);
       const next = typeof updater === 'function' ? updater({ ...scoped }) : updater;
-      return filterRemindersForNodes(next || {}, nodes);
-    });
-  }, [nodeKey, nodes]);
+      const prepared = filterRemindersForNodes(next || {}, nodes);
+      return prepared;
+    }, nodeIds);
+  }, [nodeKey, nodes, nodeIds]);
 
   return [reminders, update];
 };
@@ -169,14 +178,14 @@ function ReminderPanel({ appApi }) {
   const nodes = Array.isArray(appApi?.nodes) ? appApi.nodes : [];
   const selectedIds = Array.isArray(appApi?.selectedNodeIds) ? appApi.selectedNodeIds : [];
   const selectedId = selectedIds[0] ?? null;
-  const selectedNode = nodes.find((node) => node?.id === selectedId) || null;
+  const selectedNode = nodes.find((node) => String(node?.id) === String(selectedId)) || null;
   const [reminders, setReminders] = useReminderStore(nodes);
-  const existingReminder = selectedId ? reminders[selectedId] : null;
+  const existingReminder = selectedId != null ? reminders[String(selectedId)] : null;
   const [dueInput, setDueInput] = React.useState(() => formatForInput(existingReminder?.dueAt));
   const [noteInput, setNoteInput] = React.useState(existingReminder?.note ?? '');
   const [status, setStatus] = React.useState(null);
   const findNodeById = React.useCallback(
-    (id) => nodes.find((node) => node?.id === id) || null,
+    (id) => nodes.find((node) => String(node?.id) === String(id)) || null,
     [nodes]
   );
   const logEvent = React.useCallback(
@@ -198,7 +207,7 @@ function ReminderPanel({ appApi }) {
   }, [status]);
 
   React.useEffect(() => {
-    const reminder = selectedId ? reminders[selectedId] : null;
+    const reminder = selectedId != null ? reminders[String(selectedId)] : null;
     setDueInput(formatForInput(reminder?.dueAt));
     setNoteInput(reminder?.note ?? '');
   }, [selectedId, reminders]);
@@ -223,13 +232,14 @@ function ReminderPanel({ appApi }) {
       return;
     }
     const iso = parsed.toISOString();
+    const key = String(selectedId);
     setReminders((prev) => ({
       ...prev,
-      [selectedId]: {
-        nodeId: selectedId,
+      [key]: {
+        nodeId: key,
         dueAt: iso,
         note: noteInput.trim(),
-        createdAt: prev[selectedId]?.createdAt ?? new Date().toISOString(),
+        createdAt: prev[key]?.createdAt ?? new Date().toISOString(),
       },
     }));
     const node = findNodeById(selectedId);
@@ -252,10 +262,11 @@ function ReminderPanel({ appApi }) {
   const handleClear = React.useCallback((targetId) => {
     const nodeIdToRemove = targetId ?? selectedId;
     if (!nodeIdToRemove) return;
+    const key = String(nodeIdToRemove);
     setReminders((prev) => {
-      if (!prev[nodeIdToRemove]) return prev;
+      if (!prev[key]) return prev;
       const next = { ...prev };
-      delete next[nodeIdToRemove];
+      delete next[key];
       return next;
     });
     const node = findNodeById(nodeIdToRemove);
