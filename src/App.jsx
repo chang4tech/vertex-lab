@@ -29,6 +29,7 @@ import { addUndirectedEdge, edgesFromParentIds } from './utils/edgeUtils';
 import { getConnectedNavigationCandidates } from './utils/navigationUtils';
 import { useIsMobile } from './hooks/useIsMobile';
 import { useUser } from './contexts/UserProvider.jsx';
+import packageJson from '../package.json';
 
 const OVERLAY_LAYOUT_STORAGE_KEY = 'vertex_overlay_layout';
 
