@@ -14,9 +14,11 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Settings dialog: Remove greyed background and raise overlay z-index so the modal sits above the nav without dimming the app.
 - Canvas & minimap: Skip nodes/edges with invalid coordinates when computing bounds or drawing so neither surface distorts after load; added regression tests covering hidden-node and invalid-node scenarios.
 - Canvas: Ensure wheel zoom stays anchored under the cursor on high-DPI displays.
+- Canvas: Keep view centered when canvas size changes (e.g., opening Node Info panel).
 - Menus: Contain wheel/touch scrolling inside open dropdowns so the canvas and page no longer scroll/zoom while menus are hovered.
 
 ### Added
+- i18n: Added Spanish locale option with core UI translations.
 - Export pipeline: Expose plugin hook to decorate PNG exports (graph/user metadata provided to decorators).
 - Plugins: Export Watermark plugin adds optional text or QR code watermark to PNG exports.
 - Plugins: Version History plugin records snapshots with optional auto-capture and restore controls.
@@ -57,6 +59,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
  - Docs: Migration guidance consolidated into this changelog and `doc/progress.md`; removed standalone `MIGRATION.md`.
 
 ### Changed
+- Settings menu: Language selector now appears as a hoverable submenu instead of a dropdown.
 - Plugins: Control Hub tip cards now appear as dismissible overlay toasts instead of pushing content below the canvas.
 - Plugins: Core side panels (Graph Stats, Levels, etc.) render as fixed overlays beside the canvas instead of inline below it.
 - Node Info Panel: Clarify color chips by showing fill vs text samples and adding a colors legend for multi-selection stats.
@@ -113,12 +116,14 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Tests: New router tests for landing and graph routes.
 
 ### Added
+- i18n: Added Spanish locale option with core UI translations.
 - Keyboard: `E` toggles Connect/Disconnect when multiple nodes are selected. Uses the first selected node as the anchor; prevents cycles when connecting. The Help panel and shortcut registry have been updated accordingly.
 - Docs: Updated README Keyboard Shortcuts to reflect current shortcuts and describe the new `E` behavior.
 - Tag Manager: Manage available tags in Settings → Tags (add, rename, change color, delete). Import/Export tag presets as JSON. Node Editor reads tags from local storage.
 - Plugins: Added dedicated tests for PluginHost and the core node info panel. Ensures plugins can be disabled without affecting the app.
 
 ### Changed
+- Settings menu: Language selector now appears as a hoverable submenu instead of a dropdown.
 - Shortcuts: Adopted Cmd/Ctrl + Alt as primary combos for New (N), Import (O), and Export PNG (P) to avoid browser-reserved shortcuts. Kept Cmd/Ctrl + S for Export JSON.
 - Shortcuts: Implemented layout‑agnostic matching (uses `event.key` and `event.code`) for letters and digits to make Alt‑based and letter keys reliable across keyboard layouts (e.g., Alt+C, Alt+=, Alt+-, Alt+0, Numpad variants).
 - Shortcuts: Added fallback support for Cmd/Ctrl + Shift + O/S/N where the browser allows them. Redo remains Cmd/Ctrl + Shift + Z; Undo remains Cmd/Ctrl + Z.
