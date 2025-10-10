@@ -62,6 +62,7 @@ describe('followUpRemindersPlugin', () => {
     expect(reminderCalls.at(-1)?.[1]).toContain('"a"');
     const noteInstances = await screen.findAllByText('Call back client');
     expect(noteInstances.some((node) => node.tagName === 'DIV')).toBe(true);
+    expect(screen.getByText('Reminder saved.')).toBeInTheDocument();
     expect(screen.getByText('Mark done')).toBeInTheDocument();
   });
 

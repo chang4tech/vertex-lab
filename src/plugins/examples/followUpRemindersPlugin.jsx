@@ -174,6 +174,7 @@ function ReminderPanel({ appApi }) {
   const existingReminder = selectedId ? reminders[selectedId] : null;
   const [dueInput, setDueInput] = React.useState(() => formatForInput(existingReminder?.dueAt));
   const [noteInput, setNoteInput] = React.useState(existingReminder?.note ?? '');
+  const [status, setStatus] = React.useState(null);
   const findNodeById = React.useCallback(
     (id) => nodes.find((node) => node?.id === id) || null,
     [nodes]
@@ -186,6 +187,15 @@ function ReminderPanel({ appApi }) {
     },
     [appApi, intl]
   );
+  const showStatus = React.useCallback((type, messageId, defaultMessage, values = {}) => {
+    setStatus({ type, messageId, defaultMessage, values, key: Date.now() });
+  }, []);
+
+  React.useEffect(() => {
+    if (!status) return undefined;
+    const timer = setTimeout(() => setStatus(null), 3200);
+    return () => clearTimeout(timer);
+  }, [status]);
 
   React.useEffect(() => {
     const reminder = selectedId ? reminders[selectedId] : null;
@@ -203,6 +213,12 @@ function ReminderPanel({ appApi }) {
         'Skipped reminder save for {name}: invalid date.',
         { name: getNodeKey(findNodeById(selectedId)) },
         'warn'
+      );
+      showStatus(
+        'error',
+        'plugin.followUpReminders.statusInvalid',
+        'Enter a valid follow-up date before saving.',
+        { name: getNodeKey(findNodeById(selectedId)) }
       );
       return;
     }
@@ -225,7 +241,13 @@ function ReminderPanel({ appApi }) {
         date: intl.formatDate(parsed, { dateStyle: 'medium', timeStyle: 'short' }),
       }
     );
-  }, [dueInput, noteInput, selectedId, intl, setReminders, logEvent, findNodeById]);
+    showStatus(
+      'success',
+      'plugin.followUpReminders.statusSaved',
+      'Reminder saved.',
+      { name: getNodeKey(node) }
+    );
+  }, [dueInput, noteInput, selectedId, intl, setReminders, logEvent, findNodeById, showStatus]);
 
   const handleClear = React.useCallback((targetId) => {
     const nodeIdToRemove = targetId ?? selectedId;
@@ -242,7 +264,13 @@ function ReminderPanel({ appApi }) {
       'Cleared reminder for {name}.',
       { name: getNodeKey(node) }
     );
-  }, [selectedId, setReminders, logEvent, findNodeById]);
+    showStatus(
+      'info',
+      'plugin.followUpReminders.statusCleared',
+      'Reminder cleared.',
+      { name: getNodeKey(node) }
+    );
+  }, [selectedId, setReminders, logEvent, findNodeById, showStatus]);
 
   const now = Date.now();
   const sortedReminders = React.useMemo(() => {
@@ -277,7 +305,13 @@ function ReminderPanel({ appApi }) {
       'Selected {count, plural, one {# due node} other {# due nodes}}.',
       { count: dueSoonIds.length }
     );
-  }, [appApi, dueSoonIds, logEvent]);
+    showStatus(
+      'info',
+      'plugin.followUpReminders.statusSelected',
+      'Selected {count, plural, one {# due node} other {# due nodes}}.',
+      { count: dueSoonIds.length }
+    );
+  }, [appApi, dueSoonIds, logEvent, showStatus]);
 
   const handleSelectNode = React.useCallback((nodeId) => {
     if (!nodeId || !appApi?.selectNode) return;
@@ -288,7 +322,13 @@ function ReminderPanel({ appApi }) {
       'Focused reminder node {name}.',
       { name: getNodeKey(node) }
     );
-  }, [appApi, findNodeById, logEvent]);
+    showStatus(
+      'info',
+      'plugin.followUpReminders.statusFocused',
+      'Focused {name}.',
+      { name: getNodeKey(node) }
+    );
+  }, [appApi, findNodeById, logEvent, showStatus]);
 
   const handleHighlightDue = React.useCallback(() => {
     if (!appApi?.onHighlightNodes) return;
@@ -298,7 +338,13 @@ function ReminderPanel({ appApi }) {
       'Highlighted {count, plural, one {# due node} other {# due nodes}}.',
       { count: dueSoonIds.length }
     );
-  }, [appApi, dueSoonIds, logEvent]);
+    showStatus(
+      'info',
+      'plugin.followUpReminders.statusHighlighted',
+      'Highlighted {count, plural, one {# due node} other {# due nodes}}.',
+      { count: dueSoonIds.length }
+    );
+  }, [appApi, dueSoonIds, logEvent, showStatus]);
 
   const panelStyle = {
     width: 320,
@@ -364,6 +410,26 @@ function ReminderPanel({ appApi }) {
           </button>
         </div>
       </div>
+
+      {status && (
+        <div
+          key={status.key}
+          style={{
+            borderRadius: 8,
+            padding: '8px 12px',
+            border: `1px solid ${status.type === 'error' ? currentTheme.colors.error : status.type === 'success' ? currentTheme.colors.success : currentTheme.colors.info}`,
+            background: currentTheme.colors.menuBackground,
+            color: status.type === 'error' ? currentTheme.colors.error : status.type === 'success' ? currentTheme.colors.success : currentTheme.colors.info,
+            fontSize: 13,
+          }}
+        >
+          <FormattedMessage
+            id={status.messageId}
+            defaultMessage={status.defaultMessage}
+            values={status.values}
+          />
+        </div>
+      )}
 
       <section style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <h4 style={{ margin: 0, fontSize: 14, color: currentTheme.colors.secondaryText }}>
