@@ -1,39 +1,3 @@
-
-function LanguageMenu({ locales, activeLocale, onSelect }) {
-  return (
-    <div className="menu-section">
-      <FormattedMessage id="settings.language" defaultMessage="Language" />
-      <div style={{ display: 'flex', flexDirection: 'column', marginTop: 8 }}>
-        {locales.map((locale) => (
-          <button
-            key={locale.value}
-            type="button"
-            onClick={() => onSelect(locale.value)}
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '8px 14px',
-              marginBottom: 4,
-              background: locale.value === activeLocale
-                ? 'var(--menu-hover, rgba(96, 165, 250, 0.18))'
-                : 'transparent',
-              border: 'none',
-              borderRadius: 6,
-              color: 'var(--menu-text, #1f2937)',
-              cursor: 'pointer',
-              fontSize: 14,
-            }}
-          >
-            <span>{locale.label}</span>
-            {locale.value === activeLocale && <span style={{ fontSize: 12 }}>✓</span>}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import VertexCanvas from './VertexCanvas.jsx';
@@ -77,6 +41,50 @@ const buildDefaultNodes = (intl) => ([
   createEnhancedNode({ id: 4, parentId: 1, label: `${intl.formatMessage({ id: 'node.branch' })} 3`, x: 250, y: 400, level: 1 }),
   createEnhancedNode({ id: 5, parentId: 1, label: `${intl.formatMessage({ id: 'node.branch' })} 4`, x: 550, y: 400, level: 1 }),
 ]);
+
+const LanguageMenu = ({ locales, activeLocale, onSelect }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleClose = useCallback(() => setIsOpen(false), []);
+
+  const handleBlur = useCallback((event) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      handleClose();
+    }
+  }, [handleClose]);
+
+  const handleSelect = useCallback((value) => {
+    onSelect(value);
+    handleClose();
+  }, [onSelect, handleClose]);
+
+  return (
+    <div
+      className={`menu-item menu-item--submenu${isOpen ? ' menu-item--submenu-open' : ''}`}
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={handleClose}
+      onFocus={() => setIsOpen(true)}
+      onBlur={handleBlur}
+    >
+      <span><FormattedMessage id="settings.language" defaultMessage="Language" /></span>
+      <span className="submenu-caret">›</span>
+      <div className={`menu-submenu${isOpen ? ' open' : ''}`} role="menu">
+        {locales.map((locale) => (
+          <button
+            key={locale.value}
+            type="button"
+            onClick={() => handleSelect(locale.value)}
+            className="menu-submenu__item"
+            aria-checked={locale.value === activeLocale}
+          >
+            <span>{locale.label}</span>
+            {locale.value === activeLocale && <span className="menu-submenu__check">✓</span>}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const buildDefaultEdges = (nodes) => edgesFromParentIds(nodes);
 
