@@ -299,6 +299,7 @@ const VertexCanvas = forwardRef(({
   
   // Pan/zoom state
   const view = useRef({ offsetX: 0, offsetY: 0, scale: 1 });
+  const prevCanvasSizeRef = useRef({ width, height });
   // Touch/pointer gesture state
   const pointers = useRef(new Map());
   const pinchState = useRef({ active: false, startDist: 0, startScale: 1 });
@@ -606,6 +607,27 @@ const VertexCanvas = forwardRef(({
   const suppressClickRef = useRef(false);
 
   // Draw with pan/zoom
+  useEffect(() => {
+    const prev = prevCanvasSizeRef.current;
+    if (!prev) {
+      prevCanvasSizeRef.current = { width, height };
+      return;
+    }
+    if (prev.width === width && prev.height === height) return;
+    const deltaW = width - prev.width;
+    const deltaH = height - prev.height;
+    if (deltaW) {
+      view.current.offsetX += deltaW / 2;
+    }
+    if (deltaH) {
+      view.current.offsetY += deltaH / 2;
+    }
+    prevCanvasSizeRef.current = { width, height };
+    if (canvasRef.current) {
+      canvasRef.current.dispatchEvent(new Event('redraw'));
+    }
+  }, [width, height]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
