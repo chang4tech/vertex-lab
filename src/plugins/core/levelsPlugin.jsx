@@ -1,4 +1,5 @@
 import React from 'react';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { useTheme } from '../../contexts/ThemeContext';
 
 function LevelsAbout() {
@@ -7,11 +8,24 @@ function LevelsAbout() {
   return (
     <div style={{ color: colors.primaryText }}>
       <p style={{ marginTop: 0 }}>
-        Use levels to organize your graph without relying on parent/child metadata.
+        <FormattedMessage
+          id="plugin.levels.about.summary"
+          defaultMessage="Use levels to organize your graph without relying on parent/child metadata."
+        />
       </p>
       <ul style={{ margin: 0, paddingLeft: 18 }}>
-        <li>Assign levels to nodes via the node context menu command.</li>
-        <li>Clear legacy hierarchy links to keep the graph purely level-based.</li>
+        <li>
+          <FormattedMessage
+            id="plugin.levels.about.assign"
+            defaultMessage="Assign levels to nodes via the node context menu command."
+          />
+        </li>
+        <li>
+          <FormattedMessage
+            id="plugin.levels.about.clear"
+            defaultMessage="Clear legacy hierarchy links to keep the graph purely level-based."
+          />
+        </li>
       </ul>
     </div>
   );
@@ -19,6 +33,7 @@ function LevelsAbout() {
 
 function LevelsPanel({ groupedLevels, onSelectNode }) {
   const { currentTheme } = useTheme();
+  const intl = useIntl();
   const colors = currentTheme.colors;
   return (
     <div
@@ -34,13 +49,25 @@ function LevelsPanel({ groupedLevels, onSelectNode }) {
         boxSizing: 'border-box',
       }}
     >
-      <h3 style={{ margin: 0, color: colors.primaryText }}>Levels</h3>
+      <h3 style={{ margin: 0, color: colors.primaryText }}>
+        <FormattedMessage id="plugin.levels.title" defaultMessage="Levels" />
+      </h3>
       {groupedLevels.length === 0 ? (
-        <p style={{ color: colors.secondaryText, marginTop: 12 }}>No levels assigned yet.</p>
+        <p style={{ color: colors.secondaryText, marginTop: 12 }}>
+          <FormattedMessage
+            id="plugin.levels.empty"
+            defaultMessage="No levels assigned yet."
+          />
+        </p>
       ) : (
         groupedLevels.map(({ level, nodes }) => (
           <div key={level} style={{ marginTop: 12 }}>
-            <div style={{ fontWeight: 600, marginBottom: 4 }}>Level {level}</div>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>
+              {intl.formatMessage(
+                { id: 'plugin.levels.levelHeading', defaultMessage: 'Level {level}' },
+                { level: intl.formatNumber(level) }
+              )}
+            </div>
             <ul style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 4 }}>
               {nodes.map((node) => (
                 <li key={node.id} style={{ listStyle: 'disc' }}>

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const SETTINGS_KEY = 'plugin_core.versionHistory.settings';
@@ -169,6 +170,7 @@ const formatTimestamp = (value) => {
 const VersionHistoryConfig = () => {
   const [settings, updateSettings] = useVersionHistorySettings();
   const { currentTheme } = useTheme();
+  const intl = useIntl();
   const colors = currentTheme.colors;
 
   return (
@@ -179,10 +181,18 @@ const VersionHistoryConfig = () => {
           checked={settings.autoCapture}
           onChange={(e) => updateSettings({ autoCapture: e.target.checked })}
         />
-        Auto-capture snapshots when the graph changes
+        {intl.formatMessage({
+          id: 'plugin.versionHistory.autoCapture',
+          defaultMessage: 'Auto-capture snapshots when the graph changes',
+        })}
       </label>
       <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <span>Maximum snapshots per graph</span>
+        <span>
+          <FormattedMessage
+            id="plugin.versionHistory.maxSnapshots"
+            defaultMessage="Maximum snapshots per graph"
+          />
+        </span>
         <input
           type="number"
           min={1}
@@ -211,6 +221,7 @@ const VersionHistoryOverlay = ({ api }) => {
   const lastCaptureRef = useRef(0);
   const isOpen = !!api?.isVersionHistoryOpen;
   const { currentTheme } = useTheme();
+  const intl = useIntl();
   const colors = currentTheme.colors;
 
   useEffect(() => {
@@ -234,8 +245,14 @@ const VersionHistoryOverlay = ({ api }) => {
     const { nodes, edges } = cloneGraphState(api.nodes, api.edges);
     const timestamp = Date.now();
     const resolvedLabel = source === 'manual'
-      ? `${formatTimestamp(timestamp)} snapshot`
-      : (label || 'Snapshot');
+      ? intl.formatMessage(
+          {
+            id: 'plugin.versionHistory.manualLabel',
+            defaultMessage: '{time} snapshot',
+          },
+          { time: formatTimestamp(timestamp) },
+        )
+      : (label || intl.formatMessage({ id: 'plugin.versionHistory.snapshot', defaultMessage: 'Snapshot' }));
     const entry = {
       id: `${timestamp}-${Math.random().toString(36).slice(2, 8)}`,
       timestamp,
@@ -255,7 +272,7 @@ const VersionHistoryOverlay = ({ api }) => {
     });
     lastSignatureRef.current = signature;
     lastCaptureRef.current = Date.now();
-  }, [api, updateSnapshots, settings.maxSnapshots]);
+  }, [api, updateSnapshots, settings.maxSnapshots, intl]);
 
   const removeSnapshot = useCallback((id) => {
     updateSnapshots((prev) => prev.filter((entry) => entry.id !== id));
@@ -279,14 +296,14 @@ const VersionHistoryOverlay = ({ api }) => {
     }
     lastSignatureRef.current = signature;
     lastCaptureRef.current = now;
-    captureSnapshot('Auto snapshot', 'auto');
-  }, [api?.nodes, api?.edges, settings.autoCapture, captureSnapshot]);
+    captureSnapshot(intl.formatMessage({ id: 'plugin.versionHistory.autoLabel', defaultMessage: 'Auto snapshot' }), 'auto');
+  }, [api?.nodes, api?.edges, settings.autoCapture, captureSnapshot, intl]);
 
   useEffect(() => {
     if (snapshots.length === 0 && Array.isArray(api?.nodes) && Array.isArray(api?.edges)) {
-      captureSnapshot('Initial state', 'initial');
+      captureSnapshot(intl.formatMessage({ id: 'plugin.versionHistory.initialLabel', defaultMessage: 'Initial state' }), 'initial');
     }
-  }, [snapshots.length, api?.nodes, api?.edges, captureSnapshot]);
+  }, [snapshots.length, api?.nodes, api?.edges, captureSnapshot, intl]);
 
   useEffect(() => {
     if (snapshots.length === 0) return;
@@ -343,8 +360,18 @@ const VersionHistoryOverlay = ({ api }) => {
       >
         <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.panelBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ fontWeight: 600, color: colors.primaryText }}>Version History</div>
-            <div style={{ fontSize: 12, color: colors.secondaryText }}>{snapshots.length} snapshot{snapshots.length === 1 ? '' : 's'}</div>
+            <div style={{ fontWeight: 600, color: colors.primaryText }}>
+              <FormattedMessage id="plugin.versionHistory.title" defaultMessage="Version History" />
+            </div>
+            <div style={{ fontSize: 12, color: colors.secondaryText }}>
+              {intl.formatMessage(
+                {
+                  id: 'plugin.versionHistory.snapshotCount',
+                  defaultMessage: '{count, plural, one {# snapshot} other {# snapshots}}',
+                },
+                { count: snapshots.length },
+              )}
+            </div>
           </div>
           <button
             type="button"
@@ -358,7 +385,7 @@ const VersionHistoryOverlay = ({ api }) => {
         <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
           <button
             type="button"
-            onClick={() => captureSnapshot('Manual snapshot')}
+            onClick={() => captureSnapshot('', 'manual')}
             style={{
               alignSelf: 'flex-start',
               background: colors.primaryButton,
@@ -370,10 +397,12 @@ const VersionHistoryOverlay = ({ api }) => {
               transition: 'background 150ms ease',
             }}
           >
-            Capture snapshot
+            <FormattedMessage id="plugin.versionHistory.capture" defaultMessage="Capture snapshot" />
           </button>
           {snapshots.length === 0 ? (
-            <div style={{ color: colors.secondaryText, fontSize: 13 }}>No snapshots yet.</div>
+            <div style={{ color: colors.secondaryText, fontSize: 13 }}>
+              <FormattedMessage id="plugin.versionHistory.empty" defaultMessage="No snapshots yet." />
+            </div>
           ) : (
             snapshots.map((entry) => (
               <div key={entry.id} style={{
@@ -387,7 +416,7 @@ const VersionHistoryOverlay = ({ api }) => {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
                   <div>
-                    <div style={{ fontWeight: 600, color: colors.primaryText }}>{entry.label || 'Snapshot'}</div>
+                    <div style={{ fontWeight: 600, color: colors.primaryText }}>{entry.label || intl.formatMessage({ id: 'plugin.versionHistory.snapshot', defaultMessage: 'Snapshot' })}</div>
                     <div style={{ fontSize: 12, color: colors.secondaryText }}>{formatTimestamp(entry.timestamp)}</div>
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
@@ -403,7 +432,7 @@ const VersionHistoryOverlay = ({ api }) => {
                         cursor: 'pointer',
                       }}
                     >
-                      Restore
+                      <FormattedMessage id="plugin.versionHistory.restore" defaultMessage="Restore" />
                     </button>
                     <button
                       type="button"
@@ -417,14 +446,33 @@ const VersionHistoryOverlay = ({ api }) => {
                         cursor: 'pointer',
                       }}
                     >
-                      Delete
+                      <FormattedMessage id="plugin.versionHistory.delete" defaultMessage="Delete" />
                     </button>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 16, fontSize: 12, color: colors.secondaryText }}>
-                  <span>{entry.summary?.nodeCount ?? 0} nodes</span>
-                  <span>{entry.summary?.edgeCount ?? 0} edges</span>
-                  <span style={{ color: colors.info }}>{entry.source === 'auto' ? 'Auto' : entry.source === 'initial' ? 'Initial' : 'Manual'}</span>
+                  <span>
+                    {intl.formatMessage(
+                      { id: 'plugin.versionHistory.nodes', defaultMessage: '{count} nodes' },
+                      { count: intl.formatNumber(entry.summary?.nodeCount ?? 0) },
+                    )}
+                  </span>
+                  <span>
+                    {intl.formatMessage(
+                      { id: 'plugin.versionHistory.edges', defaultMessage: '{count} edges' },
+                      { count: intl.formatNumber(entry.summary?.edgeCount ?? 0) },
+                    )}
+                  </span>
+                  <span style={{ color: colors.info }}>
+                    {intl.formatMessage({
+                      id: `plugin.versionHistory.source.${entry.source ?? 'manual'}`,
+                      defaultMessage: entry.source === 'auto'
+                        ? 'Auto'
+                        : entry.source === 'initial'
+                          ? 'Initial'
+                          : 'Manual',
+                    })}
+                  </span>
                 </div>
               </div>
             ))

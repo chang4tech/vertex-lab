@@ -1,4 +1,5 @@
 import React from 'react';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { useTheme } from '../../contexts/ThemeContext';
 
 function SelectionToolsAbout() {
@@ -7,10 +8,30 @@ function SelectionToolsAbout() {
   return (
     <div style={{ color: colors.primaryText }}>
       <ul style={{ margin: 0, paddingLeft: 18 }}>
-        <li>Appears when you select one or more nodes.</li>
-        <li>Use Edit First to open the editor for the first selected node.</li>
-        <li>Toggle Collapse expands/collapses the first selected node.</li>
-        <li>Delete Selected removes all selected nodes.</li>
+        <li>
+          <FormattedMessage
+            id="plugin.selectionTools.about.appears"
+            defaultMessage="Appears when you select one or more nodes."
+          />
+        </li>
+        <li>
+          <FormattedMessage
+            id="plugin.selectionTools.about.edit"
+            defaultMessage="Use Edit First to open the editor for the first selected node."
+          />
+        </li>
+        <li>
+          <FormattedMessage
+            id="plugin.selectionTools.about.collapse"
+            defaultMessage="Toggle Collapse expands/collapses the first selected node."
+          />
+        </li>
+        <li>
+          <FormattedMessage
+            id="plugin.selectionTools.about.delete"
+            defaultMessage="Delete Selected removes all selected nodes."
+          />
+        </li>
       </ul>
     </div>
   );
@@ -42,6 +63,7 @@ function ActionButton({ disabled, onClick, children }) {
 
 function SelectionToolsPanel({ count, firstSelectedId, showCollapse, showDelete, api }) {
   const { currentTheme } = useTheme();
+  const intl = useIntl();
   const colors = currentTheme.colors;
   return (
     <div
@@ -60,21 +82,28 @@ function SelectionToolsPanel({ count, firstSelectedId, showCollapse, showDelete,
         boxSizing: 'border-box',
       }}
     >
-      <h3 style={{ margin: 0 }}>Selection Tools</h3>
-      <div style={{ color: colors.secondaryText }}>{count} selected</div>
+      <h3 style={{ margin: 0 }}>
+        <FormattedMessage id="plugin.selectionTools.title" defaultMessage="Selection Tools" />
+      </h3>
+      <div style={{ color: colors.secondaryText }}>
+        {intl.formatMessage(
+          { id: 'plugin.selectionTools.summary', defaultMessage: '{count} selected' },
+          { count: intl.formatNumber(count) }
+        )}
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <ActionButton
           disabled={!firstSelectedId}
           onClick={() => firstSelectedId && api?.onEditNode?.(firstSelectedId)}
         >
-          Edit First
+          <FormattedMessage id="plugin.selectionTools.editFirst" defaultMessage="Edit First" />
         </ActionButton>
         {showCollapse && (
           <ActionButton
             disabled={!firstSelectedId}
             onClick={() => firstSelectedId && api?.onToggleCollapse?.(firstSelectedId)}
           >
-            Toggle Collapse
+            <FormattedMessage id="plugin.selectionTools.toggleCollapse" defaultMessage="Toggle Collapse" />
           </ActionButton>
         )}
         {showDelete && (
@@ -82,10 +111,41 @@ function SelectionToolsPanel({ count, firstSelectedId, showCollapse, showDelete,
             disabled={count === 0}
             onClick={() => count > 0 && api?.onDeleteNodes?.(api.selectedNodeIds)}
           >
-            Delete Selected
+            <FormattedMessage id="plugin.selectionTools.deleteSelected" defaultMessage="Delete Selected" />
           </ActionButton>
         )}
       </div>
+    </div>
+  );
+}
+
+function SelectionToolsConfig() {
+  const intl = useIntl();
+  const prefix = 'plugin_core.selectionTools_';
+  const get = (k, d) => {
+    try { const v = localStorage.getItem(prefix + k); return v == null ? d : v === 'true'; } catch { return d; }
+  };
+  const set = (k, v) => { try { localStorage.setItem(prefix + k, String(v)); } catch {} };
+  const [showDelete, setShowDelete] = React.useState(() => get('showDelete', true));
+  const [showCollapse, setShowCollapse] = React.useState(() => get('showCollapse', true));
+  React.useEffect(() => { set('showDelete', showDelete); }, [showDelete]);
+  React.useEffect(() => { set('showCollapse', showCollapse); }, [showCollapse]);
+  return (
+    <div>
+      <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <input type="checkbox" checked={showDelete} onChange={(e) => setShowDelete(e.target.checked)} />
+        {intl.formatMessage({
+          id: 'plugin.selectionTools.showDelete',
+          defaultMessage: 'Show Delete button',
+        })}
+      </label>
+      <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <input type="checkbox" checked={showCollapse} onChange={(e) => setShowCollapse(e.target.checked)} />
+        {intl.formatMessage({
+          id: 'plugin.selectionTools.showCollapse',
+          defaultMessage: 'Show Collapse button',
+        })}
+      </label>
     </div>
   );
 }
@@ -107,29 +167,7 @@ export const selectionToolsPlugin = {
       render: () => <SelectionToolsAbout />
     },
     configPage: {
-      render: () => {
-        const prefix = 'plugin_core.selectionTools_';
-        const get = (k, d) => {
-          try { const v = localStorage.getItem(prefix + k); return v == null ? d : v === 'true'; } catch { return d; }
-        };
-        const set = (k, v) => { try { localStorage.setItem(prefix + k, String(v)); } catch {} };
-        const [showDelete, setShowDelete] = React.useState(() => get('showDelete', true));
-        const [showCollapse, setShowCollapse] = React.useState(() => get('showCollapse', true));
-        React.useEffect(() => { set('showDelete', showDelete); }, [showDelete]);
-        React.useEffect(() => { set('showCollapse', showCollapse); }, [showCollapse]);
-        return (
-          <div>
-            <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <input type="checkbox" checked={showDelete} onChange={(e) => setShowDelete(e.target.checked)} />
-              Show Delete button
-            </label>
-            <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <input type="checkbox" checked={showCollapse} onChange={(e) => setShowCollapse(e.target.checked)} />
-              Show Collapse button
-            </label>
-          </div>
-        );
-      }
+      render: () => <SelectionToolsConfig />
     },
     sidePanels: [
       {
