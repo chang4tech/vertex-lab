@@ -21,7 +21,7 @@ const sanitizeReminderMap = (value, knownNodeIds) => {
     if (!dueAt) return;
     const ts = Date.parse(dueAt);
     if (Number.isNaN(ts)) return;
-    if (allow && !allow.has(String(nodeId ?? nodeKey))) return;
+    if (allow && nodeId != null && !allow.has(String(nodeId))) return;
     result[strKey] = {
       nodeId: strKey,
       dueAt: new Date(ts).toISOString(),
@@ -288,21 +288,26 @@ function ReminderPanel({ appApi }) {
     const entries = Object.values(reminders || {});
     return entries
       .map((reminder) => {
-        const node = nodes.find((n) => n?.id === reminder.nodeId) || null;
+        const node = findNodeById(reminder.nodeId);
+        const due = Date.parse(reminder.dueAt);
         return {
           ...reminder,
           node,
+          label: node
+            ? getNodeKey(node)
+            : intl.formatMessage(
+                { id: 'plugin.followUpReminders.unknownNode', defaultMessage: 'Node {id}' },
+                { id: reminder.nodeId }
+              ),
+          dueTime: Number.isNaN(due) ? null : new Date(due),
           status: getReminderStatus(reminder.dueAt, now),
         };
       })
-      .filter((entry) => entry.node)
+      .filter((entry) => entry.dueTime)
       .sort((a, b) => {
-        const aTime = Date.parse(a.dueAt);
-        const bTime = Date.parse(b.dueAt);
-        if (Number.isNaN(aTime) || Number.isNaN(bTime)) return 0;
-        return aTime - bTime;
+        return a.dueTime - b.dueTime;
       });
-  }, [reminders, nodes, now]);
+  }, [reminders, nodes, now, intl, findNodeById]);
 
   const dueSoonIds = sortedReminders
     .filter((entry) => entry.status === REMINDER_STATUS.OVERDUE || entry.status === REMINDER_STATUS.UPCOMING)
@@ -530,13 +535,19 @@ function ReminderPanel({ appApi }) {
                   <FormattedMessage id="plugin.followUpReminders.currentSummary" defaultMessage="Saved reminder" />
                 </div>
                 <div style={{ fontSize: 13, color: currentTheme.colors.primaryText }}>
-                  <FormattedMessage
-                    id="plugin.followUpReminders.currentDue"
-                    defaultMessage="Due {date}"
-                    values={{
-                      date: intl.formatDate(new Date(existingReminder.dueAt), { dateStyle: 'medium', timeStyle: 'short' }),
-                    }}
-                  />
+                  {Number.isNaN(Date.parse(existingReminder.dueAt))
+                    ? (
+                      <FormattedMessage id="plugin.followUpReminders.currentDueUnknown" defaultMessage="Due date not set." />
+                    )
+                    : (
+                      <FormattedMessage
+                        id="plugin.followUpReminders.currentDue"
+                        defaultMessage="Due {date}"
+                        values={{
+                          date: intl.formatDate(new Date(existingReminder.dueAt), { dateStyle: 'medium', timeStyle: 'short' }),
+                        }}
+                      />
+                    )}
                 </div>
                 {existingReminder.note ? (
                   <div style={{ fontSize: 13, color: currentTheme.colors.secondaryText, whiteSpace: 'pre-wrap' }}>
@@ -597,7 +608,7 @@ function ReminderPanel({ appApi }) {
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                    <strong style={{ fontSize: 14 }}>{getNodeKey(reminder.node)}</strong>
+                    <strong style={{ fontSize: 14 }}>{reminder.label}</strong>
                     <span
                       style={{
                         borderRadius: 999,
