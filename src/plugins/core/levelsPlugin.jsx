@@ -31,6 +31,7 @@ function LevelsPanel({ groupedLevels, onSelectNode }) {
         boxShadow: `0 12px 24px ${colors.panelShadow}`,
         color: colors.primaryText,
         pointerEvents: 'auto',
+        boxSizing: 'border-box',
       }}
     >
       <h3 style={{ margin: 0, color: colors.primaryText }}>Levels</h3>

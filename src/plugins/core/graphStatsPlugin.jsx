@@ -31,6 +31,7 @@ function GraphStatsPanel({ nodeCount, edgeCount, selectedCount, showNodes, showE
         flexDirection: 'column',
         gap: 8,
         pointerEvents: 'auto',
+        boxSizing: 'border-box',
       }}
     >
       <h3 style={{ margin: 0, color: colors.primaryText }}>Graph Stats</h3>

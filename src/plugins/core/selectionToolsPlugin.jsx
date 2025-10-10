@@ -57,6 +57,7 @@ function SelectionToolsPanel({ count, firstSelectedId, showCollapse, showDelete,
         display: 'flex',
         flexDirection: 'column',
         gap: 12,
+        boxSizing: 'border-box',
       }}
     >
       <h3 style={{ margin: 0 }}>Selection Tools</h3>

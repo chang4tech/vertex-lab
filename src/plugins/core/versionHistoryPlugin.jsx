@@ -338,6 +338,7 @@ const VersionHistoryOverlay = ({ api }) => {
           overflow: 'hidden',
           zIndex: 10200,
           color: colors.primaryText,
+          boxSizing: 'border-box',
         }}
       >
         <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.panelBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
