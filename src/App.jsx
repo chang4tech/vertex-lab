@@ -1784,11 +1784,10 @@ function App({ graphId = 'default' }) {
   const edgeInfoPanelVisible = edgeInfoPluginEnabled && showEdgeInfoPanel;
 
   const panelWidth = isMobile ? 280 : 320;
-  const totalSidePanelWidth = (nodeInfoPanelVisible ? panelWidth : 0) + (edgeInfoPanelVisible ? panelWidth : 0);
   const sidePanelMargin = isMobile ? 8 : 16;
-  const combinedSidePanelWidth = totalSidePanelWidth + pluginSidePanelWidth;
+  const combinedSidePanelWidth = pluginSidePanelWidth;
   const overlayRightInset = combinedSidePanelWidth > 0 ? combinedSidePanelWidth + sidePanelMargin : 0;
-  const corePanelOffset = totalSidePanelWidth > 0 ? totalSidePanelWidth + sidePanelMargin : sidePanelMargin;
+  const corePanelOffset = sidePanelMargin;
 
   const initialCanvasSize = () => {
     if (typeof window === 'undefined') {
