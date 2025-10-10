@@ -7,6 +7,7 @@ import DocumentationPage from '../pages/DocumentationPage.jsx';
 import HelpCommunityPage from '../pages/HelpCommunityPage.jsx';
 import HelpFeedbackPage from '../pages/HelpFeedbackPage.jsx';
 import HelpReportPage from '../pages/HelpReportPage.jsx';
+import AboutPage from '../pages/AboutPage.jsx';
 import { FormattedMessage } from 'react-intl';
 
 function parseHash() {
@@ -32,6 +33,9 @@ function parseHash() {
   }
   if (segments[0] === 'docs') {
     return { route: 'docs', page: segments[1] || 'main' };
+  }
+  if (segments[0] === 'about') {
+    return { route: 'about' };
   }
   return { route: 'landing' };
 }
@@ -68,6 +72,9 @@ export function SimpleRouter() {
       return <HelpReportPage />;
     }
     return <DocumentationPage />;
+  }
+  if (state.route === 'about') {
+    return <AboutPage />;
   }
   return <Landing />;
 }

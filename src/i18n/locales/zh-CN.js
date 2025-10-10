@@ -170,6 +170,18 @@ export default {
   'plugin.versionHistory.source.manual': '手动',
   'plugin.versionHistory.autoCapture': '图变化时自动捕获快照',
   'plugin.versionHistory.maxSnapshots': '每个图的最大快照数量',
+  'about.tagline': '以可视化方式创作、连接并探索你的想法。',
+  'about.version': '版本',
+  'about.app.overview': 'Vertex Lab 是一个用于构建和探索图形化想法的交互式画布。',
+  'about.app.features': '主要功能包括高 DPI 渲染、插件系统、模板库以及离线优先的存储。',
+  'about.app.plugins': '通过插件扩展覆盖层、面板和命令；可在控制中心了解更多功能。',
+  'about.links.title': '资源',
+  'about.links.docs': '文档',
+  'about.links.community': '社区与支持',
+  'about.links.feedback': '提交反馈',
+  'about.links.report': '报告问题',
+  'about.license': '采用 MIT 许可证。',
+  'about.back': '返回',
 
   // Header / account
   'header.userLoading': '加载中…',

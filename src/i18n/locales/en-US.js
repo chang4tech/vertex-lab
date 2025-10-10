@@ -170,6 +170,18 @@ export default {
   'plugin.versionHistory.source.manual': 'Manual',
   'plugin.versionHistory.autoCapture': 'Auto-capture snapshots when the graph changes',
   'plugin.versionHistory.maxSnapshots': 'Maximum snapshots per graph',
+  'about.tagline': 'Craft, connect, and explore your ideas visually.',
+  'about.version': 'Version',
+  'about.app.overview': 'Vertex Lab is an interactive canvas for building and exploring graph-based ideas.',
+  'about.app.features': 'Features include high-DPI rendering, plugin system, template library, and offline-first storage.',
+  'about.app.plugins': 'Extend the app with plugins for overlays, panels, and commands. Visit the plugin control hub for details.',
+  'about.links.title': 'Resources',
+  'about.links.docs': 'Documentation',
+  'about.links.community': 'Community & Support',
+  'about.links.feedback': 'Send Feedback',
+  'about.links.report': 'Report an issue',
+  'about.license': 'Licensed under MIT.',
+  'about.back': 'Back',
 
   // Header / account
   'header.userLoading': 'Loading…',
