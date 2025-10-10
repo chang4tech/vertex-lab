@@ -45,7 +45,14 @@ const buildDefaultNodes = (intl) => ([
 const LanguageMenu = ({ locales, activeLocale, onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
 
+  const handleOpen = useCallback(() => setIsOpen(true), []);
   const handleClose = useCallback(() => setIsOpen(false), []);
+
+  const handleMouseLeave = useCallback((event) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      handleClose();
+    }
+  }, [handleClose]);
 
   const handleBlur = useCallback((event) => {
     if (!event.currentTarget.contains(event.relatedTarget)) {
@@ -61,12 +68,12 @@ const LanguageMenu = ({ locales, activeLocale, onSelect }) => {
   return (
     <div
       className={`menu-item menu-item--submenu${isOpen ? ' menu-item--submenu-open' : ''}`}
-      onMouseEnter={() => setIsOpen(true)}
-      onMouseLeave={handleClose}
-      onFocus={() => setIsOpen(true)}
+      onMouseEnter={handleOpen}
+      onMouseLeave={handleMouseLeave}
+      onFocus={handleOpen}
       onBlur={handleBlur}
       onMouseDown={(event) => {
-        // allow click to toggle the submenu on pointer devices
+        event.preventDefault();
         event.stopPropagation();
         setIsOpen((prev) => !prev);
       }}
@@ -1174,7 +1181,6 @@ const MenuBar = React.forwardRef(({
               activeLocale={currentLocale}
               onSelect={(code) => {
                 changeLocale(code);
-                // keeping settings menu open; submenu handles closing itself
               }}
             />
             <div

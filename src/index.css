@@ -41,7 +41,6 @@ body {
 
 .menu-item--submenu:hover .menu-submenu,
 .menu-item--submenu.menu-item--submenu-open .menu-submenu,
-.menu-item--submenu.opened .menu-submenu,
 .menu-item--submenu:focus-within .menu-submenu {
   display: flex;
 }
