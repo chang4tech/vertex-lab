@@ -22,6 +22,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Export pipeline: Expose plugin hook to decorate PNG exports (graph/user metadata provided to decorators).
 - Plugins: Export Watermark plugin adds optional text or QR code watermark to PNG exports.
 - Plugins: Version History plugin records snapshots with optional auto-capture and restore controls.
+- Plugins: Added Follow-up Reminders custom plugin to schedule node follow-ups, highlight upcoming work, and focus due items.
 - Help menu: Added About entry linking to the About page.
 - Docs: `doc/DEV_SERVER.md` guiding LAN access (Vite `--host`, preview, IP lookup, firewall/VPN tips).
 - README: “Access from other devices” quick steps.
