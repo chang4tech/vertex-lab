@@ -11,6 +11,7 @@ import { levelsPlugin } from './core/levelsPlugin.jsx';
 import { exportWatermarkPlugin } from './core/exportWatermarkPlugin.jsx';
 import { versionHistoryPlugin } from './core/versionHistoryPlugin.jsx';
 import { showcasePlugin } from './examples/showcasePlugin.jsx';
+import { followUpRemindersPlugin } from './examples/followUpRemindersPlugin.jsx';
 
 export const corePlugins = [
   nodeInfoPlugin,
@@ -25,5 +26,6 @@ export const corePlugins = [
   randomNodeSelectorPlugin,
   connectNodesByIdPlugin,
   levelsPlugin,
+  followUpRemindersPlugin,
   showcasePlugin,
 ];
