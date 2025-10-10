@@ -395,17 +395,16 @@ function ReminderPanel({ appApi, layout = 'floating' }) {
 
   const isInlineLayout = layout === 'inline';
 
-  const glassSurface = 'var(--plugin-panel-surface-glass, rgba(15, 23, 42, 0.45))';
+  const glassSurface = 'var(--plugin-panel-surface-glass, rgba(15, 23, 42, 0.32))';
   const panelBorderVar = 'var(--plugin-panel-border, rgba(148, 163, 184, 0.35))';
   const panelStyle = {
-    width: isInlineLayout ? '100%' : 320,
-    background: 'var(--plugin-panel-background-glass, rgba(15, 23, 42, 0.7))',
-    color: currentTheme.colors.primaryText,
-    border: `1px solid ${panelBorderVar}`,
-    borderRadius: 12,
-    boxShadow: `0 12px 24px ${currentTheme.colors.panelShadow}`,
+    width: '100%',
     padding: 16,
-    boxSizing: 'border-box',
+    borderRadius: 12,
+    background: 'transparent',
+    border: 'none',
+    boxShadow: 'none',
+    color: currentTheme.colors.primaryText,
     pointerEvents: 'auto',
     display: 'flex',
     flexDirection: 'column',

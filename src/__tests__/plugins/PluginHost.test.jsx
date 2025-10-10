@@ -34,6 +34,9 @@ describe('PluginHost', () => {
     const details = summary?.closest('details');
     expect(summary).toBeTruthy();
     expect(details).toBeTruthy();
+    const content = details?.querySelector('.plugin-side-panels__content');
+    expect(content).toBeTruthy();
+    expect(content?.contains(screen.getByTestId('simple-panel'))).toBe(true);
     fireEvent.click(summary);
     expect(details?.open).toBe(false);
     fireEvent.click(summary);

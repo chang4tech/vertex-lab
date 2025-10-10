@@ -604,6 +604,101 @@ mark {
   pointer-events: auto;
 }
 
+:root {
+  --plugin-panel-width: clamp(280px, 30vw, 340px);
+}
+
+.plugin-side-panels__scroll {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  max-height: 100%;
+  padding-right: 6px;
+}
+
+.plugin-side-panels__item,
+.plugin-side-panels__item--collapsible {
+  display: block;
+  width: var(--plugin-panel-width);
+  max-width: min(90vw, var(--plugin-panel-width));
+  background: var(--plugin-panel-background-glass, rgba(15, 23, 42, 0.78));
+  border: 1px solid var(--plugin-panel-border, rgba(148, 163, 184, 0.55));
+  border-radius: 18px;
+  color: var(--plugin-panel-text, var(--primary-text, #0f172a));
+  box-shadow: 0 24px 38px var(--plugin-panel-shadow-color, rgba(15, 23, 42, 0.28));
+  backdrop-filter: blur(18px);
+  overflow: hidden;
+}
+
+.plugin-side-panels__item:not(.plugin-side-panels__item--collapsible) > * {
+  width: 100%;
+}
+
+.plugin-side-panels__item--collapsible:not([open]) {
+  width: fit-content;
+  min-width: 220px;
+}
+
+.plugin-side-panels__item--collapsible[open] {
+  box-shadow: 0 28px 44px var(--plugin-panel-shadow-color, rgba(15, 23, 42, 0.32));
+}
+
+.plugin-side-panels__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  color: inherit;
+  background: var(--plugin-panel-summary-glass, rgba(15, 23, 42, 0.45));
+}
+
+.plugin-side-panels__summary:focus-visible {
+  outline: 2px solid var(--plugin-panel-border, rgba(59, 130, 246, 0.65));
+  outline-offset: 2px;
+}
+
+.plugin-side-panels__summary::-webkit-details-marker {
+  display: none;
+}
+
+.plugin-side-panels__title {
+  flex: 1;
+}
+
+.plugin-side-panels__arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--plugin-panel-summary-glass, rgba(15, 23, 42, 0.45));
+  color: inherit;
+  transform: rotate(90deg);
+  transition: transform 0.18s ease;
+  font-size: 13px;
+}
+
+.plugin-side-panels__item--collapsible:not([open]) .plugin-side-panels__arrow {
+  transform: rotate(0deg);
+}
+
+.plugin-side-panels__content {
+  padding: 0 16px 16px;
+  overflow: visible;
+}
+
+.plugin-side-panels__content > * {
+  width: 100%;
+}
+
 
 /* --- Dialog Component --- */
 .dialog_wrapper {

@@ -68,12 +68,12 @@ function SelectionToolsPanel({ count, firstSelectedId, showCollapse, showDelete,
   return (
     <div
       style={{
-        width: 320,
+        width: '100%',
         padding: 16,
         borderRadius: 12,
-        border: `1px solid ${colors.panelBorder}`,
-        background: colors.panelBackground,
-        boxShadow: `0 12px 24px ${colors.panelShadow}`,
+        background: 'transparent',
+        border: 'none',
+        boxShadow: 'none',
         color: colors.primaryText,
         pointerEvents: 'auto',
         display: 'flex',

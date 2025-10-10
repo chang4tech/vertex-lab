@@ -3,6 +3,33 @@ import { themes, defaultTheme, getTheme } from '../themes';
 
 const ThemeContext = createContext();
 
+const fallbackRgba = (alpha = 1) => {
+  const clamped = Math.min(Math.max(alpha, 0), 1);
+  return `rgba(15, 23, 42, ${clamped})`;
+};
+
+function hexToRgba(hex, alpha = 1) {
+  if (!hex || typeof hex !== 'string') {
+    return fallbackRgba(alpha);
+  }
+  let normalized = hex.trim().replace('#', '');
+  if (normalized.length === 3) {
+    normalized = normalized.split('').map((c) => c + c).join('');
+  }
+  if (normalized.length !== 6) {
+    return fallbackRgba(alpha);
+  }
+  const bigint = Number.parseInt(normalized, 16);
+  if (Number.isNaN(bigint)) {
+    return fallbackRgba(alpha);
+  }
+  const clamped = Math.min(Math.max(alpha, 0), 1);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return `rgba(${r}, ${g}, ${b}, ${clamped})`;
+}
+
 // eslint-disable-next-line react-refresh/only-export-components
 export function useTheme() {
   const context = useContext(ThemeContext);
@@ -80,6 +107,12 @@ function applyThemeToDocument(theme) {
   root.style.setProperty('--primary-button', colors.primaryButton);
   root.style.setProperty('--primary-button-hover', colors.primaryButtonHover);
   root.style.setProperty('--primary-button-text', colors.primaryButtonText);
+  root.style.setProperty('--plugin-panel-text', colors.primaryText);
+  root.style.setProperty('--plugin-panel-background-glass', hexToRgba(colors.panelBackground, 0.58));
+  root.style.setProperty('--plugin-panel-border', hexToRgba(colors.panelBorder || colors.menuBorder || '#94a3b8', 0.45));
+  root.style.setProperty('--plugin-panel-summary-glass', hexToRgba(colors.menuBackground || colors.panelBackground, 0.32));
+  root.style.setProperty('--plugin-panel-surface-glass', hexToRgba(colors.inputBackground || colors.panelBackground, 0.2));
+  root.style.setProperty('--plugin-panel-shadow-color', colors.panelShadow || 'rgba(15, 23, 42, 0.24)');
   
   // Update body background
   document.body.style.backgroundColor = colors.appBackground;

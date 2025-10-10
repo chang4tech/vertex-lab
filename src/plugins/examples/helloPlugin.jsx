@@ -29,7 +29,7 @@ Tips:
         allowCollapse: true,
         visible: () => true,
         render: (api) => (
-          <div style={{ width: 320, padding: 12, border: '1px solid var(--plugin-panel-border, rgba(148, 163, 184, 0.45))', background: 'var(--plugin-panel-background-glass, rgba(15, 23, 42, 0.7))', borderRadius: 14 }}>
+          <div style={{ width: '100%', padding: 12, borderRadius: 14, background: 'transparent', border: 'none', boxShadow: 'none' }}>
             <h3 style={{ margin: '8px 0' }}>Hello</h3>
             <div style={{ color: '#4b5563' }}>
               {`Selected: ${api.selectedNodeIds?.length ?? 0}`}
