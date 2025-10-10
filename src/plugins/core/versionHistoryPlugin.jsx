@@ -232,10 +232,14 @@ const VersionHistoryOverlay = ({ api }) => {
     const signature = buildGraphSignature(api.nodes, api.edges)
       ?? JSON.stringify({ nodes: api.nodes, edges: api.edges });
     const { nodes, edges } = cloneGraphState(api.nodes, api.edges);
+    const timestamp = Date.now();
+    const resolvedLabel = source === 'manual'
+      ? `${formatTimestamp(timestamp)} snapshot`
+      : (label || 'Snapshot');
     const entry = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      timestamp: Date.now(),
-      label,
+      id: `${timestamp}-${Math.random().toString(36).slice(2, 8)}`,
+      timestamp,
+      label: resolvedLabel,
       source,
       nodes,
       edges,
