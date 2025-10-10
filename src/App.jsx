@@ -236,6 +236,7 @@ const MenuBar = React.forwardRef(({
     try { sessionStorage.setItem('vertex_help_return', window.location.hash || '#/'); } catch {}
     window.location.hash = '#/about';
   };
+  const appVersion = import.meta.env.VITE_APP_VERSION ?? import.meta.env.PACKAGE_VERSION ?? '0.0.0';
 
   const openCommunity = () => {
     if (typeof onOpenCommunity === 'function') {
@@ -1170,7 +1171,10 @@ const MenuBar = React.forwardRef(({
                 setOpenMenu(null);
               }}
             >
-              <FormattedMessage id="help.about" defaultMessage="About" />
+              <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                <span><FormattedMessage id="help.about" defaultMessage="About" /></span>
+                <span style={{ opacity: 0.6, fontSize: 12, marginLeft: 8 }}>v{appVersion}</span>
+              </span>
             </div>
             <div className="menu-separator" />
             <div
