@@ -120,6 +120,7 @@ export default {
   'plugins.version': 'Version:',
   'plugins.author': 'Author:',
   'plugins.noErrors': 'No plugin errors captured.',
+  'plugins.errorsHeading': 'Plugin Errors',
   'plugin.nodeInfo.name': 'Node Info',
   'plugin.edgeInfo.name': 'Edge Info',
   'plugin.clipboard.name': 'Clipboard Tools',

@@ -235,7 +235,9 @@ const PluginsManager = ({
           </section>
 
           <section style={{ marginTop: 16 }}>
-            <h3 style={{ margin: '8px 0' }}>Plugin Errors</h3>
+            <h3 style={{ margin: '8px 0' }}>
+              <FormattedMessage id="plugins.errorsHeading" defaultMessage="Plugin Errors" />
+            </h3>
             {errors.length === 0 ? (
               <div style={subtleTextStyle}>
                 <FormattedMessage id="plugins.noErrors" defaultMessage="No plugin errors captured." />

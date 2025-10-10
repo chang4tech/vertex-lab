@@ -120,6 +120,7 @@ export default {
   'plugins.version': '版本：',
   'plugins.author': '作者：',
   'plugins.noErrors': '暂无插件错误记录。',
+  'plugins.errorsHeading': '插件错误记录',
   'plugin.nodeInfo.name': '节点信息',
   'plugin.edgeInfo.name': '连线信息',
   'plugin.clipboard.name': '剪贴板工具',
