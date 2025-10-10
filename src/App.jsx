@@ -65,6 +65,11 @@ const LanguageMenu = ({ locales, activeLocale, onSelect }) => {
       onMouseLeave={handleClose}
       onFocus={() => setIsOpen(true)}
       onBlur={handleBlur}
+      onMouseDown={(event) => {
+        // allow click to toggle the submenu on pointer devices
+        event.stopPropagation();
+        setIsOpen((prev) => !prev);
+      }}
     >
       <span><FormattedMessage id="settings.language" defaultMessage="Language" /></span>
       <span className="submenu-caret">›</span>
@@ -1169,7 +1174,7 @@ const MenuBar = React.forwardRef(({
               activeLocale={currentLocale}
               onSelect={(code) => {
                 changeLocale(code);
-                setOpenMenu(null);
+                // keeping settings menu open; submenu handles closing itself
               }}
             />
             <div
