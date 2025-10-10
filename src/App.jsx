@@ -3200,6 +3200,9 @@ function App({ graphId = 'default' }) {
     user,
     replaceGraph,
     isModalActive: hasBlockingModal,
+    resetView: () => {
+      canvasRef.current?.fitToView?.();
+    },
   }), [
     nodes,
     edges,
@@ -3240,6 +3243,7 @@ function App({ graphId = 'default' }) {
     user,
     replaceGraph,
     hasBlockingModal,
+    canvasRef,
   ]);
 
 

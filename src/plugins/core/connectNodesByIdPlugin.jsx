@@ -1,3 +1,5 @@
+import { t } from '../../i18n/translate';
+
 export const connectNodesByIdPlugin = {
   id: 'core.connectNodesById',
   name: 'Connect Nodes by ID',
@@ -26,7 +28,7 @@ export const connectNodesByIdPlugin = {
             return;
           }
 
-          const rawInput = window.prompt('Enter target node ID to connect/disconnect:');
+          const rawInput = window.prompt(t('plugin.connectNodesById.prompt', 'Enter target node ID to connect/disconnect:'));
           if (rawInput == null) return; // cancelled
           const value = rawInput.trim();
           if (value === '') return;
@@ -34,12 +36,12 @@ export const connectNodesByIdPlugin = {
           const nodes = Array.isArray(api?.nodes) ? api.nodes : [];
           const target = nodes.find(n => String(n?.id) === value) ?? nodes.find(n => n?.id === Number(value));
           if (!target) {
-            window.alert?.('Node not found. Check the ID and try again.');
+            window.alert?.(t('plugin.connectNodesById.notFound', 'Node not found. Check the ID and try again.'));
             return;
           }
 
           if (target.id === sourceId) {
-            window.alert?.('Cannot connect a node to itself.');
+            window.alert?.(t('plugin.connectNodesById.self', 'Cannot connect a node to itself.'));
             return;
           }
 

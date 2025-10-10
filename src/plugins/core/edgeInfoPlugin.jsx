@@ -60,6 +60,7 @@ Tips:
             onClose={api?.hideEdgeInfoPanel}
             topOffset={api?.menuBarBottom}
             rightOffset={api?.showNodeInfoPanel ? (api?.isMobile ? 280 : 320) : 0}
+            onResetView={api.resetView}
           />
         )
       }

@@ -128,6 +128,9 @@ export default {
   'plugin.helpOverlay.name': '帮助浮层',
   'plugin.randomNodeSelector.name': '随机节点选择器',
   'plugin.connectNodesById.name': '按 ID 连接节点',
+  'plugin.connectNodesById.prompt': '输入要连接或断开的节点 ID：',
+  'plugin.connectNodesById.notFound': '未找到节点，请检查 ID 后重试。',
+  'plugin.connectNodesById.self': '无法将节点连接到自身。',
   'plugin.exportWatermark.name': '导出水印',
   'plugin.showcase.name': '插件示例',
   'plugin.graphStats.title': '图统计',
@@ -140,6 +143,8 @@ export default {
   'plugin.graphStats.showEdges': '显示连线数量',
   'plugin.graphStats.showSelected': '显示选中数量',
   'plugin.levels.title': '层级',
+  'plugin.levels.prompt': '输入节点层级：',
+  'plugin.levels.invalid': '层级必须是有效的数字。',
   'plugin.levels.about.summary': '使用层级组织图表，无需父子关系。',
   'plugin.levels.about.assign': '通过节点上下文菜单为节点分配层级。',
   'plugin.levels.about.clear': '清除旧层级链接，使图保持纯层级结构。',
@@ -295,6 +300,7 @@ export default {
 
   // Edge Info Panel
   'edgeInfo.title': '连线信息',
+  'edgeInfo.resetView': '重置视图',
   'edgeInfo.summary': '摘要',
   'edgeInfo.totalEdges': '连线总数：{count}',
   'edgeInfo.connectedToSelection': '与选区相关：{count}',

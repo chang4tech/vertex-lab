@@ -18,7 +18,8 @@ const NodeInfoPanel = ({
   onEditNode,
   onDeleteNodes,
   onToggleCollapse,
-  topOffset = 80
+  topOffset = 80,
+  onResetView,
 }) => {
   const { currentTheme } = useTheme();
   const intl = useIntl();
@@ -77,7 +78,7 @@ const NodeInfoPanel = ({
   const formatDate = (dateString) => {
     if (!dateString) return intl.formatMessage({ id: 'common.unknown' });
     try {
-      return new Date(dateString).toLocaleString();
+      return intl.formatDate(new Date(dateString), { dateStyle: 'medium', timeStyle: 'short' });
     } catch {
       return intl.formatMessage({ id: 'common.invalid' });
     }
@@ -135,7 +136,7 @@ const NodeInfoPanel = ({
             <FormattedMessage 
               id="nodeInfo.multiSelection" 
               defaultMessage="{count} Nodes Selected"
-              values={{ count: selectedNodes.length }}
+              values={{ count: intl.formatNumber(selectedNodes.length) }}
             />
           ) : singleNode ? (
             <FormattedMessage id="nodeInfo.nodeDetails" defaultMessage="Node Details" />
@@ -143,19 +144,38 @@ const NodeInfoPanel = ({
             <FormattedMessage id="nodeInfo.noSelection" defaultMessage="No Selection" />
           )}
         </h3>
-        <button
-          onClick={onClose}
-          style={{
-            border: 'none',
-            background: 'none',
-            fontSize: '16px',
-            cursor: 'pointer',
-            color: currentTheme.colors.secondaryText,
-            padding: '4px'
-          }}
-        >
-          ✕
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {onResetView && (
+            <button
+              type="button"
+              onClick={onResetView}
+              style={{
+                border: `1px solid ${currentTheme.colors.inputBorder}`,
+                background: currentTheme.colors.panelBackground,
+                color: currentTheme.colors.primaryText,
+                borderRadius: 6,
+                padding: '4px 10px',
+                fontSize: 12,
+                cursor: 'pointer'
+              }}
+            >
+              <FormattedMessage id="nodeInfo.resetView" defaultMessage="Reset view" />
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            style={{
+              border: 'none',
+              background: 'none',
+              fontSize: '16px',
+              cursor: 'pointer',
+              color: currentTheme.colors.secondaryText,
+              padding: '4px'
+            }}
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       {/* Content */}
@@ -199,28 +219,28 @@ const NodeInfoPanel = ({
                   <FormattedMessage 
                     id="nodeInfo.totalNodes" 
                     defaultMessage="Total nodes: {count}"
-                    values={{ count: selectedNodes.length }}
+                    values={{ count: intl.formatNumber(selectedNodes.length) }}
                   />
                 </div>
                 <div>
                   <FormattedMessage 
                     id="nodeInfo.withTags" 
                     defaultMessage="With tags: {count}"
-                    values={{ count: stats.totalTags }}
+                    values={{ count: intl.formatNumber(stats.totalTags) }}
                   />
                 </div>
                 <div>
                   <FormattedMessage 
                     id="nodeInfo.collapsed" 
                     defaultMessage="Collapsed: {count}"
-                    values={{ count: stats.collapsedCount }}
+                    values={{ count: intl.formatNumber(stats.collapsedCount) }}
                   />
                 </div>
                 <div>
                   <FormattedMessage 
                     id="nodeInfo.withIcons" 
                     defaultMessage="With icons: {count}"
-                    values={{ count: stats.withIcons }}
+                    values={{ count: intl.formatNumber(stats.withIcons) }}
                   />
                 </div>
               </div>
@@ -244,7 +264,7 @@ const NodeInfoPanel = ({
                   fontSize: '13px'
                 }}>
                   <span>{getShapeName(shape)}</span>
-                  <span>{count}</span>
+                  <span>{intl.formatNumber(count)}</span>
                 </div>
               ))}
             </div>
@@ -282,7 +302,7 @@ const NodeInfoPanel = ({
                     }} />
                     <span>{getColorName(color)}</span>
                   </div>
-                  <span>{count}</span>
+                  <span>{intl.formatNumber(count)}</span>
                 </div>
               ))}
             </div>
@@ -340,7 +360,7 @@ const NodeInfoPanel = ({
                 <FormattedMessage 
                   id="nodeInfo.deleteSelected" 
                   defaultMessage="Delete Selected ({count})"
-                  values={{ count: selectedNodes.length }}
+                  values={{ count: intl.formatNumber(selectedNodes.length) }}
                 />
               </button>
             </div>

@@ -53,6 +53,7 @@ Tips:
             onDeleteNodes={api.onDeleteNodes}
             onToggleCollapse={api.onToggleCollapse}
             topOffset={api.menuBarBottom}
+            onResetView={api.resetView}
           />
         )
       }

@@ -101,6 +101,7 @@ const EdgeInfoPanel = ({
   onClose,
   topOffset = 80,
   rightOffset = 0,
+  onResetView,
 }) => {
   const { currentTheme } = useTheme();
   const intl = useIntl();
@@ -348,20 +349,39 @@ const EdgeInfoPanel = ({
         <h3 style={{ margin: 0, color: currentTheme.colors.primaryText, fontSize: '16px', fontWeight: 600 }}>
           <FormattedMessage id="edgeInfo.title" defaultMessage="Edge Info" />
         </h3>
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            border: 'none',
-            background: 'none',
-            fontSize: '16px',
-            cursor: 'pointer',
-            color: currentTheme.colors.secondaryText,
-            padding: '4px',
-          }}
-        >
-          ✕
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {onResetView && (
+            <button
+              type="button"
+              onClick={onResetView}
+              style={{
+                border: `1px solid ${currentTheme.colors.inputBorder}`,
+                background: currentTheme.colors.panelBackground,
+                color: currentTheme.colors.primaryText,
+                borderRadius: 6,
+                padding: '4px 10px',
+                fontSize: 12,
+                cursor: 'pointer',
+              }}
+            >
+              <FormattedMessage id="edgeInfo.resetView" defaultMessage="Reset view" />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              border: 'none',
+              background: 'none',
+              fontSize: '16px',
+              cursor: 'pointer',
+              color: currentTheme.colors.secondaryText,
+              padding: '4px',
+            }}
+          >
+            ✕
+          </button>
+        </div>
       </div>
       <div style={contentStyle}>
         {normalizedEdges.length === 0 ? (
@@ -387,7 +407,7 @@ const EdgeInfoPanel = ({
               </h4>
               <div style={{ fontSize: '13px', color: currentTheme.colors.secondaryText, display: 'grid', gap: 4 }}>
                 <div>
-                  <FormattedMessage id="edgeInfo.totalEdges" defaultMessage="Total edges: {count}" values={{ count: normalizedEdges.length }} />
+                  <FormattedMessage id="edgeInfo.totalEdges" defaultMessage="Total edges: {count}" values={{ count: intl.formatNumber(normalizedEdges.length) }} />
                 </div>
                 {selectedSet.size > 0 && (
                   <div>
