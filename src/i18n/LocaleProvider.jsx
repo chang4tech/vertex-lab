@@ -1,16 +1,22 @@
 import React, { createContext, useState, useContext, useCallback } from 'react';
 import { IntlProvider } from 'react-intl';
-import { LOCALES, getBrowserLocale } from './index';
+import { LOCALES, getInitialLocale } from './index';
 
 const LocaleContext = createContext();
 
 export function LocaleProvider({ children }) {
-  const [locale, setLocale] = useState(getBrowserLocale());
+  const [locale, setLocale] = useState(() => getInitialLocale());
 
   const changeLocale = useCallback((newLocale) => {
     if (LOCALES[newLocale]) {
       setLocale(newLocale);
-      localStorage.setItem('preferredLocale', newLocale);
+      try {
+        if (typeof window !== 'undefined') {
+          window.localStorage?.setItem('preferredLocale', newLocale);
+        }
+      } catch (error) {
+        console.warn('[i18n] failed to persist locale', error);
+      }
     }
   }, []);
 

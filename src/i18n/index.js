@@ -16,14 +16,41 @@ export const LOCALES = {
 // Create the cache for better performance
 const cache = createIntlCache();
 
+function getStoredLocale() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const stored = window.localStorage?.getItem('preferredLocale');
+    if (stored && LOCALES[stored]) {
+      return stored;
+    }
+  } catch (error) {
+    console.warn('[i18n] failed to read stored locale', error);
+  }
+  return null;
+}
+
 // Get browser locale or system locale
 export function getBrowserLocale() {
-  const browserLocale = navigator.language;
-  return LOCALES[browserLocale] ? browserLocale : 'en-US';
+  if (typeof navigator !== 'undefined') {
+    const browserLocale = navigator.language;
+    if (browserLocale && LOCALES[browserLocale]) {
+      return browserLocale;
+    }
+    const baseLocale = browserLocale?.split?.('-')?.[0];
+    if (baseLocale) {
+      const match = Object.keys(LOCALES).find((key) => key.startsWith(baseLocale));
+      if (match) return match;
+    }
+  }
+  return 'en-US';
+}
+
+export function getInitialLocale() {
+  return getStoredLocale() ?? getBrowserLocale();
 }
 
 // Create intl instance with messages
-export function createI18n(locale = getBrowserLocale()) {
+export function createI18n(locale = getInitialLocale()) {
   return createIntl(
     {
       locale,
