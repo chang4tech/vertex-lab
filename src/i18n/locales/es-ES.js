@@ -176,6 +176,7 @@ export default {
   'plugin.followUpReminders.statusSelected': 'Se seleccionaron {count, plural, one {# nodo pendiente} other {# nodos pendientes}}.',
   'plugin.followUpReminders.statusHighlighted': 'Se resaltaron {count, plural, one {# nodo pendiente} other {# nodos pendientes}}.',
   'plugin.followUpReminders.statusFocused': 'Se enfocó {name}.',
+  'plugin.followUpReminders.statusNoneDue': 'No hay recordatorios pendientes por ahora.',
   'plugin.followUpReminders.currentSummary': 'Recordatorio guardado',
   'plugin.followUpReminders.currentDue': 'Vence {date}',
   'plugin.followUpReminders.currentDueUnknown': 'Fecha de vencimiento sin definir.',

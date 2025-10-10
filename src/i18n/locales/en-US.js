@@ -176,6 +176,7 @@ export default {
   'plugin.followUpReminders.statusSelected': 'Selected {count, plural, one {# due node} other {# due nodes}}.',
   'plugin.followUpReminders.statusHighlighted': 'Highlighted {count, plural, one {# due node} other {# due nodes}}.',
   'plugin.followUpReminders.statusFocused': 'Focused {name}.',
+  'plugin.followUpReminders.statusNoneDue': 'No reminders are due right now.',
   'plugin.followUpReminders.currentSummary': 'Saved reminder',
   'plugin.followUpReminders.currentDue': 'Due {date}',
   'plugin.followUpReminders.currentDueUnknown': 'Due date not set.',

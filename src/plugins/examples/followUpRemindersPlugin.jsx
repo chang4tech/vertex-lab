@@ -309,25 +309,49 @@ function ReminderPanel({ appApi }) {
       });
   }, [reminders, nodes, now, intl, findNodeById]);
 
-  const dueSoonIds = sortedReminders
-    .filter((entry) => entry.status === REMINDER_STATUS.OVERDUE || entry.status === REMINDER_STATUS.UPCOMING)
-    .map((entry) => entry.nodeId);
+  const dueSoonEntries = React.useMemo(
+    () => sortedReminders.filter(
+      (entry) => entry.status === REMINDER_STATUS.OVERDUE || entry.status === REMINDER_STATUS.UPCOMING
+    ),
+    [sortedReminders]
+  );
+
+  const dueSoonNodeIds = React.useMemo(() => {
+    const seen = new Set();
+    const list = [];
+    dueSoonEntries.forEach((entry) => {
+      const id = entry.node?.id ?? entry.nodeId;
+      if (id == null) return;
+      const key = typeof id === 'object' ? JSON.stringify(id) : String(id);
+      if (seen.has(key)) return;
+      seen.add(key);
+      list.push(id);
+    });
+    return list;
+  }, [dueSoonEntries]);
 
   const handleBulkSelect = React.useCallback(() => {
-    if (!appApi?.selectNodes || dueSoonIds.length === 0) return;
-    appApi.selectNodes(dueSoonIds, { center: true });
+    if (!appApi?.selectNodes || dueSoonNodeIds.length === 0) {
+      showStatus(
+        'info',
+        'plugin.followUpReminders.statusNoneDue',
+        'No reminders are due right now.'
+      );
+      return;
+    }
+    appApi.selectNodes(dueSoonNodeIds, { center: true });
     logEvent(
       'plugin.followUpReminders.log.selectDue',
       'Selected {count, plural, one {# due node} other {# due nodes}}.',
-      { count: dueSoonIds.length }
+      { count: dueSoonNodeIds.length }
     );
     showStatus(
       'info',
       'plugin.followUpReminders.statusSelected',
       'Selected {count, plural, one {# due node} other {# due nodes}}.',
-      { count: dueSoonIds.length }
+      { count: dueSoonNodeIds.length }
     );
-  }, [appApi, dueSoonIds, logEvent, showStatus]);
+  }, [appApi, dueSoonNodeIds, logEvent, showStatus]);
 
   const handleSelectNode = React.useCallback((nodeId) => {
     if (!nodeId || !appApi?.selectNode) return;
@@ -347,20 +371,27 @@ function ReminderPanel({ appApi }) {
   }, [appApi, findNodeById, logEvent, showStatus]);
 
   const handleHighlightDue = React.useCallback(() => {
-    if (!appApi?.onHighlightNodes) return;
-    appApi.onHighlightNodes(dueSoonIds);
+    if (!appApi?.onHighlightNodes || dueSoonNodeIds.length === 0) {
+      showStatus(
+        'info',
+        'plugin.followUpReminders.statusNoneDue',
+        'No reminders are due right now.'
+      );
+      return;
+    }
+    appApi.onHighlightNodes(dueSoonNodeIds);
     logEvent(
       'plugin.followUpReminders.log.highlightDue',
       'Highlighted {count, plural, one {# due node} other {# due nodes}}.',
-      { count: dueSoonIds.length }
+      { count: dueSoonNodeIds.length }
     );
     showStatus(
       'info',
       'plugin.followUpReminders.statusHighlighted',
       'Highlighted {count, plural, one {# due node} other {# due nodes}}.',
-      { count: dueSoonIds.length }
+      { count: dueSoonNodeIds.length }
     );
-  }, [appApi, dueSoonIds, logEvent, showStatus]);
+  }, [appApi, dueSoonNodeIds, logEvent, showStatus]);
 
   const panelStyle = {
     width: 320,
@@ -405,10 +436,10 @@ function ReminderPanel({ appApi }) {
             onClick={handleHighlightDue}
             style={{
               ...buttonStyle,
-              cursor: dueSoonIds.length === 0 ? 'not-allowed' : 'pointer',
-              opacity: dueSoonIds.length === 0 ? 0.6 : 1,
+              cursor: dueSoonNodeIds.length === 0 ? 'not-allowed' : 'pointer',
+              opacity: dueSoonNodeIds.length === 0 ? 0.6 : 1,
             }}
-            disabled={dueSoonIds.length === 0}
+            disabled={dueSoonNodeIds.length === 0}
           >
             <FormattedMessage id="plugin.followUpReminders.highlightDue" defaultMessage="Highlight due" />
           </button>
@@ -417,10 +448,10 @@ function ReminderPanel({ appApi }) {
             onClick={handleBulkSelect}
             style={{
               ...buttonStyle,
-              cursor: dueSoonIds.length === 0 ? 'not-allowed' : 'pointer',
-              opacity: dueSoonIds.length === 0 ? 0.6 : 1,
+              cursor: dueSoonNodeIds.length === 0 ? 'not-allowed' : 'pointer',
+              opacity: dueSoonNodeIds.length === 0 ? 0.6 : 1,
             }}
-            disabled={dueSoonIds.length === 0}
+            disabled={dueSoonNodeIds.length === 0}
           >
             <FormattedMessage id="plugin.followUpReminders.selectDue" defaultMessage="Select due" />
           </button>

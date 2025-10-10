@@ -176,6 +176,7 @@ export default {
   'plugin.followUpReminders.statusSelected': '已选中 {count} 个即将到期的节点。',
   'plugin.followUpReminders.statusHighlighted': '已高亮 {count} 个即将到期的节点。',
   'plugin.followUpReminders.statusFocused': '已聚焦 {name}。',
+  'plugin.followUpReminders.statusNoneDue': '当前没有即将到期的提醒。',
   'plugin.followUpReminders.currentSummary': '已保存的提醒',
   'plugin.followUpReminders.currentDue': '截止 {date}',
   'plugin.followUpReminders.currentDueUnknown': '尚未设置截止时间。',
