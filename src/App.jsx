@@ -2315,8 +2315,8 @@ function App({ graphId = 'default' }) {
     const pluginEnabled = activePlugins.some(plugin => plugin.id === 'core.versionHistory');
     if (!pluginEnabled) {
       const message = intl.formatMessage({
-        id: 'file.versionHistoryUnavailable',
-        defaultMessage: 'Version history is not available yet.'
+        id: 'file.versionHistoryDisabled',
+        defaultMessage: 'Version history is not enabled yet.'
       });
       alert(message);
       return;
