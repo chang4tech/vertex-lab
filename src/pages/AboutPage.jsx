@@ -2,6 +2,14 @@ import React from 'react';
 import { FormattedMessage } from 'react-intl';
 import packageJson from '../../package.json';
 
+const resolveVersion = () => {
+  const env = typeof import.meta !== 'undefined' ? import.meta.env ?? {} : {};
+  return env?.VITE_APP_VERSION
+    ?? env?.PACKAGE_VERSION
+    ?? packageJson.version
+    ?? '0.0.0';
+};
+
 const sections = [
   {
     id: 'about.app.overview',
@@ -18,7 +26,7 @@ const sections = [
 ];
 
 export default function AboutPage() {
-  const version = packageJson.version ?? '0.0.0';
+  const version = resolveVersion();
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--app-background, #111)', color: 'var(--primary-text, #f8fafc)', padding: '64px 16px', display: 'flex', justifyContent: 'center' }}>
@@ -99,4 +107,3 @@ const linkStyle = {
   textDecoration: 'none',
   fontWeight: 600,
 };
-
