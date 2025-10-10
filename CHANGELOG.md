@@ -17,6 +17,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Canvas: Keep view centered when canvas size changes (e.g., opening Node Info panel).
 - Menus: Contain wheel/touch scrolling inside open dropdowns so the canvas and page no longer scroll/zoom while menus are hovered.
 - Plugin panels: Apply consistent glass styling, width, and overflow handling so collapsible details expand reliably while the canvas remains visible; updated PluginHost test to assert rendered content.
+- Plugin panels: Tuned glass opacity to keep the canvas clearer beneath translucent shells without sacrificing readability.
 
 ### Added
 - i18n: Added Spanish locale option with core UI translations.
