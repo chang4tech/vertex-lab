@@ -8,19 +8,64 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import Markdown from './common/Markdown.jsx';
 import { useTheme } from '../contexts/ThemeContext';
 
+function resolveWindowPlugins() {
+  if (typeof window === 'undefined') return null;
+  const loaded = window.__vertexAllPlugins;
+  return Array.isArray(loaded) ? loaded : null;
+}
+
 function usePlugins() {
-  const [plugins, setPlugins] = React.useState(() => mergePlugins(corePlugins, bundledCustomPlugins));
+  const initialPlugins = React.useMemo(() => {
+    const fromWindow = resolveWindowPlugins();
+    return fromWindow || mergePlugins(corePlugins, bundledCustomPlugins);
+  }, []);
+  const [plugins, setPlugins] = React.useState(initialPlugins);
+  const [isLoading, setIsLoading] = React.useState(!resolveWindowPlugins());
+
   React.useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const handleUpdate = (event) => {
+      const next = event?.detail?.plugins;
+      if (Array.isArray(next)) {
+        setPlugins(next);
+        setIsLoading(false);
+        return;
+      }
+      const fallback = resolveWindowPlugins();
+      if (fallback) {
+        setPlugins(fallback);
+        setIsLoading(false);
+      }
+    };
+    window.addEventListener('vertex:plugins-updated', handleUpdate);
+    return () => {
+      window.removeEventListener('vertex:plugins-updated', handleUpdate);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    let cancelled = false;
     (async () => {
       const custom = await loadCustomPluginsFromStorage();
-      setPlugins(mergePlugins(corePlugins, bundledCustomPlugins, custom));
+      if (cancelled) return;
+      const fromWindow = resolveWindowPlugins();
+      const arrays = fromWindow
+        ? [fromWindow, corePlugins, bundledCustomPlugins, custom]
+        : [corePlugins, bundledCustomPlugins, custom];
+      const merged = mergePlugins(...arrays);
+      setPlugins(prev => mergePlugins(prev, merged));
+      setIsLoading(false);
     })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
-  return plugins;
+
+  return [plugins, isLoading];
 }
 
 export default function PluginPage({ pluginId }) {
-  const plugins = usePlugins();
+  const [plugins, pluginsLoading] = usePlugins();
   const plugin = plugins.find(p => p.id === pluginId);
   const [logs, setLogs] = React.useState(() => getPluginLogsById(pluginId));
   const { currentTheme } = useTheme();
@@ -51,6 +96,14 @@ export default function PluginPage({ pluginId }) {
   }, [pluginId]);
 
   if (!plugin) {
+    if (pluginsLoading) {
+      return (
+        <div style={{ padding: 24 }}>
+          <h2><FormattedMessage id="plugin.hub.title" defaultMessage="Control Hub" /></h2>
+          <p><FormattedMessage id="plugin.hub.loading" defaultMessage="Loading plugin…" /></p>
+        </div>
+      );
+    }
     return (
       <div style={{ padding: 24 }}>
         <h2>Plugin Not Found</h2>

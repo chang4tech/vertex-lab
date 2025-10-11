@@ -1670,6 +1670,14 @@ function App({ graphId = 'default' }) {
   // (moved below activePlugins) Show a one-time tip when a plugin gets enabled
 
   useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    window.__vertexAllPlugins = allPlugins;
+    window.__vertexCustomPlugins = customPlugins;
+    window.dispatchEvent(new CustomEvent('vertex:plugins-updated', { detail: { plugins: allPlugins } }));
+    return undefined;
+  }, [allPlugins, customPlugins]);
+
+  useEffect(() => {
     let cancelled = false;
 
     const loadSamples = async () => {

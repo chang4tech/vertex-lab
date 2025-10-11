@@ -110,6 +110,7 @@ export default {
   'plugin.hub.about': 'Cómo usar',
   'plugin.hub.settings': 'Configuración',
   'plugin.hub.console': 'Consola',
+  'plugin.hub.loading': 'Cargando plugin…',
   'plugin.hub.copy': 'Copiar',
   'plugin.hub.clear': 'Borrar',
   'plugin.hub.tip': '{name} habilitado: explora su Centro de control',

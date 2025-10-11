@@ -9,7 +9,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Fixed
 - Plugin mobile drawer lacked styling; added full CSS to keep panels hidden until opened and tuned safe-area positioning.
 - Plugins Manager modal now declares dialog semantics, autofocuses controls, and listens for Escape to improve accessibility.
-- Plugin Control Hub now merges bundled custom plugins so in-repo examples no longer emit “Plugin Not Found”.
+- Plugin Control Hub now tracks bundled and user-imported custom plugins (including fresh imports) so it no longer emits “Plugin Not Found”.
 - Help overlay: Ensure the help trigger stays clickable by raising overlay z-index above the panel.
 - Library menu: Allow Library Graphs list to scroll inside the dropdown so long catalogs stay accessible.
 - Canvas: Recompute viewport using live menu height and plugin panel width so the canvas no longer overlaps navigation or plugin panels.

@@ -110,6 +110,7 @@ export default {
   'plugin.hub.about': '使用说明',
   'plugin.hub.settings': '设置',
   'plugin.hub.console': '控制台',
+  'plugin.hub.loading': '正在加载插件…',
   'plugin.hub.copy': '复制',
   'plugin.hub.clear': '清空',
   'plugin.hub.tip': '{name} 已启用：前往控制中心了解更多',
