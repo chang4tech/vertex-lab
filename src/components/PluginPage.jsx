@@ -1,5 +1,5 @@
 import React from 'react';
-import { corePlugins } from '../plugins';
+import { corePlugins, bundledCustomPlugins } from '../plugins';
 import { mergePlugins } from '../plugins/registry.js';
 import { getPluginLogsById, subscribePluginErrors, clearPluginLogsById } from '../plugins/errorLog.js';
 import { loadCustomPluginsFromStorage } from '../utils/customPluginLoader';
@@ -9,11 +9,11 @@ import Markdown from './common/Markdown.jsx';
 import { useTheme } from '../contexts/ThemeContext';
 
 function usePlugins() {
-  const [plugins, setPlugins] = React.useState(corePlugins);
+  const [plugins, setPlugins] = React.useState(() => mergePlugins(corePlugins, bundledCustomPlugins));
   React.useEffect(() => {
     (async () => {
       const custom = await loadCustomPluginsFromStorage();
-      setPlugins(mergePlugins(corePlugins, custom));
+      setPlugins(mergePlugins(corePlugins, bundledCustomPlugins, custom));
     })();
   }, []);
   return plugins;

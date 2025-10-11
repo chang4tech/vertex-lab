@@ -13,7 +13,7 @@ import HelpModal from './components/HelpModal';
 import { MobileCanvasControls } from './components/mobile/MobileCanvasControls.jsx';
 // Plugin system
 import { PluginHost } from './plugins/PluginHost';
-import { corePlugins } from './plugins';
+import { corePlugins, bundledCustomPlugins } from './plugins';
 import { mergePlugins } from './plugins/registry.js';
 import { loadPluginPrefs, savePluginPrefs } from './utils/pluginUtils';
 import { loadCustomPluginsFromStorage, addCustomPluginCode, removeStoredCustomPluginCodeById } from './utils/customPluginLoader';
@@ -1552,10 +1552,23 @@ function App({ graphId = 'default' }) {
   }, [setNodes, setEdges, setUndoStack, setRedoStack, setSelectedNodeId, setSelectedNodeIds]);
 
   // Plugins (custom + merged)
-  const [customPlugins, setCustomPlugins] = useState([]);
-  const [allPlugins, setAllPlugins] = useState(corePlugins);
+  const bundledCustomPluginIds = useMemo(
+    () => new Set(bundledCustomPlugins.map((plugin) => plugin.id)),
+    []
+  );
+  const [customPlugins, setCustomPlugins] = useState(() => [...bundledCustomPlugins]);
+  const [allPlugins, setAllPlugins] = useState(() => mergePlugins(corePlugins, bundledCustomPlugins));
   // Plugin preferences
-  const [pluginPrefs, setPluginPrefs] = useState(() => loadPluginPrefs(corePlugins));
+  const [pluginPrefs, setPluginPrefs] = useState(() => {
+    const base = loadPluginPrefs(corePlugins);
+    const next = { ...base };
+    bundledCustomPlugins.forEach((plugin) => {
+      if (!(plugin.id in next)) {
+        next[plugin.id] = false;
+      }
+    });
+    return next;
+  });
   const prevPluginPrefsRef = useRef(pluginPrefs);
   const [pluginTips, setPluginTips] = useState([]);
   const exportDecoratorsRef = useRef(new Map());
@@ -1591,11 +1604,23 @@ function App({ graphId = 'default' }) {
   const [isSampleLibraryLoading, setIsSampleLibraryLoading] = useState(true);
   useEffect(() => {
     (async () => {
-      const loaded = await loadCustomPluginsFromStorage();
-      setCustomPlugins(loaded);
-      setAllPlugins(mergePlugins(corePlugins, loaded));
+      const stored = await loadCustomPluginsFromStorage();
+      const storedPlugins = Array.isArray(stored) ? stored : [];
+      setCustomPlugins(mergePlugins(bundledCustomPlugins, storedPlugins));
+      setAllPlugins(mergePlugins(corePlugins, bundledCustomPlugins, storedPlugins));
       setPluginPrefs(prev => {
-        const next = { ...loadPluginPrefs(mergePlugins(corePlugins, loaded)), ...prev };
+        const defaults = loadPluginPrefs(mergePlugins(corePlugins, bundledCustomPlugins, storedPlugins));
+        const next = { ...defaults, ...prev };
+        bundledCustomPlugins.forEach((plugin) => {
+          if (!(plugin.id in prev)) {
+            next[plugin.id] = false;
+          }
+        });
+        storedPlugins.forEach((plugin) => {
+          if (!(plugin.id in next)) {
+            next[plugin.id] = true;
+          }
+        });
         savePluginPrefs(next);
         return next;
       });
@@ -1627,6 +1652,10 @@ function App({ graphId = 'default' }) {
   }, [setPluginEnabled]);
 
   const removeCustomPlugin = useCallback((pluginId) => {
+    if (bundledCustomPluginIds.has(pluginId)) {
+      alert('Bundled custom plugins cannot be removed.');
+      return;
+    }
     removeStoredCustomPluginCodeById(pluginId);
     setCustomPlugins(prev => prev.filter(p => p.id !== pluginId));
     setAllPlugins(prev => prev.filter(p => p.id !== pluginId));
@@ -1636,7 +1665,7 @@ function App({ graphId = 'default' }) {
       savePluginPrefs(next);
       return next;
     });
-  }, []);
+  }, [bundledCustomPluginIds]);
 
   // (moved below activePlugins) Show a one-time tip when a plugin gets enabled
 
@@ -3268,6 +3297,7 @@ function App({ graphId = 'default' }) {
           customPlugins={customPlugins}
           onImportCustomPlugin={importCustomPlugin}
           onRemoveCustomPlugin={removeCustomPlugin}
+          nonRemovablePluginIds={bundledCustomPluginIds}
         />
       )}
       <HelpModal

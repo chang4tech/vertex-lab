@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { corePlugins } from '../plugins';
@@ -14,13 +14,19 @@ const PluginsManager = ({
   customPlugins = [],
   onImportCustomPlugin = async () => {},
   onRemoveCustomPlugin = () => {},
+  nonRemovablePluginIds = null,
 }) => {
   const fileInputRef = useRef(null);
+  const modalRef = useRef(null);
+  const closeButtonRef = useRef(null);
+  const previouslyFocusedElementRef = useRef(null);
+  const onCloseRef = useRef(onClose);
   const [expanded, setExpanded] = useState({});
   const [errors, setErrors] = useState(() => getPluginErrors());
   const { currentTheme } = useTheme();
   const intl = useIntl();
   const colors = currentTheme.colors;
+  const titleId = useId();
 
   const badgeStyle = { fontSize: 12, color: colors.secondaryText };
   const warningBadgeStyle = { fontSize: 12, color: colors.warning };
@@ -49,6 +55,12 @@ const PluginsManager = ({
     padding: 8,
     borderRadius: 8
   };
+  const nonRemovableSet = React.useMemo(() => {
+    if (!nonRemovablePluginIds) return new Set();
+    if (typeof nonRemovablePluginIds.has === 'function') return nonRemovablePluginIds;
+    if (Array.isArray(nonRemovablePluginIds)) return new Set(nonRemovablePluginIds);
+    return new Set();
+  }, [nonRemovablePluginIds]);
 
   const getPluginName = (plugin) => {
     if (plugin?.nameMessageId) {
@@ -69,9 +81,55 @@ const PluginsManager = ({
     return !(hasSidePanels || hasCommands || hasOverlays || hasAbout || hasConfig);
   };
   useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
     const unsub = subscribePluginErrors(() => setErrors(getPluginErrors()));
     return unsub;
   }, []);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+
+    previouslyFocusedElementRef.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+
+    const modalEl = modalRef.current;
+    const focusTarget =
+      closeButtonRef.current ||
+      modalEl?.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+
+    if (focusTarget instanceof HTMLElement) {
+      focusTarget.focus({ preventScroll: true });
+    } else if (modalEl instanceof HTMLElement) {
+      modalEl.focus({ preventScroll: true });
+    }
+
+    return () => {
+      const previous = previouslyFocusedElementRef.current;
+      if (previous instanceof HTMLElement && typeof previous.focus === 'function') {
+        previous.focus({ preventScroll: true });
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        onCloseRef.current?.();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) onClose();
   };
@@ -86,10 +144,24 @@ const PluginsManager = ({
 
   return (
     <div className="settings-overlay" onClick={handleOverlayClick}>
-      <div className="settings-modal">
+      <div
+        className="settings-modal"
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex="-1"
+      >
         <header className="settings-header">
-          <h2><FormattedMessage id="settings.plugins" defaultMessage="Plugins" /></h2>
-          <button className="close-button" onClick={onClose}>&times;</button>
+          <h2 id={titleId}><FormattedMessage id="settings.plugins" defaultMessage="Plugins" /></h2>
+          <button
+            className="close-button"
+            onClick={onClose}
+            aria-label={intl.formatMessage({ id: 'plugins.close', defaultMessage: 'Close plugins manager' })}
+            ref={closeButtonRef}
+          >
+            &times;
+          </button>
         </header>
 
         <div className="settings-content">
@@ -227,7 +299,13 @@ const PluginsManager = ({
                       />
                     <span><FormattedMessage id={(pluginPrefs[p.id] ?? true) ? 'plugins.enabled' : 'plugins.disabled'} defaultMessage={(pluginPrefs[p.id] ?? true) ? 'Enabled' : 'Disabled'} /></span>
                     </label>
-                    <button style={subtleButtonStyle} onClick={() => onRemoveCustomPlugin(p.id)}><FormattedMessage id="plugins.remove" defaultMessage="Remove" /></button>
+                    {nonRemovableSet.has(p.id) ? (
+                      <span style={badgeStyle}>
+                        <FormattedMessage id="plugins.bundled" defaultMessage="Bundled" />
+                      </span>
+                    ) : (
+                      <button style={subtleButtonStyle} onClick={() => onRemoveCustomPlugin(p.id)}><FormattedMessage id="plugins.remove" defaultMessage="Remove" /></button>
+                    )}
                   </React.Fragment>
                 ))}
               </div>
@@ -274,6 +352,10 @@ PluginsManager.propTypes = {
   customPlugins: PropTypes.array,
   onImportCustomPlugin: PropTypes.func,
   onRemoveCustomPlugin: PropTypes.func,
+  nonRemovablePluginIds: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.string),
+    PropTypes.instanceOf(Set),
+  ]),
 };
 
 export default PluginsManager;

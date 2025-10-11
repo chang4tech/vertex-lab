@@ -12,6 +12,8 @@ import { exportWatermarkPlugin } from './core/exportWatermarkPlugin.jsx';
 import { versionHistoryPlugin } from './core/versionHistoryPlugin.jsx';
 import { showcasePlugin } from './examples/showcasePlugin.jsx';
 import { followUpRemindersPlugin } from './examples/followUpRemindersPlugin.jsx';
+import { gamificationPlugin } from './examples/gamificationPlugin.jsx';
+import { paperReferenceProspectorPlugin } from './examples/paperReferenceProspectorPlugin.jsx';
 
 export const corePlugins = [
   nodeInfoPlugin,
@@ -28,4 +30,9 @@ export const corePlugins = [
   levelsPlugin,
   followUpRemindersPlugin,
   showcasePlugin,
+];
+
+export const bundledCustomPlugins = [
+  gamificationPlugin,
+  paperReferenceProspectorPlugin,
 ];

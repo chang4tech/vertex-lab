@@ -7,6 +7,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ## Unreleased
 
 ### Fixed
+- Plugin mobile drawer lacked styling; added full CSS to keep panels hidden until opened and tuned safe-area positioning.
+- Plugins Manager modal now declares dialog semantics, autofocuses controls, and listens for Escape to improve accessibility.
+- Plugin Control Hub now merges bundled custom plugins so in-repo examples no longer emit “Plugin Not Found”.
 - Help overlay: Ensure the help trigger stays clickable by raising overlay z-index above the panel.
 - Library menu: Allow Library Graphs list to scroll inside the dropdown so long catalogs stay accessible.
 - Canvas: Recompute viewport using live menu height and plugin panel width so the canvas no longer overlaps navigation or plugin panels.
@@ -20,6 +23,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Plugin panels: Tuned opacity using pseudo-element overlays so the canvas shows through without fading text; summary/content backgrounds now inherit theme colors with adjustable alpha variables.
 
 ### Added
+- Custom Plugins: Bundled “Gamification Boost” (XP tracking, quick actions, streak overlay) and “Paper Reference Prospector” (configurable depth scouting) ship disabled-by-default in the Custom tab.
+- Plugins Manager: Bundled custom plugins show a “Bundled” badge and we prevent removing first-party bundles.
+- Docs: Recorded bundled-plugin registration requirements in `doc/PLUGINS_DESIGN.md` to avoid future Control Hub lookup regressions.
 - i18n: Added Spanish locale option with core UI translations.
 - Export pipeline: Expose plugin hook to decorate PNG exports (graph/user metadata provided to decorators).
 - Plugins: Export Watermark plugin adds optional text or QR code watermark to PNG exports.
