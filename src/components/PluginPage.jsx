@@ -53,7 +53,23 @@ function usePlugins() {
         ? [fromWindow, corePlugins, bundledCustomPlugins, custom]
         : [corePlugins, bundledCustomPlugins, custom];
       const merged = mergePlugins(...arrays);
-      setPlugins(prev => mergePlugins(prev, merged));
+      console.debug('[plugin-page] merged plugin sources', {
+        fromWindow: !!fromWindow,
+        core: corePlugins.length,
+        bundled: bundledCustomPlugins.length,
+        custom: Array.isArray(custom) ? custom.length : 0,
+        merged: merged.length,
+      });
+      setPlugins(prev => {
+        const existingIds = new Set(prev.map(p => p?.id).filter(Boolean));
+        const additions = merged.filter(p => p && !existingIds.has(p.id));
+        if (additions.length === 0) {
+          console.debug('[plugin-page] no new plugins to append');
+        } else {
+          console.debug('[plugin-page] appending plugins', additions.map(p => p.id));
+        }
+        return additions.length === 0 ? prev : [...prev, ...additions];
+      });
       setIsLoading(false);
     })();
     return () => {
@@ -67,6 +83,15 @@ function usePlugins() {
 export default function PluginPage({ pluginId }) {
   const [plugins, pluginsLoading] = usePlugins();
   const plugin = plugins.find(p => p.id === pluginId);
+  console.info('[plugin-page] render', {
+    pluginId,
+    found: !!plugin,
+    pluginsCount: plugins.length,
+    pluginsLoading,
+  });
+  React.useEffect(() => {
+    console.debug('[plugin-page] committed render', { pluginId });
+  });
   const [logs, setLogs] = React.useState(() => getPluginLogsById(pluginId));
   const { currentTheme } = useTheme();
   const intl = useIntl();
@@ -120,25 +145,37 @@ export default function PluginPage({ pluginId }) {
     if (!hasConfig) {
       return <div style={subtleTextStyle}>This plugin does not provide a config page.</div>;
     }
-    const defaults = loadPluginPrefs([plugin]);
-    const api = {
-      pluginPrefs: defaults,
-      setPluginEnabled: (id, enabled) => {
-        const next = { ...defaults, [id]: enabled };
-        savePluginPrefs(next);
-      },
-    };
-    return configSlot.render(api);
+    console.debug('[plugin-page] rendering config slot', { pluginId, slotType: typeof configSlot.render });
+    try {
+      const defaults = loadPluginPrefs([plugin]);
+      const api = {
+        pluginPrefs: defaults,
+        setPluginEnabled: (id, enabled) => {
+          const next = { ...defaults, [id]: enabled };
+          savePluginPrefs(next);
+        },
+      };
+      const result = configSlot.render(api);
+      return result || <div style={subtleTextStyle}>No config UI provided.</div>;
+    } catch (err) {
+      console.error('[plugin-page] config render failed', err);
+      return <div style={{ ...subtleTextStyle, color: colors.error }}>Failed to render config UI. Check console for details.</div>;
+    }
   };
 
   const ConsoleView = () => (
     <div>
       <div style={{ marginBottom: 8, display: 'flex', gap: 8 }}>
         <button style={buttonStyle} onClick={() => {
+          console.debug('[plugin-page] copy logs', { pluginId, count: logs.length });
           const text = logs.map(e => `[${new Date(e.time).toISOString()}] (${e.level}) ${e.message}`).join('\n');
           navigator.clipboard?.writeText(text).catch(() => {});
         }}><FormattedMessage id="plugin.hub.copy" defaultMessage="Copy" /></button>
-        <button style={buttonStyle} onClick={() => { clearPluginLogsById(pluginId); setLogs([]); }}><FormattedMessage id="plugin.hub.clear" defaultMessage="Clear" /></button>
+        <button style={buttonStyle} onClick={() => {
+          console.debug('[plugin-page] clear logs', { pluginId });
+          clearPluginLogsById(pluginId);
+          setLogs([]);
+        }}><FormattedMessage id="plugin.hub.clear" defaultMessage="Clear" /></button>
       </div>
       {logs.length === 0 ? (
         <div style={subtleTextStyle}>No logs yet.</div>

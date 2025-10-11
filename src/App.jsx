@@ -1645,7 +1645,12 @@ function App({ graphId = 'default' }) {
         const exists = prev.some(p => p.id === plugin.id);
         return exists ? prev : [...prev, plugin];
       });
-      setAllPlugins(prev => mergePlugins(prev, [plugin]));
+      setAllPlugins(prev => {
+        if (prev.some(existing => existing?.id === plugin.id)) {
+          return prev;
+        }
+        return [...prev, plugin];
+      });
       setPluginEnabled(plugin.id, true);
     } catch (e) {
       console.error('Failed to import plugin:', e);
@@ -1671,7 +1676,9 @@ function App({ graphId = 'default' }) {
 
   const handleOpenPluginHub = useCallback((pluginId) => {
     const current = typeof window !== 'undefined' ? (window.location.hash || '#/') : '#/';
-    pendingPluginReturnRef.current = current && current.length > 0 ? current : '#/';
+    const nextReturn = current && current.length > 0 ? current : '#/';
+    console.info('[plugins] Control Hub requested', { pluginId, from: nextReturn });
+    pendingPluginReturnRef.current = nextReturn;
     setPendingPluginHubId(pluginId);
     setShowPluginsManager(false);
   }, []);
@@ -1687,13 +1694,27 @@ function App({ graphId = 'default' }) {
   }, [allPlugins, customPlugins]);
 
   useEffect(() => {
+    console.debug('[plugins] showPluginsManager changed', { showPluginsManager, pendingPluginHubId });
     if (!pendingPluginHubId) return;
-    if (showPluginsManager) return;
+    if (showPluginsManager) {
+      console.debug('[plugins] Waiting for Plugins Manager to close before navigating', { pluginId: pendingPluginHubId });
+      return;
+    }
+    const pluginId = pendingPluginHubId;
     const returnHash = pendingPluginReturnRef.current || '#/';
+    console.info('[plugins] Navigating to Control Hub', { pluginId, returnHash });
     try {
       sessionStorage.setItem('vertex_plugin_return', returnHash);
-    } catch {}
-    window.location.hash = `#/plugin/${encodeURIComponent(pendingPluginHubId)}`;
+    } catch (err) {
+      console.warn('[plugins] Failed to persist return hash', err);
+    }
+    const nextHash = `#/plugin/${encodeURIComponent(pluginId)}`;
+    if (window.location.hash === nextHash) {
+      console.debug('[plugins] Hash already set; forcing router update', { pluginId });
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    } else {
+      window.location.hash = nextHash;
+    }
     setPendingPluginHubId(null);
     pendingPluginReturnRef.current = null;
   }, [pendingPluginHubId, showPluginsManager]);

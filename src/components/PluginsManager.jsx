@@ -63,6 +63,13 @@ const PluginsManager = ({
     return new Set();
   }, [nonRemovablePluginIds]);
 
+  useEffect(() => {
+    console.debug('[plugins-manager] mounted');
+    return () => {
+      console.debug('[plugins-manager] unmounted');
+    };
+  }, []);
+
   const getPluginName = (plugin) => {
     if (plugin?.nameMessageId) {
       return intl.formatMessage(
@@ -144,6 +151,7 @@ const PluginsManager = ({
   };
 
   const openControlHub = React.useCallback((pluginId) => {
+    console.debug('[plugins-manager] Control Hub requested', { pluginId });
     onOpenControlHub(pluginId);
   }, [onOpenControlHub]);
 

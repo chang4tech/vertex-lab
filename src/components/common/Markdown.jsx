@@ -27,8 +27,16 @@ function parseLines(text = '') {
     }
     // paragraph
     const paras = [];
-    while (i < lines.length && lines[i].trim() && !/^[-*#]/.test(lines[i])) {
-      paras.push(lines[i]); i++;
+    while (i < lines.length) {
+      const current = lines[i];
+      if (!current.trim()) break;
+      if (/^[-*#]/.test(current)) break;
+      paras.push(current);
+      i++;
+    }
+    if (paras.length === 0 && i < lines.length) {
+      paras.push(lines[i]);
+      i++;
     }
     blocks.push({ type: 'p', text: paras.join(' ') });
   }
@@ -53,4 +61,3 @@ export default function Markdown({ text = '' }) {
     </div>
   );
 }
-

@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import PluginsManager from '../../components/PluginsManager.jsx';
 import { ThemeProvider } from '../../contexts/ThemeContext.jsx';
@@ -12,6 +12,19 @@ const renderWithProviders = (ui) => render(
 );
 
 describe('PluginsManager custom plugins section', () => {
+  let infoSpy;
+  let debugSpy;
+
+  beforeEach(() => {
+    infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+    debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    infoSpy?.mockRestore();
+    debugSpy?.mockRestore();
+  });
+
   it('renders custom plugins with toggle and remove button', () => {
     const custom = [{ id: 'x.custom', name: 'X', slots: { sidePanels: [] } }];
     const onToggle = vi.fn();

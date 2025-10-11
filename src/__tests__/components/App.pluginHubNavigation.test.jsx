@@ -88,6 +88,8 @@ describe('App Control Hub navigation', () => {
   let fetchMock;
   let warnSpy;
   let logSpy;
+  let infoSpy;
+  let debugSpy;
 
   beforeEach(() => {
     window.location.hash = '#/g/test-graph';
@@ -107,11 +109,15 @@ describe('App Control Hub navigation', () => {
     global.fetch = fetchMock;
     warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+    debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
   });
 
   afterEach(() => {
     warnSpy?.mockRestore();
     logSpy?.mockRestore();
+    infoSpy?.mockRestore();
+    debugSpy?.mockRestore();
     if (global.fetch === fetchMock) {
       delete global.fetch;
     }
