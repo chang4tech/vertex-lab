@@ -15,6 +15,7 @@ const PluginsManager = ({
   onImportCustomPlugin = async () => {},
   onRemoveCustomPlugin = () => {},
   nonRemovablePluginIds = null,
+  onOpenControlHub = () => {},
 }) => {
   const fileInputRef = useRef(null);
   const modalRef = useRef(null);
@@ -143,12 +144,8 @@ const PluginsManager = ({
   };
 
   const openControlHub = React.useCallback((pluginId) => {
-    try {
-      sessionStorage.setItem('vertex_plugin_return', window.location.hash || '#/');
-    } catch {}
-    onCloseRef.current?.();
-    window.location.hash = `#/plugin/${encodeURIComponent(pluginId)}`;
-  }, []);
+    onOpenControlHub(pluginId);
+  }, [onOpenControlHub]);
 
   return (
     <div className="settings-overlay" onClick={handleOverlayClick}>
@@ -368,6 +365,7 @@ PluginsManager.propTypes = {
     PropTypes.arrayOf(PropTypes.string),
     PropTypes.instanceOf(Set),
   ]),
+  onOpenControlHub: PropTypes.func,
 };
 
 export default PluginsManager;

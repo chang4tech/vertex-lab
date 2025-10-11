@@ -1524,6 +1524,8 @@ function App({ graphId = 'default' }) {
   const [settingsTab, setSettingsTab] = useState('all');
   const [showTagManager, setShowTagManager] = useState(false);
   const [showPluginsManager, setShowPluginsManager] = useState(false);
+  const [pendingPluginHubId, setPendingPluginHubId] = useState(null);
+  const pendingPluginReturnRef = useRef('#/');
   const [helpModal, setHelpModal] = useState({ open: false, titleId: null, messageId: null });
 
   useEffect(() => {
@@ -1667,6 +1669,13 @@ function App({ graphId = 'default' }) {
     });
   }, [bundledCustomPluginIds]);
 
+  const handleOpenPluginHub = useCallback((pluginId) => {
+    const current = typeof window !== 'undefined' ? (window.location.hash || '#/') : '#/';
+    pendingPluginReturnRef.current = current && current.length > 0 ? current : '#/';
+    setPendingPluginHubId(pluginId);
+    setShowPluginsManager(false);
+  }, []);
+
   // (moved below activePlugins) Show a one-time tip when a plugin gets enabled
 
   useEffect(() => {
@@ -1676,6 +1685,18 @@ function App({ graphId = 'default' }) {
     window.dispatchEvent(new CustomEvent('vertex:plugins-updated', { detail: { plugins: allPlugins } }));
     return undefined;
   }, [allPlugins, customPlugins]);
+
+  useEffect(() => {
+    if (!pendingPluginHubId) return;
+    if (showPluginsManager) return;
+    const returnHash = pendingPluginReturnRef.current || '#/';
+    try {
+      sessionStorage.setItem('vertex_plugin_return', returnHash);
+    } catch {}
+    window.location.hash = `#/plugin/${encodeURIComponent(pendingPluginHubId)}`;
+    setPendingPluginHubId(null);
+    pendingPluginReturnRef.current = null;
+  }, [pendingPluginHubId, showPluginsManager]);
 
   useEffect(() => {
     let cancelled = false;
@@ -3306,6 +3327,7 @@ function App({ graphId = 'default' }) {
           onImportCustomPlugin={importCustomPlugin}
           onRemoveCustomPlugin={removeCustomPlugin}
           nonRemovablePluginIds={bundledCustomPluginIds}
+          onOpenControlHub={handleOpenPluginHub}
         />
       )}
       <HelpModal
