@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { levelsPlugin } from '../../plugins/core/levelsPlugin.jsx';
 
-describe('levelsPlugin', () => {
-  const [setLevelCommand, clearParentsCommand] = levelsPlugin.slots.commands;
+const [setLevelCommand, clearParentsCommand] = levelsPlugin.slots.commands;
 
+describe('levelsPlugin', () => {
   beforeEach(() => {
     vi.spyOn(window, 'prompt').mockReturnValue('3');
     vi.spyOn(window, 'alert').mockImplementation(() => {});
@@ -35,6 +35,12 @@ describe('levelsPlugin', () => {
     expect(selectNodes).toHaveBeenCalledWith([1], { center: true });
     expect(setHighlightedNodes).toHaveBeenCalledWith([1]);
     expect(window.alert).not.toHaveBeenCalled();
+  });
+
+  it('alerts when entered level is invalid', () => {
+    window.prompt.mockReturnValue('abc');
+    setLevelCommand.run({ selectedNodeIds: [1], updateNodes: vi.fn(), setHighlightedNodes: vi.fn() }, { nodeId: 1 });
+    expect(window.alert).toHaveBeenCalledWith('Level must be a valid number.');
   });
 
   it('clears parent links across nodes', () => {
