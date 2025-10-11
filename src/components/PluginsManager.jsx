@@ -142,6 +142,14 @@ const PluginsManager = ({
     e.target.value = '';
   };
 
+  const openControlHub = React.useCallback((pluginId) => {
+    try {
+      sessionStorage.setItem('vertex_plugin_return', window.location.hash || '#/');
+    } catch {}
+    onCloseRef.current?.();
+    window.location.hash = `#/plugin/${encodeURIComponent(pluginId)}`;
+  }, []);
+
   return (
     <div className="settings-overlay" onClick={handleOverlayClick}>
       <div
@@ -210,10 +218,12 @@ const PluginsManager = ({
                           </div>
                         )}
                         <div style={{ ...pillContainerStyle, marginTop: 8 }}>
-                          <button style={subtleButtonStyle} onClick={() => {
-                            try { sessionStorage.setItem('vertex_plugin_return', window.location.hash || '#/'); } catch {}
-                            window.location.hash = `#/plugin/${encodeURIComponent(p.id)}`;
-                          }}><FormattedMessage id="plugins.controlHub" defaultMessage="Control Hub" /></button>
+                          <button
+                            style={subtleButtonStyle}
+                            onClick={() => openControlHub(p.id)}
+                          >
+                            <FormattedMessage id="plugins.controlHub" defaultMessage="Control Hub" />
+                          </button>
                         </div>
                       </div>
                     )}
@@ -283,10 +293,12 @@ const PluginsManager = ({
                           </div>
                         )}
                         <div style={{ ...pillContainerStyle, marginTop: 8 }}>
-                          <button style={subtleButtonStyle} onClick={() => {
-                            try { sessionStorage.setItem('vertex_plugin_return', window.location.hash || '#/'); } catch {}
-                            window.location.hash = `#/plugin/${encodeURIComponent(p.id)}`;
-                          }}><FormattedMessage id="plugins.controlHub" defaultMessage="Control Hub" /></button>
+                          <button
+                            style={subtleButtonStyle}
+                            onClick={() => openControlHub(p.id)}
+                          >
+                            <FormattedMessage id="plugins.controlHub" defaultMessage="Control Hub" />
+                          </button>
                         </div>
                       </div>
                     )}

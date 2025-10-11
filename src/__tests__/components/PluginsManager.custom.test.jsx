@@ -16,9 +16,10 @@ describe('PluginsManager custom plugins section', () => {
     const custom = [{ id: 'x.custom', name: 'X', slots: { sidePanels: [] } }];
     const onToggle = vi.fn();
     const onRemove = vi.fn();
+    const onClose = vi.fn();
     renderWithProviders(
       <PluginsManager
-        onClose={() => {}}
+        onClose={onClose}
         pluginPrefs={{ 'x.custom': true }}
         onTogglePlugin={onToggle}
         availablePlugins={[]}
@@ -38,5 +39,34 @@ describe('PluginsManager custom plugins section', () => {
     fireEvent.click(removeBtn);
     expect(onRemove).toHaveBeenCalled();
   });
-});
 
+  it('closes the manager before navigating to Control Hub', () => {
+    const custom = [{
+      id: 'x.custom',
+      name: 'X',
+      slots: {
+        sidePanels: [],
+        configPage: { render: () => null },
+      },
+    }];
+    const onClose = vi.fn();
+    renderWithProviders(
+      <PluginsManager
+        onClose={onClose}
+        pluginPrefs={{ 'x.custom': true }}
+        onTogglePlugin={() => {}}
+        availablePlugins={[]}
+        customPlugins={custom}
+        onImportCustomPlugin={() => {}}
+        onRemoveCustomPlugin={() => {}}
+      />
+    );
+    window.location.hash = '#/g/test';
+    const detailsBtn = screen.getByRole('button', { name: /Details|Show Details/i });
+    fireEvent.click(detailsBtn);
+    const controlHubBtn = screen.getByRole('button', { name: /Control Hub/i });
+    fireEvent.click(controlHubBtn);
+    expect(onClose).toHaveBeenCalled();
+    expect(window.location.hash).toBe('#/plugin/x.custom');
+  });
+});
