@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
 
 const openMobileControls = async (page) => {
+  await page.waitForSelector('.mobile-controls', { state: 'attached', timeout: 10000 });
   const controls = page.locator('.mobile-controls');
-  await expect(controls).toBeVisible();
+  await expect(controls).toBeVisible({ timeout: 10000 });
   await expect.poll(async () => controls.getAttribute('data-expanded')).not.toBeNull();
   for (let attempt = 0; attempt < 4; attempt += 1) {
     if ((await controls.getAttribute('data-expanded')) === 'true') {
