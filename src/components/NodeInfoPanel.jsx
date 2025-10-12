@@ -11,16 +11,17 @@ import {
 } from '../utils/nodeUtils';
 import { useIsMobile } from '../hooks/useIsMobile';
 
-const NodeInfoPanel = ({ 
-  selectedNodes = [], 
-  visible = true, 
-  onClose, 
+const NodeInfoPanel = ({
+  selectedNodes = [],
+  visible = true,
+  onClose,
   onEditNode,
   onDeleteNodes,
   onToggleCollapse,
   topOffset = 80,
   onResetView,
   layout = 'floating',
+  appearance = 'standalone',
 }) => {
   const { currentTheme } = useTheme();
   const intl = useIntl();
@@ -28,6 +29,7 @@ const NodeInfoPanel = ({
   const layoutMode = layout === 'inline' ? 'inline' : 'floating';
   const isInlineLayout = layoutMode === 'inline';
   const panelWidth = isInlineLayout ? '100%' : (isMobile ? 280 : 320);
+  const isEmbedded = appearance === 'embedded';
 
   const isMultiSelection = selectedNodes.length > 1;
   const singleNode = selectedNodes.length === 1 ? selectedNodes[0] : null;
@@ -107,6 +109,27 @@ const NodeInfoPanel = ({
   const surfaceGlass = 'var(--plugin-panel-surface-glass, rgba(15, 23, 42, 0.45))';
   const panelBorderVar = 'var(--plugin-panel-border, rgba(148, 163, 184, 0.35))';
   const glassBorder = `1px solid ${panelBorderVar}`;
+  const cardBackground = isEmbedded ? currentTheme.colors.panelBackground : surfaceGlass;
+  const cardBorder = isEmbedded ? `1px solid ${currentTheme.colors.panelBorder}` : `1px solid ${panelBorderVar}`;
+  const cardRadius = isEmbedded ? 14 : 10;
+  const cardPadding = isEmbedded ? '18px 20px' : '12px';
+  const cardShadow = isEmbedded ? '0 18px 44px -32px rgba(15, 23, 42, 0.28)' : 'none';
+  const stackGap = 16;
+  const chipBackground = isEmbedded ? currentTheme.colors.inputBackground : surfaceGlass;
+  const chipBorder = isEmbedded ? `1px solid ${currentTheme.colors.inputBorder}` : `1px solid ${panelBorderVar}`;
+  const buildSectionStyle = (overrides = {}) => ({
+    backgroundColor: cardBackground,
+    border: cardBorder,
+    borderRadius: cardRadius,
+    padding: cardPadding,
+    boxShadow: cardShadow,
+    ...overrides,
+  });
+  const sectionStackStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: stackGap,
+  };
   const inlineContainerStyle = {
     position: 'relative',
     width: '100%',
@@ -118,6 +141,23 @@ const NodeInfoPanel = ({
     flexDirection: 'column',
     overflow: 'hidden',
     maxHeight: '100%',
+    pointerEvents: 'auto',
+  };
+
+  const embeddedContainerStyle = {
+    position: 'relative',
+    width: '100%',
+    backgroundColor: 'transparent',
+    border: 'none',
+    borderRadius: 0,
+    boxShadow: 'none',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'visible',
+    maxHeight: 'none',
+    padding: 0,
+    pointerEvents: 'auto',
+    gap: 16,
   };
 
   const floatingContainerStyle = {
@@ -133,24 +173,62 @@ const NodeInfoPanel = ({
     zIndex: 100,
     display: 'flex',
     flexDirection: 'column',
-    overflow: 'hidden'
+    overflow: 'hidden',
+    pointerEvents: 'auto'
   };
 
-  const containerStyle = isInlineLayout ? inlineContainerStyle : floatingContainerStyle;
+  const containerStyle = isEmbedded
+    ? embeddedContainerStyle
+    : (isInlineLayout ? inlineContainerStyle : floatingContainerStyle);
+
+  const headerStyle = {
+    padding: isEmbedded ? '0 0 12px 0' : '16px',
+    borderBottom: isEmbedded ? 'none' : `1px solid ${currentTheme.colors.panelBorder}`,
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: isEmbedded
+      ? 'transparent'
+      : 'var(--plugin-panel-summary-glass, rgba(15, 23, 42, 0.18))',
+    borderTopLeftRadius: isInlineLayout && !isEmbedded ? 18 : 0,
+    borderTopRightRadius: isInlineLayout && !isEmbedded ? 18 : 0,
+    margin: 0,
+  };
+
+  const contentStyle = {
+    flex: isEmbedded ? 'initial' : 1,
+    overflow: isEmbedded ? 'visible' : 'auto',
+    padding: isEmbedded ? 0 : '16px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: stackGap,
+  };
+
+  const showCloseButton = !isEmbedded && typeof onClose === 'function';
+  const resetButtonStyle = isEmbedded
+    ? {
+        border: `1px solid ${currentTheme.colors.inputBorder}`,
+        background: currentTheme.colors.menuBackground,
+        color: currentTheme.colors.primaryText,
+        borderRadius: 8,
+        padding: '6px 12px',
+        fontSize: 12,
+        cursor: 'pointer'
+      }
+    : {
+        border: `1px solid ${panelBorderVar}`,
+        background: surfaceGlass,
+        color: currentTheme.colors.primaryText,
+        borderRadius: 6,
+        padding: '4px 10px',
+        fontSize: 12,
+        cursor: 'pointer'
+      };
 
   return (
     <div style={containerStyle}>
       {/* Header */}
-      <div style={{
-        padding: '16px',
-        borderBottom: `1px solid ${currentTheme.colors.panelBorder}`,
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: 'var(--plugin-panel-summary-glass, rgba(15, 23, 42, 0.18))',
-        borderTopLeftRadius: isInlineLayout ? 18 : 0,
-        borderTopRightRadius: isInlineLayout ? 18 : 0,
-      }}>
+      <div style={headerStyle}>
         <h3 style={{
           margin: 0,
           color: currentTheme.colors.primaryText,
@@ -174,47 +252,40 @@ const NodeInfoPanel = ({
             <button
               type="button"
               onClick={onResetView}
-              style={{
-                border: `1px solid ${panelBorderVar}`,
-                background: surfaceGlass,
-                color: currentTheme.colors.primaryText,
-                borderRadius: 6,
-                padding: '4px 10px',
-                fontSize: 12,
-                cursor: 'pointer'
-              }}
+              style={resetButtonStyle}
             >
               <FormattedMessage id="nodeInfo.resetView" defaultMessage="Reset view" />
             </button>
           )}
-          <button
-            onClick={onClose}
-            style={{
-              border: 'none',
-              background: 'none',
-              fontSize: '16px',
-              cursor: 'pointer',
-              color: currentTheme.colors.secondaryText,
-              padding: '4px'
-            }}
-          >
-            ✕
-          </button>
+          {showCloseButton && (
+            <button
+              onClick={onClose}
+              style={{
+                border: 'none',
+                background: 'none',
+                fontSize: '16px',
+                cursor: 'pointer',
+                color: currentTheme.colors.secondaryText,
+                padding: '4px'
+              }}
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
 
       {/* Content */}
-      <div style={{
-        flex: 1,
-        overflow: 'auto',
-        padding: '16px'
-      }}>
+      <div style={contentStyle}>
         {selectedNodes.length === 0 ? (
-          <div style={{
+          <div style={buildSectionStyle({
             textAlign: 'center',
             color: currentTheme.colors.secondaryText,
-            marginTop: '40px'
-          }}>
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 12,
+          })}>
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>📋</div>
             <FormattedMessage 
               id="nodeInfo.selectPrompt" 
@@ -223,15 +294,9 @@ const NodeInfoPanel = ({
           </div>
         ) : isMultiSelection ? (
           // Multi-selection view
-          <div>
+          <div style={sectionStackStyle}>
             {/* Summary */}
-            <div style={{
-              backgroundColor: surfaceGlass,
-              border: `1px solid ${panelBorderVar}`,
-              borderRadius: '10px',
-              padding: '12px',
-              marginBottom: '16px'
-            }}>
+            <div style={buildSectionStyle()}>
               <h4 style={{
                 margin: '0 0 8px 0',
                 color: currentTheme.colors.primaryText,
@@ -272,7 +337,7 @@ const NodeInfoPanel = ({
             </div>
 
             {/* Shapes Distribution */}
-            <div style={{ marginBottom: '16px' }}>
+            <div style={buildSectionStyle()}>
               <h4 style={{
                 margin: '0 0 8px 0',
                 color: currentTheme.colors.primaryText,
@@ -295,7 +360,7 @@ const NodeInfoPanel = ({
             </div>
 
             {/* Colors Distribution */}
-            <div style={{ marginBottom: '16px' }}>
+            <div style={buildSectionStyle()}>
               <h4 style={{
                 margin: '0 0 8px 0',
                 color: currentTheme.colors.primaryText,
@@ -334,7 +399,7 @@ const NodeInfoPanel = ({
 
             {/* Tags */}
             {stats.uniqueTags.length > 0 && (
-              <div style={{ marginBottom: '16px' }}>
+              <div style={buildSectionStyle({ display: 'flex', flexDirection: 'column', gap: 12 })}>
                 <h4 style={{
                   margin: '0 0 8px 0',
                   color: currentTheme.colors.primaryText,
@@ -363,13 +428,11 @@ const NodeInfoPanel = ({
             )}
 
             {/* Actions */}
-            <div style={{
-              borderTop: `1px solid ${currentTheme.colors.panelBorder}`,
-              paddingTop: '16px',
+            <div style={buildSectionStyle({
               display: 'flex',
               flexDirection: 'column',
-              gap: '8px'
-            }}>
+              gap: 12,
+            })}>
               <button
                 onClick={() => onDeleteNodes && onDeleteNodes(selectedNodes.map(n => n.id))}
                 style={{
@@ -392,16 +455,9 @@ const NodeInfoPanel = ({
           </div>
         ) : singleNode ? (
           // Single node view
-          <div>
+          <div style={sectionStackStyle}>
             {/* Node Preview */}
-            <div style={{
-              backgroundColor: surfaceGlass,
-              border: `1px solid ${panelBorderVar}`,
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '16px',
-              textAlign: 'center'
-            }}>
+            <div style={buildSectionStyle({ textAlign: 'center' })}>
               <div style={{
                 fontSize: '24px',
                 marginBottom: '8px'
@@ -417,7 +473,7 @@ const NodeInfoPanel = ({
             </div>
 
             {/* Basic Properties */}
-            <div style={{ marginBottom: '16px' }}>
+            <div style={buildSectionStyle({ display: 'flex', flexDirection: 'column', gap: 12 })}>
               <h4 style={{
                 margin: '0 0 8px 0',
                 color: currentTheme.colors.primaryText,
@@ -458,8 +514,8 @@ const NodeInfoPanel = ({
                       gap: 6,
                       padding: '2px 8px',
                       borderRadius: 12,
-                      border: `1px solid ${panelBorderVar}`,
-                      backgroundColor: surfaceGlass
+                      border: chipBorder,
+                      backgroundColor: chipBackground
                     }}>
                       <span style={{ color: getNodeTextColor(singleNode, currentTheme), fontWeight: 600 }}>Aa</span>
                       <span style={{ color: currentTheme.colors.secondaryText, fontSize: '12px' }}>
@@ -486,7 +542,7 @@ const NodeInfoPanel = ({
 
             {/* Tags */}
             {singleNode.tags && singleNode.tags.length > 0 && (
-              <div style={{ marginBottom: '16px' }}>
+              <div style={buildSectionStyle({ display: 'flex', flexDirection: 'column', gap: 12 })}>
                 <h4 style={{
                   margin: '0 0 8px 0',
                   color: currentTheme.colors.primaryText,
@@ -516,19 +572,19 @@ const NodeInfoPanel = ({
 
             {/* Notes */}
             {singleNode.notes && singleNode.notes.trim() && (
-              <div style={{ marginBottom: '16px' }}>
+              <div style={buildSectionStyle({ display: 'flex', flexDirection: 'column', gap: 12 })}>
                 <h4 style={{
                   margin: '0 0 8px 0',
                   color: currentTheme.colors.primaryText,
                   fontSize: '14px'
                 }}>
-                  <FormattedMessage id="nodeInfo.notes" defaultMessage="Notes" />
-                </h4>
-                <div style={{
+                <FormattedMessage id="nodeInfo.notes" defaultMessage="Notes" />
+              </h4>
+              <div style={{
                   backgroundColor: currentTheme.colors.inputBackground,
                   border: `1px solid ${currentTheme.colors.inputBorder}`,
-                  borderRadius: '6px',
-                  padding: '8px',
+                  borderRadius: 8,
+                  padding: '10px 12px',
                   fontSize: '13px',
                   color: currentTheme.colors.secondaryText,
                   whiteSpace: 'pre-wrap'
@@ -539,7 +595,7 @@ const NodeInfoPanel = ({
             )}
 
             {/* Timestamps */}
-            <div style={{ marginBottom: '16px' }}>
+            <div style={buildSectionStyle({ display: 'flex', flexDirection: 'column', gap: 12 })}>
               <h4 style={{
                 margin: '0 0 8px 0',
                 color: currentTheme.colors.primaryText,
@@ -560,13 +616,11 @@ const NodeInfoPanel = ({
             </div>
 
             {/* Actions */}
-            <div style={{
-              borderTop: `1px solid ${currentTheme.colors.panelBorder}`,
-              paddingTop: '16px',
+            <div style={buildSectionStyle({
               display: 'flex',
               flexDirection: 'column',
-              gap: '8px'
-            }}>
+              gap: 12,
+            })}>
               <button
                 onClick={() => onEditNode && onEditNode(singleNode.id)}
                 style={{

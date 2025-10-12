@@ -31,13 +31,27 @@ function LevelsAbout() {
   );
 }
 
-function LevelsPanel({ groupedLevels, onSelectNode }) {
+function LevelsPanel({ groupedLevels, onSelectNode, appearance = 'standalone' }) {
   const { currentTheme } = useTheme();
   const intl = useIntl();
   const colors = currentTheme.colors;
-  return (
-    <div
-      style={{
+  const isEmbedded = appearance === 'embedded';
+  const containerStyle = isEmbedded
+    ? {
+        width: '100%',
+        padding: '18px 20px',
+        borderRadius: 14,
+        border: `1px solid ${colors.panelBorder}`,
+        background: colors.panelBackground,
+        boxShadow: '0 18px 44px -32px rgba(15, 23, 42, 0.28)',
+        color: colors.primaryText,
+        pointerEvents: 'auto',
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+      }
+    : {
         width: 260,
         padding: 16,
         borderRadius: 12,
@@ -47,8 +61,9 @@ function LevelsPanel({ groupedLevels, onSelectNode }) {
         color: colors.primaryText,
         pointerEvents: 'auto',
         boxSizing: 'border-box',
-      }}
-    >
+      };
+  return (
+    <div style={containerStyle}>
       <h3 style={{ margin: 0, color: colors.primaryText }}>
         <FormattedMessage id="plugin.levels.title" defaultMessage="Levels" />
       </h3>
@@ -206,6 +221,7 @@ export const levelsPlugin = {
                 api.selectNodes?.([id], { center: true });
                 api.setHighlightedNodes?.([id]);
               }}
+              appearance="embedded"
             />
           );
         }

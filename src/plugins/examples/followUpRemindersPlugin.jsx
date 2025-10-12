@@ -172,7 +172,7 @@ const useReminderStore = (nodes = []) => {
   return [reminders, update];
 };
 
-function ReminderPanel({ appApi, layout = 'floating' }) {
+function ReminderPanel({ appApi, layout = 'floating', appearance = 'standalone' }) {
   const { currentTheme } = useTheme();
   const intl = useIntl();
   const nodes = Array.isArray(appApi?.nodes) ? appApi.nodes : [];
@@ -394,31 +394,34 @@ function ReminderPanel({ appApi, layout = 'floating' }) {
   }, [appApi, dueSoonNodeIds, logEvent, showStatus]);
 
   const isInlineLayout = layout === 'inline';
+  const isEmbedded = appearance === 'embedded';
 
-  const glassSurface = 'var(--plugin-panel-surface-glass, rgba(15, 23, 42, 0.32))';
   const panelBorderVar = 'var(--plugin-panel-border, rgba(148, 163, 184, 0.35))';
+  const baseBorder = isEmbedded ? currentTheme.colors.panelBorder : panelBorderVar;
+  const glassSurface = isEmbedded ? currentTheme.colors.inputBackground : 'var(--plugin-panel-surface-glass, rgba(15, 23, 42, 0.32))';
   const panelStyle = {
     width: '100%',
-    padding: 16,
-    borderRadius: 12,
-    background: 'transparent',
-    border: 'none',
-    boxShadow: 'none',
+    padding: isEmbedded ? '18px 20px' : 16,
+    borderRadius: isEmbedded ? 14 : 12,
+    background: isEmbedded ? currentTheme.colors.panelBackground : 'transparent',
+    border: isEmbedded ? `1px solid ${currentTheme.colors.panelBorder}` : 'none',
+    boxShadow: isEmbedded ? '0 18px 44px -32px rgba(15, 23, 42, 0.24)' : 'none',
     color: currentTheme.colors.primaryText,
     pointerEvents: 'auto',
     display: 'flex',
     flexDirection: 'column',
-    gap: 12,
+    gap: 16,
     position: isInlineLayout ? 'relative' : 'static',
   };
 
   const buttonStyle = {
-    borderRadius: 6,
-    padding: '8px 12px',
-    border: `1px solid ${panelBorderVar}`,
+    borderRadius: 8,
+    padding: '8px 14px',
+    border: `1px solid ${baseBorder}`,
     background: glassSurface,
     color: currentTheme.colors.primaryText,
     cursor: 'pointer',
+    transition: 'background-color 0.18s ease',
   };
 
   const primaryButtonStyle = {
@@ -909,8 +912,8 @@ How to use:
         mobileBehavior: 'hidden',
         visible: () => true,
         order: 25,
-        render: (api) => <ReminderPanel appApi={api} layout="floating" />,
-        renderMobile: (api) => <ReminderPanel appApi={api} layout="inline" />,
+        render: (api) => <ReminderPanel appApi={api} layout="floating" appearance="embedded" />,
+        renderMobile: (api) => <ReminderPanel appApi={api} layout="inline" appearance="embedded" />,
       },
     ],
     canvasOverlays: [

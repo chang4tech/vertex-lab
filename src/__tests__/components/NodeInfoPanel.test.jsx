@@ -213,4 +213,21 @@ describe('NodeInfoPanel', () => {
     expect(root.style.position).toBe('relative');
     expect(root.style.width).toBe('100%');
   });
+
+  it('supports embedded appearance without close button or chrome', () => {
+    const { container } = render(
+      <TestWrapper>
+        <NodeInfoPanel
+          {...defaultProps}
+          selectedNodes={[mockNode1]}
+          layout="inline"
+          appearance="embedded"
+        />
+      </TestWrapper>
+    );
+
+    expect(screen.queryByText('✕')).toBeNull();
+    const root = container.firstChild;
+    expect(root.style.backgroundColor).toBe('transparent');
+  });
 });

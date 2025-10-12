@@ -55,9 +55,9 @@ Tips:
             onEditNode={api.onEditNode}
             onDeleteNodes={api.onDeleteNodes}
             onToggleCollapse={api.onToggleCollapse}
-            topOffset={api.menuBarBottom}
             onResetView={api.resetView}
-            layout="floating"
+            layout="inline"
+            appearance="embedded"
           />
         ),
         renderMobile: (api) => (
@@ -68,9 +68,9 @@ Tips:
             onEditNode={api.onEditNode}
             onDeleteNodes={api.onDeleteNodes}
             onToggleCollapse={api.onToggleCollapse}
-            topOffset={api.menuBarBottom}
             onResetView={api.resetView}
             layout="inline"
+            appearance="embedded"
           />
         )
       }

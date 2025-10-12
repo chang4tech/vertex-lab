@@ -45,33 +45,77 @@ const buildDefaultNodes = (intl) => ([
 
 const LanguageMenu = ({ locales, activeLocale, onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef(null);
+  const pendingCloseRef = useRef(null);
 
-  const handleOpen = useCallback(() => setIsOpen(true), []);
-  const handleClose = useCallback(() => setIsOpen(false), []);
+  const openMenu = useCallback(() => {
+    setIsOpen(true);
+  }, []);
 
-  const handleMouseLeave = useCallback((event) => {
-    if (!event.currentTarget.contains(event.relatedTarget)) {
-      handleClose();
+  const closeMenu = useCallback(() => {
+    if (pendingCloseRef.current) {
+      clearTimeout(pendingCloseRef.current);
+      pendingCloseRef.current = null;
     }
-  }, [handleClose]);
+    setIsOpen(false);
+  }, []);
+
+  const scheduleDeferredClose = useCallback(() => {
+    if (pendingCloseRef.current) return;
+    pendingCloseRef.current = setTimeout(() => {
+      pendingCloseRef.current = null;
+      setIsOpen(false);
+    }, 0);
+  }, []);
 
   const handleBlur = useCallback((event) => {
-    if (!event.currentTarget.contains(event.relatedTarget)) {
-      handleClose();
+    const nextTarget = event.relatedTarget;
+    const menuNode = menuRef.current;
+    const isRelatedTargetNode = typeof Node !== 'undefined' && nextTarget instanceof Node;
+    if (!menuNode || !isRelatedTargetNode || !menuNode.contains(nextTarget)) {
+      closeMenu();
     }
-  }, [handleClose]);
+  }, [closeMenu]);
 
   const handleSelect = useCallback((value) => {
     onSelect(value);
-    handleClose();
-  }, [onSelect, handleClose]);
+    closeMenu();
+  }, [onSelect, closeMenu]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const handlePointerDown = (event) => {
+      const menuNode = menuRef.current;
+      if (!menuNode) return;
+      const target = event.target;
+      const isTargetNode = typeof Node !== 'undefined' && target instanceof Node;
+      if (!isTargetNode || menuNode.contains(target)) return;
+      scheduleDeferredClose();
+    };
+
+    document.addEventListener('mousedown', handlePointerDown, true);
+    document.addEventListener('touchstart', handlePointerDown, true);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown, true);
+      document.removeEventListener('touchstart', handlePointerDown, true);
+    };
+  }, [isOpen, scheduleDeferredClose]);
+
+  useEffect(() => () => {
+    if (pendingCloseRef.current) {
+      clearTimeout(pendingCloseRef.current);
+      pendingCloseRef.current = null;
+    }
+  }, []);
 
   return (
     <div
+      ref={menuRef}
       className={`menu-item menu-item--submenu${isOpen ? ' menu-item--submenu-open' : ''}`}
-      onMouseEnter={handleOpen}
-      onMouseLeave={handleMouseLeave}
-      onFocus={handleOpen}
+      onMouseEnter={openMenu}
+      onFocus={openMenu}
       onBlur={handleBlur}
       onMouseDown={(event) => {
         event.preventDefault();
@@ -81,7 +125,10 @@ const LanguageMenu = ({ locales, activeLocale, onSelect }) => {
     >
       <span><FormattedMessage id="settings.language" defaultMessage="Language" /></span>
       <span className="submenu-caret">›</span>
-      <div className={`menu-submenu${isOpen ? ' open' : ''}`} role="menu">
+      <div
+        className={`menu-submenu${isOpen ? ' open' : ''}`}
+        role="menu"
+      >
         {locales.map((locale) => (
           <button
             key={locale.value}
@@ -3603,4 +3650,5 @@ function App({ graphId = 'default' }) {
   );
 }
 
+export { LanguageMenu };
 export default App;
