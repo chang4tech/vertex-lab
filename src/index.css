@@ -638,8 +638,8 @@ mark {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: var(--plugin-panel-width);
-  max-width: min(90vw, var(--plugin-panel-width));
+  width: 100%;
+  max-width: 100%;
   align-items: stretch;
   pointer-events: auto;
 }
@@ -648,8 +648,9 @@ mark {
   font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--plugin-panel-text, #0f172a) 72%, transparent);
   padding: 0 6px;
+  color: var(--plugin-panel-text, var(--primary-text, #0f172a));
+  color: color-mix(in srgb, var(--plugin-panel-text, #0f172a) 70%, transparent);
 }
 
 .plugin-side-panels__notifications-list {
@@ -659,11 +660,10 @@ mark {
 }
 
 .plugin-side-panels__notification-card {
-  width: var(--plugin-panel-width);
-  max-width: min(90vw, var(--plugin-panel-width));
+  width: 100%;
   border-radius: 16px;
   border: 1px solid var(--plugin-panel-border, rgba(148, 163, 184, 0.35));
-  background: var(--plugin-panel-summary-bg, rgba(15, 23, 42, 0.92));
+  background: var(--plugin-panel-chrome-bg, var(--panel-background, #ffffff));
   box-shadow: 0 20px 48px -24px var(--plugin-panel-shadow-color, rgba(15, 23, 42, 0.3));
   padding: 18px 20px;
   display: flex;
@@ -679,6 +679,7 @@ mark {
   gap: 12px;
   font-size: 14px;
   font-weight: 600;
+  color: var(--plugin-panel-text, var(--primary-text, #0f172a));
 }
 
 .plugin-side-panels__notification-badge {
@@ -690,7 +691,7 @@ mark {
   border-radius: 999px;
   font-size: 12px;
   border: 1px solid var(--plugin-panel-border, rgba(148, 163, 184, 0.35));
-  background: color-mix(in srgb, var(--plugin-panel-summary-bg, rgba(15, 23, 42, 0.92)) 65%, transparent);
+  background: var(--plugin-panel-summary-bg, var(--plugin-panel-chrome-bg, rgba(15, 23, 42, 0.92)));
   color: var(--plugin-panel-text, var(--primary-text, #0f172a));
 }
 
@@ -699,6 +700,7 @@ mark {
   flex-direction: column;
   gap: 12px;
   font-size: 13px;
+  color: var(--plugin-panel-text, var(--primary-text, #0f172a));
 }
 
 .plugin-side-panels__item,
@@ -843,8 +845,9 @@ mark {
   font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--primary-button-text, #ffffff) 65%, transparent);
   padding: 0 2px;
+  color: var(--primary-button-text, #ffffff);
+  color: color-mix(in srgb, var(--primary-button-text, #ffffff) 70%, transparent);
 }
 
 .plugin-mobile-drawer__notifications-list {
@@ -856,7 +859,7 @@ mark {
 .plugin-mobile-drawer__notification-card {
   border-radius: 16px;
   border: 1px solid color-mix(in srgb, var(--menu-border, #e0e0e0) 60%, transparent);
-  background: color-mix(in srgb, var(--menu-background, rgba(30, 41, 59, 0.92)) 78%, transparent);
+  background: color-mix(in srgb, var(--menu-background, rgba(30, 41, 59, 0.92)) 85%, transparent);
   box-shadow: 0 18px 38px -20px rgba(15, 23, 42, 0.45);
   padding: 18px 18px;
   display: flex;
@@ -892,6 +895,7 @@ mark {
   flex-direction: column;
   gap: 12px;
   font-size: 13px;
+  color: var(--primary-button-text, #ffffff);
 }
 
 .plugin-mobile-drawer__grabber {
