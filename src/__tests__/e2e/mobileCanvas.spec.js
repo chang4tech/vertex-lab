@@ -1,5 +1,20 @@
 import { test, expect } from '@playwright/test';
 
+const openMobileControls = async (page) => {
+  const controls = page.locator('.mobile-controls');
+  await expect(controls).toBeVisible();
+  await expect.poll(async () => controls.getAttribute('data-expanded')).not.toBeNull();
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    if ((await controls.getAttribute('data-expanded')) === 'true') {
+      return controls;
+    }
+    await controls.locator('.mobile-controls__toggle').click({ force: true });
+    await page.waitForTimeout(200);
+  }
+  await expect.poll(async () => controls.getAttribute('data-expanded')).toBe('true');
+  return controls;
+};
+
 test.describe('Mobile Canvas Operations', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate directly to a graph route so the canvas is present
@@ -10,6 +25,20 @@ test.describe('Mobile Canvas Operations', () => {
     await page.locator('canvas').dblclick({ position: { x: 200, y: 200 } });
     // Wait briefly for rendering
     await page.waitForTimeout(500);
+    const drawerClose = page.getByRole('button', { name: 'Close panel drawer' }).first();
+    if (await drawerClose.isVisible()) {
+      await drawerClose.scrollIntoViewIfNeeded();
+      await drawerClose.click({ force: true });
+      await page.waitForTimeout(200);
+    }
+    const drawerToggle = page.locator('.plugin-mobile-drawer__toggle');
+    if (await drawerToggle.first().isVisible()) {
+      const expanded = await drawerToggle.first().getAttribute('aria-expanded');
+      if (expanded !== 'false') {
+        await drawerToggle.first().click({ force: true });
+        await page.waitForTimeout(200);
+      }
+    }
   });
 
   const skipIfNotMobileViewport = async (page) => {
@@ -23,7 +52,7 @@ test.describe('Mobile Canvas Operations', () => {
     await skipIfNotMobileViewport(page);
 
     const controls = page.locator('.mobile-controls');
-    await expect(controls).toBeVisible();
+    await openMobileControls(page);
     // Playwright occasionally reports the canvas intercepting these taps even though
     // the floating controls render above it, so `force` sidesteps that heuristic.
     await controls.getByRole('button', { name: 'Center' }).click({ force: true });
@@ -42,16 +71,17 @@ test.describe('Mobile Canvas Operations', () => {
     await skipIfNotMobileViewport(page);
 
     const controls = page.locator('.mobile-controls');
-    await expect(controls).toBeVisible();
+    await openMobileControls(page);
 
     const zoomIn = controls.getByRole('button', { name: 'Zoom In' });
-    await zoomIn.click({ force: true });
-    await page.waitForTimeout(200);
-    await zoomIn.click({ force: true });
-    await page.waitForTimeout(200);
-    await zoomIn.click({ force: true });
+    for (let i = 0; i < 3; i += 1) {
+      await zoomIn.click({ force: true });
+      await page.waitForTimeout(200);
+      await openMobileControls(controls);
+    }
     await page.waitForTimeout(500);
 
+    await openMobileControls(controls);
     await controls.getByRole('button', { name: 'Reset Zoom' }).click({ force: true });
 
     // Give some time for the canvas to redraw

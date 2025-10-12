@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import VertexCanvas from '../../VertexCanvas';
 import { ThemeProvider } from '../../contexts/ThemeContext';
+import { NODE_SHAPES } from '../../utils/nodeUtils';
 
 // Mock canvas API
 const mockContext = {
@@ -96,6 +97,34 @@ describe('VertexCanvas', () => {
     });
 
     expect(mockProps.onNodeClick).toHaveBeenCalledWith(1);
+  });
+
+  it('hit-tests ellipse nodes using drawn bounds', () => {
+    const onNodeClick = vi.fn();
+    const ellipseNode = {
+      id: 'ellipse-1',
+      label: 'Ellipse',
+      x: 320,
+      y: 200,
+      level: 0,
+      shape: NODE_SHAPES.ELLIPSE
+    };
+    const { container } = renderWithTheme(
+      <VertexCanvas
+        nodes={[ellipseNode]}
+        edges={[]}
+        onNodeClick={onNodeClick}
+        selectedNodeIds={[]}
+      />
+    );
+    const canvas = container.querySelector('canvas');
+
+    fireEvent.click(canvas, {
+      clientX: ellipseNode.x + 30,
+      clientY: ellipseNode.y
+    });
+
+    expect(onNodeClick).toHaveBeenCalledWith('ellipse-1');
   });
 
   it('does not call onNodeClick when meta/ctrl multi-selecting', () => {

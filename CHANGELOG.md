@@ -23,6 +23,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Plugin panels: Tuned opacity using pseudo-element overlays so the canvas shows through without fading text; summary/content backgrounds now inherit theme colors with adjustable alpha variables.
 
 ### Added
+- Plugin Host: Notification rail for plugin panels plus notifications slot; desktop/mobile panels show cards with badges and follow-up actions.
+- Follow-up Reminders: Notifications feed highlights overdue/upcoming tasks with focus/mark-done controls while the panel stays focused on scheduling.
 - Custom Plugins: Bundled “Gamification Boost” (XP tracking, quick actions, streak overlay) and “Paper Reference Prospector” (configurable depth scouting) ship disabled-by-default in the Custom tab.
 - Plugins Manager: Bundled custom plugins show a “Bundled” badge and we prevent removing first-party bundles.
 - Docs: Recorded bundled-plugin registration requirements in `doc/PLUGINS_DESIGN.md` to avoid future Control Hub lookup regressions.

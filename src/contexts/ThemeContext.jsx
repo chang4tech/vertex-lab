@@ -108,14 +108,23 @@ function applyThemeToDocument(theme) {
   root.style.setProperty('--primary-button-hover', colors.primaryButtonHover);
   root.style.setProperty('--primary-button-text', colors.primaryButtonText);
   root.style.setProperty('--plugin-panel-text', colors.primaryText);
-  root.style.setProperty('--plugin-panel-chrome-bg', colors.panelBackground);
-  root.style.setProperty('--plugin-panel-border', hexToRgba(colors.panelBorder || colors.menuBorder || '#94a3b8', 0.35));
-  root.style.setProperty('--plugin-panel-summary-bg', colors.menuBackground || colors.panelBackground);
-  root.style.setProperty('--plugin-panel-surface-bg', colors.inputBackground || colors.panelBackground);
-  root.style.setProperty('--plugin-panel-opacity', '0.55');
-  root.style.setProperty('--plugin-panel-summary-opacity', '0.45');
-  root.style.setProperty('--plugin-panel-surface-opacity', '0.25');
-  root.style.setProperty('--plugin-panel-shadow-color', colors.panelShadow || 'rgba(15, 23, 42, 0.2)');
+  const isDarkTheme = theme?.id === 'dark';
+  const chromeAlpha = isDarkTheme ? 0.88 : 0.96;
+  const summaryAlpha = isDarkTheme ? 0.92 : 0.98;
+  const surfaceAlpha = isDarkTheme ? 0.9 : 0.97;
+  const borderAlpha = isDarkTheme ? 0.55 : 0.28;
+  const fallbackPanelColor = colors.panelBackground || colors.menuBackground || '#0f172a';
+  const fallbackSummaryColor = colors.menuBackground || fallbackPanelColor;
+  const fallbackSurfaceColor = colors.inputBackground || fallbackPanelColor;
+  const shadowFallback = isDarkTheme ? 'rgba(15, 23, 42, 0.35)' : 'rgba(15, 23, 42, 0.16)';
+  root.style.setProperty('--plugin-panel-chrome-bg', hexToRgba(fallbackPanelColor, chromeAlpha));
+  root.style.setProperty('--plugin-panel-border', hexToRgba(colors.panelBorder || colors.menuBorder || '#94a3b8', borderAlpha));
+  root.style.setProperty('--plugin-panel-summary-bg', hexToRgba(fallbackSummaryColor, summaryAlpha));
+  root.style.setProperty('--plugin-panel-surface-bg', hexToRgba(fallbackSurfaceColor, surfaceAlpha));
+  root.style.setProperty('--plugin-panel-opacity', '1');
+  root.style.setProperty('--plugin-panel-summary-opacity', '1');
+  root.style.setProperty('--plugin-panel-surface-opacity', '1');
+  root.style.setProperty('--plugin-panel-shadow-color', colors.panelShadow || shadowFallback);
   
   // Update body background
   document.body.style.backgroundColor = colors.appBackground;

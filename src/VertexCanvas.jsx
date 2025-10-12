@@ -273,6 +273,110 @@ function drawEdge(ctx, from, to, theme) {
   ctx.stroke();
 }
 
+function pointInPolygon(points, px, py) {
+  if (!Array.isArray(points) || points.length < 3) {
+    return false;
+  }
+  let inside = false;
+  for (let i = 0, j = points.length - 1; i < points.length; j = i, i += 1) {
+    const xi = points[i].x;
+    const yi = points[i].y;
+    const xj = points[j].x;
+    const yj = points[j].y;
+    const segmentLenSq = (xj - xi) * (xj - xi) + (yj - yi) * (yj - yi);
+    const cross = (px - xi) * (yj - yi) - (py - yi) * (xj - xi);
+    if (Math.abs(cross) <= (1e-9 * Math.max(1, segmentLenSq)) &&
+      Math.min(xi, xj) - Number.EPSILON <= px &&
+      px <= Math.max(xi, xj) + Number.EPSILON &&
+      Math.min(yi, yj) - Number.EPSILON <= py &&
+      py <= Math.max(yi, yj) + Number.EPSILON) {
+      return true;
+    }
+    const intersects = ((yi > py) !== (yj > py)) &&
+      (px <= ((xj - xi) * (py - yi)) / ((yj - yi) || 1e-12) + xi);
+    if (intersects) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+function getNodePolygonPoints(node, radius, shape) {
+  if (!isFiniteNumber(radius) || radius <= 0 || !hasFinitePosition(node)) {
+    return null;
+  }
+  switch (shape) {
+    case NODE_SHAPES.RECTANGLE:
+    case NODE_SHAPES.ROUNDED_RECTANGLE: {
+      const halfWidth = (radius * 1.6) / 2;
+      const halfHeight = (radius * 1.2) / 2;
+      return [
+        { x: node.x - halfWidth, y: node.y - halfHeight },
+        { x: node.x + halfWidth, y: node.y - halfHeight },
+        { x: node.x + halfWidth, y: node.y + halfHeight },
+        { x: node.x - halfWidth, y: node.y + halfHeight }
+      ];
+    }
+    case NODE_SHAPES.DIAMOND:
+      return [
+        { x: node.x, y: node.y - radius },
+        { x: node.x + radius, y: node.y },
+        { x: node.x, y: node.y + radius },
+        { x: node.x - radius, y: node.y }
+      ];
+    case NODE_SHAPES.HEXAGON: {
+      const points = [];
+      for (let i = 0; i < 6; i += 1) {
+        const angle = (i * Math.PI) / 3;
+        points.push({
+          x: node.x + radius * Math.cos(angle),
+          y: node.y + radius * Math.sin(angle)
+        });
+      }
+      return points;
+    }
+    default:
+      return null;
+  }
+}
+
+function isPointInsideNode(node, px, py, theme) {
+  if (!theme || !theme.colors) {
+    return false;
+  }
+  const radius = theme.colors.nodeRadius;
+  if (!isFiniteNumber(radius) || radius <= 0 || !hasFinitePosition(node)) {
+    return false;
+  }
+  const enhanced = upgradeNode(node);
+  const shape = enhanced.shape || NODE_SHAPES.CIRCLE;
+  const dx = px - enhanced.x;
+  const dy = py - enhanced.y;
+
+  switch (shape) {
+    case NODE_SHAPES.RECTANGLE:
+    case NODE_SHAPES.ROUNDED_RECTANGLE: {
+      const halfWidth = (radius * 1.6) / 2;
+      const halfHeight = (radius * 1.2) / 2;
+      return Math.abs(dx) <= halfWidth && Math.abs(dy) <= halfHeight;
+    }
+    case NODE_SHAPES.ELLIPSE: {
+      const rx = radius * 1.4;
+      const ry = radius * 0.8;
+      if (!isFiniteNumber(rx) || !isFiniteNumber(ry) || rx <= 0 || ry <= 0) {
+        return false;
+      }
+      return ((dx * dx) / (rx * rx)) + ((dy * dy) / (ry * ry)) <= 1 + Number.EPSILON;
+    }
+    case NODE_SHAPES.DIAMOND:
+    case NODE_SHAPES.HEXAGON: {
+      const polygon = getNodePolygonPoints(enhanced, radius, shape);
+      return polygon ? pointInPolygon(polygon, px, py) : false;
+    }
+    default:
+      return dx * dx + dy * dy <= radius * radius;
+  }
+}
 
 import { forwardRef, useImperativeHandle } from 'react';
 
@@ -751,12 +855,9 @@ const VertexCanvas = forwardRef(({
       }
       // Node drag
       const { x, y } = getTransformed(e.clientX, e.clientY);
-      for (const node of nodes) {
-        if (!hasFinitePosition(node)) continue;
-        const dx = node.x - x;
-        const dy = node.y - y;
-        const nodeRadius = currentTheme.colors.nodeRadius;
-        if (dx * dx + dy * dy < nodeRadius * nodeRadius) {
+      const visibleNodes = getFiniteVisibleNodes(nodes, propsEdges);
+      for (const node of visibleNodes) {
+        if (isPointInsideNode(node, x, y, currentTheme)) {
           dragState.current = {
             dragging: true,
             nodeId: node.id,
@@ -935,11 +1036,8 @@ const VertexCanvas = forwardRef(({
       // Check visible nodes only
       const visibleNodes = getFiniteVisibleNodes(nodes, propsEdges);
       let clickedNodeId = null;
-      const nodeRadius = currentTheme.colors.nodeRadius;
       for (const node of visibleNodes) {
-        const dx = node.x - x;
-        const dy = node.y - y;
-        if (dx * dx + dy * dy < nodeRadius * nodeRadius) {
+        if (isPointInsideNode(node, x, y, currentTheme)) {
           clickedNodeId = node.id;
           break;
         }
@@ -992,12 +1090,9 @@ const VertexCanvas = forwardRef(({
           const worldY = (e.clientY - rect.top - view.current.offsetY) / view.current.scale;
           // Hit test visible nodes
           const visibleNodes = getFiniteVisibleNodes(nodes, propsEdges);
-          const nodeRadius = currentTheme.colors.nodeRadius;
           let clickedNodeId = null;
           for (const node of visibleNodes) {
-            const dx = node.x - worldX;
-            const dy = node.y - worldY;
-            if (dx * dx + dy * dy < nodeRadius * nodeRadius) { clickedNodeId = node.id; break; }
+            if (isPointInsideNode(node, worldX, worldY, currentTheme)) { clickedNodeId = node.id; break; }
           }
           if (typeof onContextMenuRequest === 'function') {
             onContextMenuRequest({
@@ -1115,10 +1210,7 @@ const VertexCanvas = forwardRef(({
     let clickedNodeId = null;
     
     for (const node of visibleNodes) {
-      const dx = node.x - x;
-      const dy = node.y - y;
-      const nodeRadius = currentTheme.colors.nodeRadius;
-      if (dx * dx + dy * dy < nodeRadius * nodeRadius) {
+      if (isPointInsideNode(node, x, y, currentTheme)) {
         clickedNodeId = node.id;
         break;
       }
@@ -1159,10 +1251,7 @@ const VertexCanvas = forwardRef(({
     // Check visible nodes only
     const visibleNodes = getFiniteVisibleNodes(nodes, propsEdges);
     for (const node of visibleNodes) {
-      const dx = node.x - x;
-      const dy = node.y - y;
-      const nodeRadius = currentTheme.colors.nodeRadius;
-      if (dx * dx + dy * dy < nodeRadius * nodeRadius) {
+      if (isPointInsideNode(node, x, y, currentTheme)) {
         onNodeDoubleClick && onNodeDoubleClick(node.id);
         break;
       }

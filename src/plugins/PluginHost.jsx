@@ -1,10 +1,49 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FormattedMessage } from 'react-intl';
 import PluginErrorBoundary from './PluginErrorBoundary.jsx';
 import { appendPluginLog } from './errorLog.js';
 
 function PanelRenderer({ render, appApi }) {
   // Call provided render so errors bubble to the boundary above
   return render(appApi);
+}
+
+function NotificationSection({ entries = [], variant = 'desktop' }) {
+  if (!entries || entries.length === 0) {
+    return null;
+  }
+
+  const baseClass = variant === 'mobile' ? 'plugin-mobile-drawer' : 'plugin-side-panels';
+  const rootClass = `${baseClass}__notifications`;
+  const headerClass = `${baseClass}__notifications-header`;
+  const listClass = `${baseClass}__notifications-list`;
+  const cardClass = `${baseClass}__notification-card`;
+  const cardHeaderClass = `${baseClass}__notification-cardHeader`;
+  const badgeClass = `${baseClass}__notification-badge`;
+  const bodyClass = `${baseClass}__notification-cardBody`;
+
+  return (
+    <section className={rootClass} aria-label="Plugin notifications">
+      <div className={headerClass}>
+        <FormattedMessage id="plugins.notifications.title" defaultMessage="Notifications" />
+      </div>
+      <div className={listClass}>
+        {entries.map((entry) => (
+          <article key={entry.key} className={cardClass}>
+            <div className={cardHeaderClass}>
+              <span>{entry.title}</span>
+              {entry.badge !== undefined && entry.badge !== null && entry.badge !== false && entry.badge !== '' && (
+                <span className={badgeClass}>{entry.badge}</span>
+              )}
+            </div>
+            <div className={bodyClass}>
+              {entry.element}
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 const descriptorsEqual = (a, b) => {
@@ -150,6 +189,66 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
     return entries;
   }, [plugins, appApi]);
 
+  const notificationEntries = useMemo(() => {
+    if (!plugins || plugins.length === 0) return [];
+    const entries = [];
+    plugins.forEach((plugin) => {
+      const notifications = Array.isArray(plugin?.slots?.notifications) ? plugin.slots.notifications : [];
+      const withPluginApi = (render) => (hostApi) => {
+        const api = {
+          ...hostApi,
+          plugin: {
+            id: plugin.id,
+            log: (message, level = 'info') => appendPluginLog({ pluginId: plugin.id, level, message: String(message) }),
+            openHub: () => {
+              try { sessionStorage.setItem('vertex_plugin_return', window.location.hash || '#/'); } catch {}
+              try { window.location.hash = `#/plugin/${encodeURIComponent(plugin.id)}`; } catch {}
+            },
+            openConfig: () => { try { window.location.hash = `#/plugin/${encodeURIComponent(plugin.id)}`; } catch {} },
+            openConsole: () => { try { window.location.hash = `#/plugin/${encodeURIComponent(plugin.id)}`; } catch {} },
+          },
+        };
+        return render(api);
+      };
+
+      notifications
+        .filter((notification) => (typeof notification.visible === 'function' ? notification.visible(appApi) : true))
+        .forEach((notification) => {
+          const notificationTitle =
+            (typeof notification.title === 'function' && notification.title(appApi)) ||
+            (typeof notification.title === 'string' && notification.title) ||
+            (typeof notification.label === 'function' && notification.label(appApi)) ||
+            (typeof notification.label === 'string' && notification.label) ||
+            (typeof notification.name === 'string' && notification.name) ||
+            plugin.name ||
+            notification.id ||
+            plugin.id;
+
+          const badgeValue = typeof notification.badge === 'function'
+            ? notification.badge(appApi)
+            : notification.badge;
+
+          const element = (
+            <PluginErrorBoundary key={`${plugin.id}:${notification.id}`} pluginId={plugin.id}>
+              <PanelRenderer render={withPluginApi(notification.render)} appApi={appApi} />
+            </PluginErrorBoundary>
+          );
+
+          entries.push({
+            key: `${plugin.id}:${notification.id}`,
+            order: notification.order ?? 0,
+            element,
+            title: notificationTitle,
+            badge: badgeValue,
+            pluginId: plugin.id,
+            notificationId: notification.id,
+          });
+        });
+    });
+    entries.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    return entries;
+  }, [plugins, appApi]);
+
   const isMobile = !!appApi?.isMobile;
   const menuBarBottom = appApi?.menuBarBottom ?? 80;
   const corePanelOffset = Number.isFinite(appApi?.corePanelOffset)
@@ -175,7 +274,7 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
 
   useEffect(() => {
     if (typeof onSidePanelWidthChange !== 'function') return undefined;
-    if (hideSidePanels || sidePanelEntries.length === 0) {
+    if (hideSidePanels || (sidePanelEntries.length === 0 && notificationEntries.length === 0)) {
       onSidePanelWidthChange(0);
       return undefined;
     }
@@ -209,7 +308,7 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
       }
       onSidePanelWidthChange(0);
     };
-  }, [onSidePanelWidthChange, hideSidePanels, sidePanelEntries.length]);
+  }, [onSidePanelWidthChange, hideSidePanels, sidePanelEntries.length, notificationEntries.length]);
 
   useEffect(() => {
     setCollapsedPanels((prev) => {
@@ -272,9 +371,10 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
 
   return (
     <>
-      {visibleDesktopEntries.length > 0 && !hideSidePanels && (
+      {(notificationEntries.length > 0 || visibleDesktopEntries.length > 0) && !hideSidePanels && (
         <div ref={containerRef} className="plugin-side-panels" style={sidePanelContainerStyle}>
           <div className="plugin-side-panels__scroll" style={{ maxHeight: maxHeightValue }}>
+            <NotificationSection entries={notificationEntries} />
             {visibleDesktopEntries.map((entry) => {
               const collapsed = collapsedPanels.has(entry.key);
               if (entry.allowCollapse) {
@@ -304,7 +404,7 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
           </div>
         </div>
       )}
-      {mobileDrawerEntries.length > 0 && !hideSidePanels && (
+      {isMobile && (notificationEntries.length > 0 || mobileDrawerEntries.length > 0) && !hideSidePanels && (
         <>
           <div
             className={`plugin-mobile-drawer ${mobileDrawerOpen ? 'plugin-mobile-drawer--open' : ''}`}
@@ -324,6 +424,7 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
                 ✕
               </button>
             </div>
+            <NotificationSection entries={notificationEntries} variant="mobile" />
             <div className="plugin-mobile-drawer__tabs" role="tablist">
               {mobileDrawerEntries.map((entry) => {
                 const isActive = entry.key === activeMobilePanelKey;

@@ -603,86 +603,182 @@ function ReminderPanel({ appApi, layout = 'floating' }) {
         )}
       </section>
 
-      <section style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <h4 style={{ margin: 0, fontSize: 14, color: currentTheme.colors.secondaryText }}>
-          <FormattedMessage id="plugin.followUpReminders.upcoming" defaultMessage="Upcoming follow-ups" />
-        </h4>
-        {sortedReminders.length === 0 ? (
-          <div style={{ fontSize: 13, color: currentTheme.colors.secondaryText }}>
-            <FormattedMessage id="plugin.followUpReminders.none" defaultMessage="No follow-ups scheduled." />
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {sortedReminders.map((reminder) => {
-              const dueTime = Date.parse(reminder.dueAt);
-              const formattedDate = Number.isNaN(dueTime)
-                ? intl.formatMessage({ id: 'plugin.followUpReminders.invalidShort', defaultMessage: 'Invalid date' })
-                : intl.formatDate(new Date(dueTime), { dateStyle: 'medium', timeStyle: 'short' });
-              const badgeColor = (() => {
-                switch (reminder.status) {
-                  case REMINDER_STATUS.OVERDUE:
-                    return currentTheme.colors.error;
-                  case REMINDER_STATUS.UPCOMING:
-                    return currentTheme.colors.warning;
-                  default:
-                    return currentTheme.colors.info;
-                }
-              })();
+    </div>
+  );
+}
 
-              return (
-                <div
-                  key={reminder.nodeId}
+function ReminderNotifications({ appApi }) {
+  const intl = useIntl();
+  const { currentTheme } = useTheme();
+  const nodes = Array.isArray(appApi?.nodes) ? appApi.nodes : [];
+  const [reminders, setReminders] = useReminderStore(nodes);
+  const findNodeById = React.useCallback(
+    (id) => nodes.find((node) => String(node?.id) === String(id)) || null,
+    [nodes]
+  );
+  const logEvent = React.useCallback((id, defaultMessage, values = {}, level = 'info') => {
+    if (!appApi?.plugin?.log) return;
+    const message = intl.formatMessage({ id, defaultMessage }, values);
+    appApi.plugin.log(message, level);
+  }, [appApi, intl]);
+
+  const now = Date.now();
+  const dueEntries = React.useMemo(() => {
+    const list = Object.values(reminders || {});
+    return list
+      .map((reminder) => {
+        const node = findNodeById(reminder.nodeId);
+        const due = Date.parse(reminder.dueAt);
+        return {
+          ...reminder,
+          node,
+          label: node
+            ? getNodeKey(node)
+            : intl.formatMessage(
+                { id: 'plugin.followUpReminders.unknownNode', defaultMessage: 'Node {id}' },
+                { id: reminder.nodeId }
+              ),
+          dueTime: Number.isNaN(due) ? null : new Date(due),
+          status: getReminderStatus(reminder.dueAt, now),
+        };
+      })
+      .filter((entry) => entry.dueTime && (entry.status === REMINDER_STATUS.OVERDUE || entry.status === REMINDER_STATUS.UPCOMING))
+      .sort((a, b) => a.dueTime - b.dueTime);
+  }, [reminders, findNodeById, intl, now]);
+
+  const handleFocus = React.useCallback((nodeId) => {
+    if (!nodeId || !appApi?.selectNode) return;
+    appApi.selectNode(nodeId, { center: true });
+    const node = findNodeById(nodeId);
+    logEvent(
+      'plugin.followUpReminders.log.focus',
+      'Focused reminder node {name}.',
+      { name: getNodeKey(node) }
+    );
+  }, [appApi, findNodeById, logEvent]);
+
+  const handleMarkDone = React.useCallback((nodeId) => {
+    if (!nodeId) return;
+    const key = String(nodeId);
+    setReminders((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+    const node = findNodeById(nodeId);
+    logEvent(
+      'plugin.followUpReminders.log.cleared',
+      'Cleared reminder for {name}.',
+      { name: getNodeKey(node) }
+    );
+  }, [setReminders, findNodeById, logEvent]);
+
+  const buttonStyle = {
+    borderRadius: 6,
+    padding: '6px 12px',
+    border: `1px solid ${currentTheme.colors.inputBorder}`,
+    background: currentTheme.colors.menuBackground,
+    color: currentTheme.colors.primaryText,
+    cursor: 'pointer',
+  };
+
+  if (dueEntries.length === 0) {
+    return (
+      <div style={{ fontSize: 13, color: currentTheme.colors.secondaryText }}>
+        <FormattedMessage id="plugin.followUpReminders.notificationsEmpty" defaultMessage="You're all caught up for now." />
+      </div>
+    );
+  }
+
+  const visibleEntries = dueEntries.slice(0, 4);
+  const remaining = dueEntries.length - visibleEntries.length;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ fontSize: 13, color: currentTheme.colors.secondaryText }}>
+        <FormattedMessage
+          id="plugin.followUpReminders.notificationsSummary"
+          defaultMessage="{count, plural, one {# reminder needs attention} other {# reminders need attention}}"
+          values={{ count: dueEntries.length }}
+        />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {visibleEntries.map((entry) => {
+          const badgeColor = (() => {
+            switch (entry.status) {
+              case REMINDER_STATUS.OVERDUE:
+                return currentTheme.colors.error;
+              case REMINDER_STATUS.UPCOMING:
+                return currentTheme.colors.warning;
+              default:
+                return currentTheme.colors.info;
+            }
+          })();
+          const formattedDate = entry.dueTime
+            ? intl.formatDate(entry.dueTime, { dateStyle: 'medium', timeStyle: 'short' })
+            : intl.formatMessage({ id: 'plugin.followUpReminders.invalidShort', defaultMessage: 'Invalid date' });
+          const nodeId = entry.node?.id ?? entry.nodeId;
+
+          return (
+            <div
+              key={entry.nodeId}
+              style={{
+                borderRadius: 12,
+                border: `1px solid ${currentTheme.colors.panelBorder}`,
+                background: currentTheme.colors.menuBackground,
+                padding: 14,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 10,
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                <strong style={{ fontSize: 14, color: currentTheme.colors.primaryText }}>{entry.label}</strong>
+                <span
                   style={{
-                    border: `1px solid ${currentTheme.colors.panelBorder}`,
-                    borderRadius: 10,
-                    padding: 12,
-                    background: currentTheme.colors.appBackground || currentTheme.colors.panelBackground,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 6,
+                    borderRadius: 999,
+                    padding: '3px 10px',
+                    fontSize: 12,
+                    border: `1px solid ${badgeColor}`,
+                    color: badgeColor,
+                    background: currentTheme.colors.panelBackground,
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                    <strong style={{ fontSize: 14 }}>{reminder.label}</strong>
-                    <span
-                      style={{
-                        borderRadius: 999,
-                        padding: '2px 8px',
-                        fontSize: 12,
-                        border: `1px solid ${badgeColor}`,
-                        color: badgeColor,
-                        background: currentTheme.colors.panelBackground,
-                      }}
-                    >
-                      {reminder.status === REMINDER_STATUS.OVERDUE ? (
-                        <FormattedMessage id="plugin.followUpReminders.overdue" defaultMessage="Overdue" />
-                      ) : reminder.status === REMINDER_STATUS.UPCOMING ? (
-                        <FormattedMessage id="plugin.followUpReminders.dueSoon" defaultMessage="Due soon" />
-                      ) : (
-                        <FormattedMessage id="plugin.followUpReminders.scheduled" defaultMessage="Scheduled" />
-                      )}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 13, color: currentTheme.colors.secondaryText }}>{formattedDate}</div>
-                  {reminder.note && (
-                    <div style={{ fontSize: 13, whiteSpace: 'pre-wrap', color: currentTheme.colors.primaryText }}>
-                      {reminder.note}
-                    </div>
+                  {entry.status === REMINDER_STATUS.OVERDUE ? (
+                    <FormattedMessage id="plugin.followUpReminders.overdue" defaultMessage="Overdue" />
+                  ) : (
+                    <FormattedMessage id="plugin.followUpReminders.dueSoon" defaultMessage="Due soon" />
                   )}
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button style={buttonStyle} type="button" onClick={() => handleSelectNode(reminder.nodeId)}>
-                      <FormattedMessage id="plugin.followUpReminders.openNode" defaultMessage="Focus node" />
-                    </button>
-                    <button style={buttonStyle} type="button" onClick={() => handleClear(reminder.nodeId)}>
-                      <FormattedMessage id="plugin.followUpReminders.markDone" defaultMessage="Mark done" />
-                    </button>
-                  </div>
+                </span>
+              </div>
+              <div style={{ fontSize: 13, color: currentTheme.colors.secondaryText }}>{formattedDate}</div>
+              {entry.note && (
+                <div style={{ fontSize: 13, whiteSpace: 'pre-wrap', color: currentTheme.colors.primaryText }}>
+                  {entry.note}
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
+              )}
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <button style={buttonStyle} type="button" onClick={() => handleFocus(nodeId)}>
+                  <FormattedMessage id="plugin.followUpReminders.openNode" defaultMessage="Focus node" />
+                </button>
+                <button style={buttonStyle} type="button" onClick={() => handleMarkDone(entry.nodeId)}>
+                  <FormattedMessage id="plugin.followUpReminders.markDone" defaultMessage="Mark done" />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {remaining > 0 && (
+        <div style={{ fontSize: 12, color: currentTheme.colors.secondaryText }}>
+          <FormattedMessage
+            id="plugin.followUpReminders.notificationsMore"
+            defaultMessage="+{count} more scheduled"
+            values={{ count: remaining }}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -771,6 +867,28 @@ export const followUpRemindersPlugin = {
   version: '1.0.0',
   author: 'Vertex Lab',
   slots: {
+    notifications: [
+      {
+        id: 'followUpRemindersNotifications',
+        title: 'Follow-up Reminders',
+        order: 15,
+        visible: () => true,
+        badge: (api) => {
+          const nodes = Array.isArray(api?.nodes) ? api.nodes : [];
+          const nodeIds = nodes.map((node) => node?.id).filter((id) => id != null);
+          const scoped = filterRemindersForNodes(getReminderState(nodeIds), nodes);
+          const now = Date.now();
+          const count = Object.values(scoped || {}).reduce((total, reminder) => {
+            const status = getReminderStatus(reminder.dueAt, now);
+            return (status === REMINDER_STATUS.OVERDUE || status === REMINDER_STATUS.UPCOMING)
+              ? total + 1
+              : total;
+          }, 0);
+          return count > 0 ? count : null;
+        },
+        render: (api) => <ReminderNotifications appApi={api} />,
+      },
+    ],
     aboutPage: {
       markdown: `
 # Follow-up Reminders
