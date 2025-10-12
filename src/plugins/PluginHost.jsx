@@ -112,6 +112,8 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
   const [collapsedPanels, setCollapsedPanels] = useState(() => new Set());
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [activeMobilePanelKey, setActiveMobilePanelKey] = useState(null);
+  const drawerRef = useRef(null);
+  const toggleButtonRef = useRef(null);
 
   useEffect(() => {
     if (typeof onOverlaysChange === 'function') {
@@ -266,7 +268,7 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
         display: 'flex',
         flexDirection: 'column',
         gap: 12,
-        pointerEvents: 'none',
+        pointerEvents: 'auto',
         maxHeight: maxHeightValue,
         maxWidth: 'min(340px, calc(100vw - 32px))',
         zIndex: 10115,
@@ -366,6 +368,48 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
     }
   }, [hideSidePanels]);
 
+  useEffect(() => {
+    if (!isMobile || !mobileDrawerOpen) return;
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setMobileDrawerOpen(false);
+        const btn = toggleButtonRef.current;
+        if (btn && typeof btn.focus === 'function') btn.focus();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isMobile, mobileDrawerOpen]);
+
+  useEffect(() => {
+    if (!isMobile || !mobileDrawerOpen) return;
+    const firstFocus = () => {
+      const el = document.getElementById(activeMobilePanelKey ? `plugin-mobile-drawer-tab-${activeMobilePanelKey}` : '');
+      if (el && typeof el.focus === 'function') el.focus();
+    };
+    firstFocus();
+    const trap = (e) => {
+      if (e.key !== 'Tab') return;
+      const root = drawerRef.current;
+      if (!root) return;
+      const focusables = root.querySelectorAll('a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])');
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener('keydown', trap);
+    return () => window.removeEventListener('keydown', trap);
+  }, [isMobile, mobileDrawerOpen, activeMobilePanelKey]);
+
   const activeMobilePanel = mobileDrawerEntries.find((entry) => entry.key === activeMobilePanelKey) || null;
   const activeMobilePanelLabelId = activeMobilePanel ? `plugin-mobile-drawer-tab-${activeMobilePanel.key}` : undefined;
 
@@ -387,7 +431,7 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
                   >
                     <summary className="plugin-side-panels__summary">
                       <span className="plugin-side-panels__title">{entry.title}</span>
-                      <span className="plugin-side-panels__arrow" aria-hidden="true">›</span>
+                      <span className="plugin-side-panels__arrow" aria-hidden="true">?</span>
                     </summary>
                     <div className="plugin-side-panels__content">
                       {entry.element}
@@ -407,6 +451,7 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
       {isMobile && (notificationEntries.length > 0 || mobileDrawerEntries.length > 0) && !hideSidePanels && (
         <>
           <div
+            ref={drawerRef}
             className={`plugin-mobile-drawer ${mobileDrawerOpen ? 'plugin-mobile-drawer--open' : ''}`}
             role="dialog"
             aria-modal={mobileDrawerOpen ? 'true' : undefined}
@@ -418,10 +463,10 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
               <button
                 type="button"
                 className="plugin-mobile-drawer__close"
-                onClick={() => setMobileDrawerOpen(false)}
+                onClick={() => { setMobileDrawerOpen(false); const btn = toggleButtonRef.current; if (btn && typeof btn.focus === 'function') btn.focus(); }}
                 aria-label="Close panel drawer"
               >
-                ✕
+                ���
               </button>
             </div>
             <NotificationSection entries={notificationEntries} variant="mobile" />
@@ -435,19 +480,46 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
                     role="tab"
                     aria-selected={isActive}
                     id={`plugin-mobile-drawer-tab-${entry.key}`}
+                    aria-controls={`plugin-mobile-drawer-panel-${entry.key}`}
                     className={`plugin-mobile-drawer__tab ${isActive ? 'plugin-mobile-drawer__tab--active' : ''}`}
                     onClick={() => setActiveMobilePanelKey(entry.key)}
+                    onKeyDown={(e) => {
+                      const idx = mobileDrawerEntries.findIndex(x => x.key === activeMobilePanelKey);
+                      if (e.key === 'ArrowRight') {
+                        const next = mobileDrawerEntries[(idx + 1) % mobileDrawerEntries.length];
+                        if (next) setActiveMobilePanelKey(next.key);
+                        e.preventDefault();
+                      } else if (e.key === 'ArrowLeft') {
+                        const prev = mobileDrawerEntries[(idx - 1 + mobileDrawerEntries.length) % mobileDrawerEntries.length];
+                        if (prev) setActiveMobilePanelKey(prev.key);
+                        e.preventDefault();
+                      } else if (e.key === 'Home') {
+                        const first = mobileDrawerEntries[0];
+                        if (first) setActiveMobilePanelKey(first.key);
+                        e.preventDefault();
+                      } else if (e.key === 'End') {
+                        const last = mobileDrawerEntries[mobileDrawerEntries.length - 1];
+                        if (last) setActiveMobilePanelKey(last.key);
+                        e.preventDefault();
+                      }
+                    }}
                   >
                     {entry.title}
                   </button>
                 );
               })}
             </div>
-            <div className="plugin-mobile-drawer__body">
+            <div
+              className="plugin-mobile-drawer__body"
+              role="tabpanel"
+              id={activeMobilePanel ? `plugin-mobile-drawer-panel-${activeMobilePanel.key}` : undefined}
+              aria-labelledby={activeMobilePanel ? `plugin-mobile-drawer-tab-${activeMobilePanel.key}` : undefined}
+            >
               {activeMobilePanel?.mobileElement || activeMobilePanel?.element || null}
             </div>
           </div>
           <button
+            ref={toggleButtonRef}
             type="button"
             className="plugin-mobile-drawer__toggle"
             onClick={() => setMobileDrawerOpen((prev) => !prev)}
