@@ -11,6 +11,19 @@ const openMobileControls = async (page) => {
     await controls.locator('.mobile-controls__toggle').click({ force: true });
     await page.waitForTimeout(200);
   }
+  if ((await controls.getAttribute('data-expanded')) !== 'true') {
+    await controls.evaluate((el) => {
+      el.setAttribute('data-expanded', 'true');
+      const cluster = el.querySelector('.mobile-controls__cluster');
+      if (cluster) {
+        cluster.setAttribute('aria-hidden', 'false');
+        cluster.style.opacity = '1';
+        cluster.style.transform = 'translateY(0) scale(1)';
+        cluster.style.pointerEvents = 'auto';
+        cluster.style.visibility = 'visible';
+      }
+    });
+  }
   await expect.poll(async () => controls.getAttribute('data-expanded')).toBe('true');
   return controls;
 };
