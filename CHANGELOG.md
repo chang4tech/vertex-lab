@@ -7,6 +7,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ## Unreleased
 
 ### Fixed
+- Follow-up Reminders: Mobile drawer no longer auto-opens; reminders surface via notifications while controls stay accessible.
 - Plugin mobile drawer lacked styling; added full CSS to keep panels hidden until opened and tuned safe-area positioning.
 - Plugins Manager modal now declares dialog semantics, autofocuses controls, and listens for Escape to improve accessibility.
 - Plugin Control Hub now tracks bundled and user-imported custom plugins (including fresh imports) so it no longer emits “Plugin Not Found”.

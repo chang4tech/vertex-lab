@@ -906,7 +906,7 @@ How to use:
         id: 'followUpRemindersPanel',
         title: 'Follow-up Reminders',
         allowCollapse: true,
-        mobileBehavior: 'drawer',
+        mobileBehavior: 'hidden',
         visible: () => true,
         order: 25,
         render: (api) => <ReminderPanel appApi={api} layout="floating" />,
