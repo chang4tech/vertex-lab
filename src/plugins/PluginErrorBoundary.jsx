@@ -1,10 +1,12 @@
 import React from 'react';
 import { appendPluginError } from './errorLog.js';
+import PluginError from './components/PluginError.jsx';
 
 class PluginErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false, error: null };
+    this.handleRetry = this.handleRetry.bind(this);
   }
 
   static getDerivedStateFromError(error) {
@@ -18,20 +20,20 @@ class PluginErrorBoundary extends React.Component {
     appendPluginError({ pluginId, message: String(error?.message || error), stack: String(error?.stack || ''), componentStack: info?.componentStack || '' });
   }
 
+  handleRetry() {
+    this.setState({ hasError: false, error: null });
+  }
+
   render() {
     const { hasError, error } = this.state;
-    const { pluginId, children } = this.props;
+    const { pluginId, pluginName, children } = this.props;
     if (hasError) {
       return (
-        <div style={{ width: 320, padding: 12, borderLeft: '1px solid #e5e7eb', background: '#fff' }}>
-          <h3 style={{ margin: '8px 0' }}>Plugin Error</h3>
-          <div style={{ color: '#6b7280', fontSize: 12 }}>
-            {`A panel in plugin '${pluginId}' failed to render.`}
-          </div>
-          <pre style={{ color: '#991b1b', whiteSpace: 'pre-wrap' }}>
-            {String(error?.message || error)}
-          </pre>
-        </div>
+        <PluginError
+          error={error}
+          pluginName={pluginName || pluginId}
+          onRetry={this.handleRetry}
+        />
       );
     }
     return children;

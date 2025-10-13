@@ -2,13 +2,48 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FormattedMessage } from 'react-intl';
 import PluginErrorBoundary from './PluginErrorBoundary.jsx';
 import { appendPluginLog } from './errorLog.js';
+import { useHapticFeedback } from '../hooks/useHapticFeedback.js';
+import { useNotificationHistory } from '../hooks/useNotificationHistory.js';
 
 function PanelRenderer({ render, appApi }) {
   // Call provided render so errors bubble to the boundary above
   return render(appApi);
 }
 
-function NotificationSection({ entries = [], variant = 'desktop' }) {
+function NotificationSection({ entries = [], variant = 'desktop', onNotificationVisible, isUnseen }) {
+  const observerRef = React.useRef(null);
+  const cardRefs = React.useRef(new Map());
+
+  React.useEffect(() => {
+    if (!onNotificationVisible || typeof IntersectionObserver === 'undefined') return;
+
+    // Create observer to detect when notifications become visible
+    observerRef.current = new IntersectionObserver(
+      (observerEntries) => {
+        observerEntries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const key = entry.target.dataset.notificationKey;
+            if (key) {
+              onNotificationVisible(key);
+            }
+          }
+        });
+      },
+      { threshold: 0.5 } // Mark as seen when 50% visible
+    );
+
+    // Observe all notification cards
+    cardRefs.current.forEach((element) => {
+      if (element) observerRef.current.observe(element);
+    });
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [entries, onNotificationVisible]);
+
   if (!entries || entries.length === 0) {
     return null;
   }
@@ -28,19 +63,45 @@ function NotificationSection({ entries = [], variant = 'desktop' }) {
         <FormattedMessage id="plugins.notifications.title" defaultMessage="Notifications" />
       </div>
       <div className={listClass}>
-        {entries.map((entry) => (
-          <article key={entry.key} className={cardClass}>
-            <div className={cardHeaderClass}>
-              <span>{entry.title}</span>
-              {entry.badge !== undefined && entry.badge !== null && entry.badge !== false && entry.badge !== '' && (
-                <span className={badgeClass}>{entry.badge}</span>
+        {entries.map((entry) => {
+          // Support priority variants: info, warning, error, success
+          const priority = entry.priority || 'info';
+          const priorityClass = priority !== 'info' ? ` ${cardClass}--${priority}` : '';
+          const unseen = isUnseen ? isUnseen(entry.key) : false;
+
+          return (
+            <article
+              key={entry.key}
+              className={`${cardClass}${priorityClass}`}
+              ref={(el) => {
+                if (el) {
+                  cardRefs.current.set(entry.key, el);
+                } else {
+                  cardRefs.current.delete(entry.key);
+                }
+              }}
+              data-notification-key={entry.key}
+              style={{ position: 'relative' }}
+            >
+              {unseen && (
+                <span
+                  className="plugin-update-badge"
+                  aria-label="Unread notification"
+                  title="New notification"
+                />
               )}
-            </div>
-            <div className={bodyClass}>
-              {entry.element}
-            </div>
-          </article>
-        ))}
+              <div className={cardHeaderClass}>
+                <span>{entry.title}</span>
+                {entry.badge !== undefined && entry.badge !== null && entry.badge !== false && entry.badge !== '' && (
+                  <span className={badgeClass}>{entry.badge}</span>
+                )}
+              </div>
+              <div className={bodyClass}>
+                {entry.element}
+              </div>
+            </article>
+          );
+        })}
       </div>
     </section>
   );
@@ -66,6 +127,15 @@ const descriptorsEqual = (a, b) => {
 
 // Simple plugin host that renders plugin-provided side panels
 export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanelWidthChange, hideSidePanels = false }) {
+  const { triggerHaptic, triggerWithAnimation } = useHapticFeedback();
+  const {
+    markAsSeen,
+    markAllAsSeen,
+    isUnseen,
+    getUnseenCount,
+    updateCurrentNotifications,
+  } = useNotificationHistory();
+
   const overlayDescriptors = useMemo(() => {
     if (!plugins || plugins.length === 0) return [];
     return plugins.flatMap((plugin) => {
@@ -109,11 +179,29 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
 
   const lastDescriptorsRef = useRef();
   const containerRef = useRef(null);
+  const scrollContainerRef = useRef(null);
   const [collapsedPanels, setCollapsedPanels] = useState(() => new Set());
+  const [scrollAtTop, setScrollAtTop] = useState(true);
+  const [scrollAtBottom, setScrollAtBottom] = useState(true);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [activeMobilePanelKey, setActiveMobilePanelKey] = useState(null);
   const drawerRef = useRef(null);
   const toggleButtonRef = useRef(null);
+  const drawerStartY = useRef(0);
+  const drawerStartTranslate = useRef(0);
+
+  // Resizable panel state
+  const [panelWidth, setPanelWidth] = useState(() => {
+    try {
+      const stored = localStorage.getItem('vertex_plugin_panel_width');
+      return stored ? parseInt(stored, 10) : 340;
+    } catch {
+      return 340;
+    }
+  });
+  const resizeStartX = useRef(0);
+  const resizeStartWidth = useRef(0);
+  const isResizing = useRef(false);
 
   useEffect(() => {
     if (typeof onOverlaysChange === 'function') {
@@ -230,6 +318,10 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
             ? notification.badge(appApi)
             : notification.badge;
 
+          const priority = typeof notification.priority === 'function'
+            ? notification.priority(appApi)
+            : (notification.priority || 'info');
+
           const element = (
             <PluginErrorBoundary key={`${plugin.id}:${notification.id}`} pluginId={plugin.id}>
               <PanelRenderer render={withPluginApi(notification.render)} appApi={appApi} />
@@ -242,6 +334,7 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
             element,
             title: notificationTitle,
             badge: badgeValue,
+            priority,
             pluginId: plugin.id,
             notificationId: notification.id,
           });
@@ -270,9 +363,19 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
         gap: 12,
         pointerEvents: 'auto',
         maxHeight: maxHeightValue,
-        maxWidth: 'min(340px, calc(100vw - 32px))',
+        width: `${panelWidth}px`,
+        maxWidth: 'calc(100vw - 32px)',
         zIndex: 10115,
       };
+
+  // Track notification keys for history management
+  const notificationKeys = useMemo(() => notificationEntries.map((entry) => entry.key), [notificationEntries]);
+  const unseenNotificationCount = getUnseenCount(notificationKeys);
+
+  // Update current notifications for history tracking
+  useEffect(() => {
+    updateCurrentNotifications(notificationKeys);
+  }, [notificationKeys, updateCurrentNotifications]);
 
   useEffect(() => {
     if (typeof onSidePanelWidthChange !== 'function') return undefined;
@@ -329,7 +432,10 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
     });
   }, [sidePanelEntries]);
 
-  const handleCollapseChange = useCallback((key, nextOpen) => {
+  const handleCollapseChange = useCallback((key, nextOpen, event) => {
+    // Trigger haptic feedback on collapse/expand
+    triggerHaptic('light');
+
     setCollapsedPanels((prev) => {
       const next = new Set(prev instanceof Set ? prev : []);
       if (nextOpen) {
@@ -339,7 +445,7 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
       }
       return next;
     });
-  }, []);
+  }, [triggerHaptic]);
 
   const visibleDesktopEntries = !isMobile ? sidePanelEntries : [];
 
@@ -413,12 +519,155 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
   const activeMobilePanel = mobileDrawerEntries.find((entry) => entry.key === activeMobilePanelKey) || null;
   const activeMobilePanelLabelId = activeMobilePanel ? `plugin-mobile-drawer-tab-${activeMobilePanel.key}` : undefined;
 
+  // Track scroll position for scroll indicators
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    const updateScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      setScrollAtTop(scrollTop <= 1);
+      setScrollAtBottom(scrollTop + clientHeight >= scrollHeight - 1);
+    };
+
+    updateScroll();
+    el.addEventListener('scroll', updateScroll, { passive: true });
+    return () => el.removeEventListener('scroll', updateScroll);
+  }, [sidePanelEntries, notificationEntries]);
+
+  // Swipe-to-close gesture for mobile drawer
+  useEffect(() => {
+    if (!isMobile || !mobileDrawerOpen) return;
+
+    const drawer = drawerRef.current;
+    if (!drawer) return;
+
+    const onTouchStart = (e) => {
+      const touch = e.touches[0];
+      drawerStartY.current = touch.clientY;
+      drawerStartTranslate.current = 0;
+    };
+
+    const onTouchMove = (e) => {
+      const touch = e.touches[0];
+      const deltaY = touch.clientY - drawerStartY.current;
+
+      // Only allow downward swipe (positive deltaY)
+      if (deltaY > 0) {
+        drawerStartTranslate.current = deltaY;
+        drawer.style.transform = `translateY(${deltaY}px)`;
+        drawer.style.transition = 'none';
+      }
+    };
+
+    const onTouchEnd = () => {
+      const deltaY = drawerStartTranslate.current;
+
+      // If swiped down more than 100px, close the drawer
+      if (deltaY > 100) {
+        triggerHaptic('medium');
+        setMobileDrawerOpen(false);
+        const btn = toggleButtonRef.current;
+        if (btn && typeof btn.focus === 'function') btn.focus();
+      }
+
+      // Reset transform
+      drawer.style.transform = '';
+      drawer.style.transition = '';
+      drawerStartY.current = 0;
+      drawerStartTranslate.current = 0;
+    };
+
+    const handle = drawer.querySelector('.plugin-mobile-drawer__handle');
+    if (handle) {
+      handle.addEventListener('touchstart', onTouchStart, { passive: true });
+      handle.addEventListener('touchmove', onTouchMove, { passive: true });
+      handle.addEventListener('touchend', onTouchEnd, { passive: true });
+
+      return () => {
+        handle.removeEventListener('touchstart', onTouchStart);
+        handle.removeEventListener('touchmove', onTouchMove);
+        handle.removeEventListener('touchend', onTouchEnd);
+      };
+    }
+  }, [isMobile, mobileDrawerOpen]);
+
+  // Resizable panel drag logic
+  useEffect(() => {
+    if (isMobile) return;
+
+    const onMouseDown = (e) => {
+      if (e.button !== 0) return; // Only left click
+      e.preventDefault();
+      isResizing.current = true;
+      resizeStartX.current = e.clientX;
+      resizeStartWidth.current = panelWidth;
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    };
+
+    const onMouseMove = (e) => {
+      if (!isResizing.current) return;
+      e.preventDefault();
+
+      // Calculate new width (resize from left, so subtract delta)
+      const deltaX = resizeStartX.current - e.clientX;
+      const newWidth = Math.max(280, Math.min(600, resizeStartWidth.current + deltaX));
+      setPanelWidth(newWidth);
+    };
+
+    const onMouseUp = () => {
+      if (!isResizing.current) return;
+      isResizing.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+
+      // Persist to localStorage
+      try {
+        localStorage.setItem('vertex_plugin_panel_width', String(panelWidth));
+      } catch {}
+    };
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handle = container.querySelector('.plugin-panel-resize-handle');
+    if (handle) {
+      handle.addEventListener('mousedown', onMouseDown);
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+
+      return () => {
+        handle.removeEventListener('mousedown', onMouseDown);
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      };
+    }
+  }, [isMobile, panelWidth]);
+
   return (
     <>
       {(notificationEntries.length > 0 || visibleDesktopEntries.length > 0) && !hideSidePanels && (
         <div ref={containerRef} className="plugin-side-panels" style={sidePanelContainerStyle}>
-          <div className="plugin-side-panels__scroll" style={{ maxHeight: maxHeightValue }}>
-            <NotificationSection entries={notificationEntries} />
+          <div
+            className="plugin-panel-resize-handle"
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize plugin panel"
+            title="Drag to resize panel"
+          />
+          <div
+            ref={scrollContainerRef}
+            className="plugin-side-panels__scroll"
+            style={{ maxHeight: maxHeightValue }}
+            data-scroll-top={scrollAtTop}
+            data-scroll-bottom={scrollAtBottom}
+          >
+            <NotificationSection
+              entries={notificationEntries}
+              onNotificationVisible={markAsSeen}
+              isUnseen={isUnseen}
+            />
             {visibleDesktopEntries.map((entry) => {
               const collapsed = collapsedPanels.has(entry.key);
               if (entry.allowCollapse) {
@@ -469,7 +718,12 @@ export function PluginHost({ plugins = [], appApi, onOverlaysChange, onSidePanel
                 ���
               </button>
             </div>
-            <NotificationSection entries={notificationEntries} variant="mobile" />
+            <NotificationSection
+              entries={notificationEntries}
+              variant="mobile"
+              onNotificationVisible={markAsSeen}
+              isUnseen={isUnseen}
+            />
             <div className="plugin-mobile-drawer__tabs" role="tablist">
               {mobileDrawerEntries.map((entry) => {
                 const isActive = entry.key === activeMobilePanelKey;
