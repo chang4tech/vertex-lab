@@ -1168,7 +1168,7 @@ mark {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   will-change: scroll-position;
-  overflow-y: hidden;
+  overflow-x: hidden;
 }
 
 .plugin-side-panels__scroll::before,
