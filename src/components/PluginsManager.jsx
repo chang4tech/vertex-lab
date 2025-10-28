@@ -3,8 +3,10 @@ import PropTypes from 'prop-types';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { corePlugins } from '../plugins';
 import '../styles/Settings.css';
-import { getPluginErrors, getPluginErrorsById, subscribePluginErrors } from '../plugins/errorLog.js';
+import { getPluginErrors, subscribePluginErrors } from '../plugins/errorLog.js';
 import { useTheme } from '../contexts/ThemeContext';
+import { checkPluginConflicts } from '../utils/pluginUtils';
+import PluginRow from './PluginRow';
 
 const PluginsManager = ({
   onClose,
@@ -155,6 +157,88 @@ const PluginsManager = ({
     onOpenControlHub(pluginId);
   }, [onOpenControlHub]);
 
+  // Helper to get conflicts for a plugin
+  const getPluginConflictsInfo = React.useCallback((plugin) => {
+    const allPlugins = [...availablePlugins, ...customPlugins];
+    if (!plugin.conflicts || plugin.conflicts.length === 0) {
+      return null;
+    }
+
+    const conflictingPlugins = plugin.conflicts
+      .map(id => allPlugins.find(p => p.id === id))
+      .filter(Boolean)
+      .map(p => getPluginName(p));
+
+    return conflictingPlugins.length > 0 ? conflictingPlugins : null;
+  }, [availablePlugins, customPlugins, getPluginName]);
+
+  // Helper to get formatted conflict names for a list of plugin IDs
+  const getConflictNames = React.useCallback((conflictIds, allPlugins) => {
+    return conflictIds
+      .map(id => {
+        const plugin = allPlugins.find(p => p.id === id);
+        return plugin ? getPluginName(plugin) : null;
+      })
+      .filter(Boolean)
+      .join(', ');
+  }, [getPluginName]);
+
+  // Helper to show conflict confirmation dialog
+  const confirmConflictResolution = React.useCallback((pluginName, conflictNames) => {
+    return window.confirm(
+      intl.formatMessage(
+        {
+          id: 'plugins.conflictWarning',
+          defaultMessage: 'Enabling "{pluginName}" will disable the following conflicting plugin(s): {conflictNames}. Continue?'
+        },
+        { pluginName, conflictNames }
+      )
+    );
+  }, [intl]);
+
+  // Helper to disable conflicting plugins
+  const disableConflictingPlugins = React.useCallback((conflicts) => {
+    conflicts.forEach(conflictId => {
+      onTogglePlugin(conflictId, false);
+    });
+  }, [onTogglePlugin]);
+
+  // Handle plugin conflicts when enabling a plugin
+  const handleEnableWithConflicts = React.useCallback((pluginId, allPlugins) => {
+    const { hasConflict, conflicts } = checkPluginConflicts(pluginId, allPlugins, pluginPrefs);
+
+    if (!hasConflict) {
+      onTogglePlugin(pluginId, true);
+      return;
+    }
+
+    const plugin = allPlugins.find(p => p.id === pluginId);
+    const pluginName = getPluginName(plugin);
+    const conflictNames = getConflictNames(conflicts, allPlugins);
+
+    const confirmed = confirmConflictResolution(pluginName, conflictNames);
+    if (!confirmed) {
+      return;
+    }
+
+    disableConflictingPlugins(conflicts);
+    onTogglePlugin(pluginId, true);
+  }, [pluginPrefs, onTogglePlugin, getPluginName, getConflictNames, confirmConflictResolution, disableConflictingPlugins]);
+
+  const handleTogglePlugin = React.useCallback((pluginId, enabled) => {
+    const allPlugins = [...availablePlugins, ...customPlugins];
+
+    if (enabled) {
+      handleEnableWithConflicts(pluginId, allPlugins);
+    } else {
+      onTogglePlugin(pluginId, enabled);
+    }
+  }, [availablePlugins, customPlugins, onTogglePlugin, handleEnableWithConflicts]);
+
+  const handleToggleExpanded = React.useCallback((pluginId) => {
+    setExpanded(prev => ({ ...prev, [pluginId]: !prev[pluginId] }));
+  }, []);
+
   return (
     <div className="settings-overlay" onClick={handleOverlayClick}>
       <div
@@ -182,66 +266,19 @@ const PluginsManager = ({
             <h3 style={{ margin: '8px 0' }}><FormattedMessage id="plugins.core" defaultMessage="Core Plugins" /></h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8 }}>
               {availablePlugins.map(p => (
-                <React.Fragment key={p.id}>
-                  <div>
-                    <div style={pillContainerStyle}>
-                      <strong>{getPluginName(p)}</strong>
-                      <span style={badgeStyle}>
-                        {`• ${intl.formatMessage({ id: (pluginPrefs[p.id] ?? true) ? 'plugins.enabled' : 'plugins.disabled', defaultMessage: (pluginPrefs[p.id] ?? true) ? 'Enabled' : 'Disabled' })}`}
-                      </span>
-                      {isIncomplete(p) && (
-                        <span style={warningBadgeStyle}>• <FormattedMessage id="plugins.incomplete" defaultMessage="Incomplete" /></span>
-                      )}
-                      {getPluginErrorsById(p.id).length > 0 && (
-                        <span style={errorBadgeStyle}>
-                          {`• ${intl.formatMessage({ id: 'plugins.errors', defaultMessage: 'Errors' })}: ${getPluginErrorsById(p.id).length}`}
-                        </span>
-                      )}
-                      <button
-                        style={{ ...subtleButtonStyle, marginLeft: 'auto' }}
-                        onClick={() => setExpanded(prev => ({ ...prev, [p.id]: !prev[p.id] }))}
-                      >
-                        {expanded[p.id]
-                          ? intl.formatMessage({ id: 'plugins.hideDetails', defaultMessage: 'Hide Details' })
-                          : intl.formatMessage({ id: 'plugins.showDetails', defaultMessage: 'Details' })}
-                      </button>
-                    </div>
-                    {expanded[p.id] && (
-                      <div style={detailsTextStyle}>
-                        {p.description && (
-                          <div>
-                            <strong>Description:</strong> {p.descriptionId
-                              ? <FormattedMessage id={p.descriptionId} defaultMessage={p.description} />
-                              : p.description}
-                          </div>
-                        )}
-                        {p.version && <div><strong><FormattedMessage id="plugins.version" defaultMessage="Version:" /></strong> {p.version}</div>}
-                        {p.author && <div><strong><FormattedMessage id="plugins.author" defaultMessage="Author:" /></strong> {p.author}</div>}
-                        {!p.description && !p.version && !p.author && (
-                          <div style={subtleTextStyle}>
-                            <FormattedMessage id="plugins.noMetadata" defaultMessage="No metadata" />
-                          </div>
-                        )}
-                        <div style={{ ...pillContainerStyle, marginTop: 8 }}>
-                          <button
-                            style={subtleButtonStyle}
-                            onClick={() => openControlHub(p.id)}
-                          >
-                            <FormattedMessage id="plugins.controlHub" defaultMessage="Control Hub" />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: colors.primaryText }}>
-                    <input
-                      type="checkbox"
-                      checked={pluginPrefs[p.id] ?? true}
-                      onChange={(e) => onTogglePlugin(p.id, e.target.checked)}
-                    />
-                    <span><FormattedMessage id={(pluginPrefs[p.id] ?? true) ? 'plugins.enabled' : 'plugins.disabled'} defaultMessage={(pluginPrefs[p.id] ?? true) ? 'Enabled' : 'Disabled'} /></span>
-                  </label>
-                </React.Fragment>
+                <PluginRow
+                  key={p.id}
+                  plugin={p}
+                  pluginPrefs={pluginPrefs}
+                  expanded={expanded}
+                  colors={colors}
+                  onToggleExpanded={handleToggleExpanded}
+                  onToggleEnabled={handleTogglePlugin}
+                  onOpenControlHub={openControlHub}
+                  getPluginName={getPluginName}
+                  getPluginConflictsInfo={getPluginConflictsInfo}
+                  isIncomplete={isIncomplete}
+                />
               ))}
             </div>
           </section>
@@ -257,73 +294,21 @@ const PluginsManager = ({
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', alignItems: 'center', gap: 8 }}>
                 {customPlugins.map((p) => (
-                  <React.Fragment key={p.id}>
-                    <div>
-                      <div style={pillContainerStyle}>
-                        <strong>{getPluginName(p)}</strong>
-                        <span style={badgeStyle}>
-                          {`• ${intl.formatMessage({ id: (pluginPrefs[p.id] ?? true) ? 'plugins.enabled' : 'plugins.disabled', defaultMessage: (pluginPrefs[p.id] ?? true) ? 'Enabled' : 'Disabled' })}`}
-                        </span>
-                        {isIncomplete(p) && (
-                          <span style={warningBadgeStyle}>• <FormattedMessage id="plugins.incomplete" defaultMessage="Incomplete" /></span>
-                        )}
-                        {getPluginErrorsById(p.id).length > 0 && (
-                        <span style={errorBadgeStyle}>
-                          {`• ${intl.formatMessage({ id: 'plugins.errors', defaultMessage: 'Errors' })}: ${getPluginErrorsById(p.id).length}`}
-                        </span>
-                      )}
-                      <button
-                        style={{ ...subtleButtonStyle, marginLeft: 'auto' }}
-                        onClick={() => setExpanded(prev => ({ ...prev, [p.id]: !prev[p.id] }))}
-                      >
-                        {expanded[p.id]
-                          ? intl.formatMessage({ id: 'plugins.hideDetails', defaultMessage: 'Hide Details' })
-                          : intl.formatMessage({ id: 'plugins.showDetails', defaultMessage: 'Details' })}
-                      </button>
-                    </div>
-                    {expanded[p.id] && (
-                      <div style={detailsTextStyle}>
-                        {p.description && (
-                          <div>
-                            <strong>Description:</strong> {p.descriptionId
-                              ? <FormattedMessage id={p.descriptionId} defaultMessage={p.description} />
-                              : p.description}
-                          </div>
-                        )}
-                        {p.version && <div><strong><FormattedMessage id="plugins.version" defaultMessage="Version:" /></strong> {p.version}</div>}
-                        {p.author && <div><strong><FormattedMessage id="plugins.author" defaultMessage="Author:" /></strong> {p.author}</div>}
-                        {!p.description && !p.version && !p.author && (
-                          <div style={subtleTextStyle}>
-                            <FormattedMessage id="plugins.noMetadata" defaultMessage="No metadata" />
-                          </div>
-                        )}
-                        <div style={{ ...pillContainerStyle, marginTop: 8 }}>
-                          <button
-                            style={subtleButtonStyle}
-                            onClick={() => openControlHub(p.id)}
-                          >
-                            <FormattedMessage id="plugins.controlHub" defaultMessage="Control Hub" />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: colors.primaryText }}>
-                      <input
-                        type="checkbox"
-                        checked={pluginPrefs[p.id] ?? true}
-                        onChange={(e) => onTogglePlugin(p.id, e.target.checked)}
-                      />
-                    <span><FormattedMessage id={(pluginPrefs[p.id] ?? true) ? 'plugins.enabled' : 'plugins.disabled'} defaultMessage={(pluginPrefs[p.id] ?? true) ? 'Enabled' : 'Disabled'} /></span>
-                    </label>
-                    {nonRemovableSet.has(p.id) ? (
-                      <span style={badgeStyle}>
-                        <FormattedMessage id="plugins.bundled" defaultMessage="Bundled" />
-                      </span>
-                    ) : (
-                      <button style={subtleButtonStyle} onClick={() => onRemoveCustomPlugin(p.id)}><FormattedMessage id="plugins.remove" defaultMessage="Remove" /></button>
-                    )}
-                  </React.Fragment>
+                  <PluginRow
+                    key={p.id}
+                    plugin={p}
+                    pluginPrefs={pluginPrefs}
+                    expanded={expanded}
+                    colors={colors}
+                    onToggleExpanded={handleToggleExpanded}
+                    onToggleEnabled={handleTogglePlugin}
+                    onOpenControlHub={openControlHub}
+                    getPluginName={getPluginName}
+                    getPluginConflictsInfo={getPluginConflictsInfo}
+                    isIncomplete={isIncomplete}
+                    showRemoveButton={true}
+                    onRemove={!nonRemovableSet.has(p.id) ? onRemoveCustomPlugin : null}
+                  />
                 ))}
               </div>
             )}

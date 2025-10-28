@@ -6,6 +6,23 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## Unreleased
 
+### Added
+- Plugin System: Added `conflicts` field to plugin schema allowing plugins to declare mutual exclusivity with other plugins
+- Plugin Conflicts: Bidirectional conflict detection - checks both direct conflicts and reverse conflicts
+- Plugin Conflicts: Automatic conflict resolution with user confirmation when enabling conflicting plugins
+- Plugin Conflicts: Visual indicators in Plugins Manager showing which plugins have potential conflicts with tooltips
+- Plugin Conflicts: Comprehensive test suite (16 tests) for conflict detection logic
+- Plugin Examples: Added `conflictExample.jsx` demonstrating two mutually exclusive layout algorithm plugins
+- Documentation: Added "Plugin Conflicts" section to `doc/PLUGIN_SPEC.md` with examples and use cases
+
+### Changed
+- PluginsManager: Refactored `handleTogglePlugin` function - reduced cyclomatic complexity from ~5 to ~2
+- PluginsManager: Extracted conflict handling logic into 5 separate helper functions for better maintainability
+- PluginsManager: Created reusable `PluginRow` component reducing code duplication by 150+ lines
+- PluginsManager: Reduced component from ~400 lines to ~330 lines (-17.5%)
+- Plugin Validation: Enhanced to validate `conflicts` field structure (array of plugin ID strings)
+- Code Quality: Improved separation of concerns with focused, single-responsibility functions
+
 ### Fixed
 - Follow-up Reminders: Mobile drawer no longer auto-opens; reminders surface via notifications while controls stay accessible.
 - Plugin mobile drawer lacked styling; added full CSS to keep panels hidden until opened and tuned safe-area positioning.

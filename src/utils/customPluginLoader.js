@@ -55,6 +55,13 @@ export function validatePlugin(plugin) {
       if (p.visible && typeof p.visible !== 'function') return false;
     }
   }
+  // Validate conflicts field if present
+  if (plugin.conflicts !== undefined) {
+    if (!Array.isArray(plugin.conflicts)) return false;
+    for (const conflictId of plugin.conflicts) {
+      if (typeof conflictId !== 'string' || !conflictId) return false;
+    }
+  }
   return true;
 }
 
