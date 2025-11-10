@@ -11,6 +11,7 @@ const Search = ({
   onClose,
   selectedNodeId,
   providers = [],
+  debounceMs = 0,
 }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
@@ -33,23 +34,30 @@ const Search = ({
     }
   }, [visible]);
 
-  // Perform search when query changes
+  // Perform search when query changes (optional debounce)
   useEffect(() => {
-    if (query.trim() === '') {
-      setResults([]);
-      setShowHistory(true);
-      onHighlightNodes([]);
+    let timer;
+    const run = () => {
+      if (query.trim() === '') {
+        setResults([]);
+        setShowHistory(true);
+        onHighlightNodes([]);
+      } else {
+        const searchResults = aggregateSearchResults(query, nodes, providers);
+        setResults(searchResults);
+        setShowHistory(false);
+        setSelectedIndex(0);
+        const highlightedNodeIds = searchResults.map(result => result.node.id);
+        onHighlightNodes(highlightedNodeIds);
+      }
+    };
+    if (debounceMs && debounceMs > 0) {
+      timer = setTimeout(run, debounceMs);
     } else {
-      const searchResults = aggregateSearchResults(query, nodes, providers);
-      setResults(searchResults);
-      setShowHistory(false);
-      setSelectedIndex(0);
-      
-      // Highlight matching nodes on canvas
-      const highlightedNodeIds = searchResults.map(result => result.node.id);
-      onHighlightNodes(highlightedNodeIds);
+      run();
     }
-  }, [query, nodes, providers, onHighlightNodes]);
+    return () => { if (timer) clearTimeout(timer); };
+  }, [query, nodes, providers, onHighlightNodes, debounceMs]);
 
   const handleSearch = useCallback((searchQuery) => {
     setQuery(searchQuery);

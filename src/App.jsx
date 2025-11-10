@@ -6,7 +6,6 @@ import { ContextMenu } from './components/menu/ContextMenu';
 import Settings from './components/Settings';
 import TagManager from './components/TagManager';
 import PluginsManager from './components/PluginsManager';
-import Search from './components/Search';
 import ThemeSelector from './components/ThemeSelector';
 import NodeEditor from './components/NodeEditor';
 import HelpModal from './components/HelpModal';
@@ -3336,6 +3335,8 @@ function App({ graphId = 'default' }) {
     user,
     replaceGraph,
     isModalActive: hasBlockingModal,
+    isSearchOpen: !!showSearch,
+    searchProviders,
     openSearch: () => setShowSearch(true),
     closeSearch: () => setShowSearch(false),
     resetView: () => {
@@ -3529,16 +3530,7 @@ function App({ graphId = 'default' }) {
         exportUser={user}
       />
 
-      {/* Search */}
-      <Search
-        nodes={nodes}
-        visible={showSearch}
-        selectedNodeId={selectedNodeId}
-        providers={searchProviders}
-        onSelectNode={handleSelectSearchNode}
-        onHighlightNodes={handleHighlightNodes}
-        onClose={handleCloseSearch}
-      />
+      {/* Search moved into plugin overlay (core.search) */}
 
       {/* Theme Selector */}
       {showThemes && (
