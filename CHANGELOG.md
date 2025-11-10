@@ -48,6 +48,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Menus: Contain wheel/touch scrolling inside open dropdowns so the canvas and page no longer scroll/zoom while menus are hovered.
 - Plugin panels: Apply consistent glass styling, width, and overflow handling so collapsible details expand reliably while the canvas remains visible; updated PluginHost test to assert rendered content.
 - Plugin panels: Tuned opacity using pseudo-element overlays so the canvas shows through without fading text; summary/content backgrounds now inherit theme colors with adjustable alpha variables.
+- Node Editor: Add accessible labels to color swatches to stabilize tests and improve screen-reader support
 
 ### Added
 - Plugin Host: Notification rail for plugin panels plus notifications slot; desktop/mobile panels show cards with badges and follow-up actions.

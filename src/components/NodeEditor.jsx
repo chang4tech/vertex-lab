@@ -454,6 +454,7 @@ const StyleTab = ({ editedNode, setEditedNode, currentTheme }) => {
                   position: 'relative'
                 }}
                 title={NODE_COLOR_INFO[color]?.name || key}
+                aria-label={color}
               >
                 {editedNode.color === color && (
                   <div style={{
