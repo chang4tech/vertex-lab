@@ -1,3 +1,5 @@
 {
-  "enablePromptCompletion": true
+  "general": {
+    "enablePromptCompletion": true
+  }
 }

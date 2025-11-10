@@ -202,6 +202,7 @@ const Search = ({
               {searchHistory.map((historyItem, index) => (
                 <div
                   key={index}
+                  data-testid={`search-history-${index}`}
                   onClick={() => handleSearch(historyItem)}
                   style={{
                     padding: '12px 20px',
@@ -212,6 +213,7 @@ const Search = ({
                     gap: '12px'
                   }}
                   onMouseEnter={() => setSelectedIndex(index)}
+                  aria-selected={selectedIndex === index}
                 >
                   <div style={{ opacity: 0.5 }}>🕒</div>
                   <div>{historyItem}</div>
@@ -253,6 +255,7 @@ const Search = ({
                   {results.map((result, index) => (
                     <div
                       key={result.node.id}
+                      data-testid={`search-result-${result.node.id}`}
                       onClick={() => handleSelectResult(result)}
                       style={{
                         padding: '12px 20px',
@@ -265,6 +268,7 @@ const Search = ({
                         borderLeft: result.node.id === selectedNodeId ? '3px solid #1976d2' : '3px solid transparent'
                       }}
                       onMouseEnter={() => setSelectedIndex(index)}
+                      aria-selected={selectedIndex === index}
                     >
                       <div style={{
                         width: '24px',
