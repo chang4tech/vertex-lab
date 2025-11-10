@@ -23,6 +23,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Search: Plugin-extensible search via new `slots.searchProviders`; aggregation merges provider results with fallback search and stable ranking
 - Search: Added `core.search.open` plugin command and routed Cmd/Ctrl+F to go through plugin command path (plugins can override)
 - Search UI: Moved Search modal into a core plugin overlay (`core.search`) with a Control Hub config (Include tags, Debounce ms). Core plugin declares conflicts so custom search UIs can disable it.
+- Examples: Added `examples.searchPrefixProvider` to illustrate `slots.searchProviders` with a simple prefix matcher
 
 ### Changed
 - PluginsManager: Refactored `handleTogglePlugin` function - reduced cyclomatic complexity from ~5 to ~2

@@ -15,6 +15,7 @@ import { showcasePlugin } from './examples/showcasePlugin.jsx';
 import { followUpRemindersPlugin } from './examples/followUpRemindersPlugin.jsx';
 import { gamificationPlugin } from './examples/gamificationPlugin.jsx';
 import { paperReferenceProspectorPlugin } from './examples/paperReferenceProspectorPlugin.jsx';
+import { searchPrefixProviderPlugin } from './examples/searchPrefixProviderPlugin.jsx';
 
 export const corePlugins = [
   nodeInfoPlugin,
@@ -37,4 +38,5 @@ export const corePlugins = [
 export const bundledCustomPlugins = [
   gamificationPlugin,
   paperReferenceProspectorPlugin,
+  searchPrefixProviderPlugin,
 ];
