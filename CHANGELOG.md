@@ -6,6 +6,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## Unreleased
 
+## [0.4.0] - 2025-11-10
+
 ### Added
 - Plugin System: Added `conflicts` field to plugin schema allowing plugins to declare mutual exclusivity with other plugins
 - Plugin Conflicts: Bidirectional conflict detection - checks both direct conflicts and reverse conflicts
@@ -172,6 +174,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Tests
 - Added unit tests to cover the `E` shortcut in `useKeyboardShortcuts`.
+
 
 ## 0.0.0 - Initial
 - Initial project scaffold, canvas rendering, selection, import/export, themes, and core shortcuts.
