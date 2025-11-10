@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { searchNodes, highlightMatches, getSearchHistory, addToSearchHistory, clearSearchHistory } from '../utils/searchUtils';
+import { highlightMatches, getSearchHistory, addToSearchHistory, clearSearchHistory } from '../utils/searchUtils';
+import { aggregateSearchResults } from '../utils/searchEngine.js';
 
 const Search = ({ 
   nodes, 
@@ -8,7 +9,8 @@ const Search = ({
   onHighlightNodes, 
   visible, 
   onClose,
-  selectedNodeId 
+  selectedNodeId,
+  providers = [],
 }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
@@ -38,7 +40,7 @@ const Search = ({
       setShowHistory(true);
       onHighlightNodes([]);
     } else {
-      const searchResults = searchNodes(nodes, query);
+      const searchResults = aggregateSearchResults(query, nodes, providers);
       setResults(searchResults);
       setShowHistory(false);
       setSelectedIndex(0);
@@ -47,7 +49,7 @@ const Search = ({
       const highlightedNodeIds = searchResults.map(result => result.node.id);
       onHighlightNodes(highlightedNodeIds);
     }
-  }, [query, nodes, onHighlightNodes]);
+  }, [query, nodes, providers, onHighlightNodes]);
 
   const handleSearch = useCallback((searchQuery) => {
     setQuery(searchQuery);

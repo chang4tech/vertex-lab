@@ -18,6 +18,7 @@ import { mergePlugins } from './plugins/registry.js';
 import { loadPluginPrefs, savePluginPrefs } from './utils/pluginUtils';
 import { loadCustomPluginsFromStorage, addCustomPluginCode, removeStoredCustomPluginCodeById } from './utils/customPluginLoader';
 import { collectPluginCommands, filterCommandsForContext } from './plugins/commands.js';
+import { collectSearchProviders } from './plugins/searchProviders.js';
 import { useLocaleOptions } from './i18n/LocaleProvider';
 import { useTheme } from './contexts/ThemeContext';
 import { organizeLayout, detectCollisions } from './utils/layoutUtils';
@@ -1995,6 +1996,7 @@ function App({ graphId = 'default' }) {
     [allPlugins, pluginPrefs]
   );
   const pluginCommands = React.useMemo(() => collectPluginCommands(activePlugins), [activePlugins]);
+  const searchProviders = React.useMemo(() => collectSearchProviders(activePlugins), [activePlugins]);
 
   useEffect(() => {
     const enabled = activePlugins.some(plugin => plugin.id === 'core.versionHistory');
@@ -3521,6 +3523,7 @@ function App({ graphId = 'default' }) {
         nodes={nodes}
         visible={showSearch}
         selectedNodeId={selectedNodeId}
+        providers={searchProviders}
         onSelectNode={handleSelectSearchNode}
         onHighlightNodes={handleHighlightNodes}
         onClose={handleCloseSearch}

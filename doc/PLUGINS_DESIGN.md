@@ -32,9 +32,9 @@ This document outlines proposed plugins to expand Vertex Lab’s extension ecosy
 - API Needed: Expose `exportJson()` and `exportPng()` via App API to plugins.
 
 5) Search Helpers
-- Slots: `commands`
-- UX: Commands like “Highlight neighbors of selection” or “Select by tag”.
-- API Needed: Read edges or provide helper lookups via App API; expose `setHighlightedNodeIds` safely.
+- Slots: `commands`, `searchProviders`
+- UX: Commands like “Highlight neighbors of selection” or “Select by tag”. Providers can participate in the Search ranking/matching.
+- API Needed: Read edges or provide helper lookups via App API; expose `setHighlightedNodeIds` safely. Providers receive `(query, nodes)` and return `{ node, score?, exact?, matchedIndices? }`.
 
 6) Theme Preview Overlay
 - Slots: `canvasOverlays`
