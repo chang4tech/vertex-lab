@@ -51,7 +51,7 @@ For a detailed list of changes and fixes, see `CHANGELOG.md` at the project root
 
 ## Plugins
 
-Vertex Lab supports plugins that contribute UI panels, canvas overlays, and commands. Manage plugins via Settings → Plugins (enable/disable core plugins and import custom `.js/.mjs` plugins). The host error‑isolates plugin panels, dedupes plugins by id (first occurrence wins), and surfaces plugin commands in the context menu when applicable.
+Vertex Lab supports plugins that contribute UI panels, canvas overlays, commands, and search providers. Manage plugins via Settings → Plugins (enable/disable core plugins and import custom `.js/.mjs` plugins). The host error‑isolates plugin panels, dedupes plugins by id (first occurrence wins), and surfaces plugin commands in the context menu when applicable.
 
 - Control Hub: Each plugin has a localized Control Hub with sections for “How to Use”, “Settings”, and a “Console” with Copy/Clear.
 - How to Use: Authors can provide a simple `aboutPage.markdown` string for richer docs; it’s rendered as lightweight Markdown.
@@ -59,6 +59,13 @@ Vertex Lab supports plugins that contribute UI panels, canvas overlays, and comm
 - Incomplete indicator: Plugins with no visible contributions (no panels, commands, overlays, about, or config) show an “Incomplete” badge in the Plugins dialog.
 
 See `doc/PLUGIN_SPEC.md` for the full specification. Migration and progress notes are summarized in `doc/progress.md` and tracked in `CHANGELOG.md`.
+
+### Search Architecture
+- Providers: Plugins may register `slots.searchProviders` to participate in matching and ranking.
+- Aggregation: The core UI aggregates provider results with a built‑in fallback (exact > prefix > others; then score; then label).
+- Command: Cmd/Ctrl + F routes through the `core.search.open` command so plugins can override open behavior.
+- UI Plugin: The Search modal is rendered by the core `core.search` plugin as a canvas overlay. Its Control Hub exposes settings like “Include tags” and “Debounce (ms)”.
+- Example: The bundled custom plugin “Prefix Search Provider (Example)” shows how to implement a simple provider.
 
 ## Getting Started
 

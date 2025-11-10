@@ -36,6 +36,13 @@ This document outlines proposed plugins to expand Vertex Lab’s extension ecosy
 - UX: Commands like “Highlight neighbors of selection” or “Select by tag”. Providers can participate in the Search ranking/matching.
 - API Needed: Read edges or provide helper lookups via App API; expose `setHighlightedNodeIds` safely. Providers receive `(query, nodes)` and return `{ node, score?, exact?, matchedIndices? }`.
 
+## Search Architecture
+- Providers: Plugins contribute `slots.searchProviders` to supply matching/ranking; results merge with the fallback.
+- Aggregation: Stable sort — exact > prefix > others; then score desc; then label.
+- Command: `core.search.open` is the canonical entry; keyboard routing (Cmd/Ctrl + F) uses this command.
+- UI: `core.search` plugin renders the modal overlay and exposes Control Hub settings (include tags, debounce).
+- Overrides: Custom search UIs can declare `conflicts: ['core.search']` and provide their own overlay/command.
+
 6) Theme Preview Overlay
 - Slots: `canvasOverlays`
 - UX: Small overlay to cycle theme preview with arrows.

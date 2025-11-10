@@ -149,6 +149,17 @@ export const myPlugin = {
 };
 ```
 
+## Core Search Plugin
+
+The built‑in Search UI is contributed by the `core.search` plugin:
+
+- UI: Renders the Search modal via a `canvasOverlays` contribution when `api.isSearchOpen` is true.
+- Command: `core.search.open` opens the Search UI and is bound to Cmd/Ctrl + F.
+- Config: The Control Hub exposes settings like “Include tags in search” and “Debounce (ms)”.
+- Extensibility: Plugins can disable the core Search UI by declaring `conflicts: ['core.search']` and providing an alternate overlay.
+
+Providers registered by plugins are passed to the Search UI automatically; the core aggregator merges all provider results with a built‑in fallback matcher for robust behavior.
+
 ### controlHub (single page)
 
 Each plugin has a single page called the Control Hub at `#/plugin/<id>`. It combines settings, console, and overview in one place. From the Plugins Manager, click “Control Hub”.
