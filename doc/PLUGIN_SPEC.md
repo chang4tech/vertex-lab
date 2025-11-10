@@ -149,6 +149,35 @@ export const myPlugin = {
 };
 ```
 
+### notifications
+
+Surface transient cards in the right sidebar’s Notifications section. Useful for reminders, status updates, or actionable toasts that shouldn’t block the canvas. Each notification object supports:
+
+- `id` (string): Unique within the plugin.
+- `visible?: (api) => boolean`: Optional predicate to control whether to render.
+- `title?: string | (api) => string`: Optional title. You can also supply `label` or `name`; the host picks the first available.
+- `badge?: number | string | (api) => number | string`: Small badge value (e.g., count).
+- `priority?: 'info' | 'warn' | 'error' | (api) => ('info'|'warn'|'error')`: Visual priority; defaults to `info`.
+- `order?: number`: Sort order (ascending).
+- `render: (api) => React.ReactNode`: Required render function for the card content.
+
+Example:
+
+```
+{
+  id: 'dueSoon',
+  title: (api) => `Reminders (${(api.selectedNodeIds||[]).length})`,
+  badge: (api) => (api.selectedNodeIds || []).length,
+  priority: 'warn',
+  visible: (api) => (api.selectedNodeIds || []).length > 0,
+  render: (api) => (
+    <div style={{ padding: 12 }}>
+      Select a node to schedule follow‑ups.
+    </div>
+  ),
+}
+```
+
 ## Core Search Plugin
 
 The built‑in Search UI is contributed by the `core.search` plugin:
@@ -184,23 +213,27 @@ The host provides an `api` object with commonly needed state and actions. Curren
 - `onEditNode: (id: string) => void`: Open editor for a node.
 - `onDeleteNodes: (ids: string[]) => void`: Delete nodes by IDs.
 - `onToggleCollapse: (id: string) => void`: Collapse/expand a node.
+- `onHighlightNodes: (ids: string[]) => void`: Highlight nodes (non‑destructive visual state).
 - `setPluginEnabled: (pluginId: string, enabled: boolean) => void`: Toggle a plugin.
 - `pluginPrefs: Record<string, boolean>`: Current plugin enabled/disabled state.
 - `overlayLayout: { items: Record<string, { slot?: string, order?: number, style?: object }>, slots: Record<string, { className?: string, style?: object }>, overrides: { items: Record<string, any>, slots: Record<string, any> } }`: Snapshot of overlay placement (help button, minimap, mobile controls, and plugin entries).
-- `setOverlayLayout: (patch: { items?: Record<string, Partial<{ slot: string | null, order: number, style: object }>>, slots?: Record<string, Partial<{ className?: string, style?: object, gap?: number }>> }) => void`: Merge overlay layout overrides; pass `null` to remove.
+- `setOverlayLayout: (patch: { items?: Record<string, Partial<{ slot: string | null, order: number, style: object }>>, slots?: Record<string, Partial<{ className?: string, style?: object, gap?: number }>> }) => void`: Merge overlay layout overrides; pass `slot: null` or `null` entries to remove overrides.
 - `resetOverlayLayout: () => void`: Clear overlay layout overrides back to defaults.
 - `isHelpVisible: boolean`: Current help panel visibility.
 - `toggleHelp: () => void`: Toggle the help panel.
 - `isMobile: boolean`: Whether the host is currently rendering in mobile mode.
-- `overlayLayout: { items: Record<string, { slot: string, order?: number, style?: object }>, slots: Record<string, { className?: string, style?: object }>, overrides: { items: Record<string, any>, slots: Record<string, any> } }`: Snapshot of built-in overlay placement (help button, minimap, mobile controls).
-- `setOverlayLayout: (patch: { items?: Record<string, Partial<{ slot: string | null, order: number, style: object }>>, slots?: Record<string, Partial<{ className?: string, style?: object, gap?: number }>> }) => void`: Merge overlay layout overrides; pass `slot: null` or `null` entries to remove overrides.
-- `resetOverlayLayout: () => void`: Clear overlay layout overrides back to defaults.
- - `plugin: { id: string, log(message: string, level?: 'info'|'warn'|'error'), openHub(): void }`: Helpers scoped to the plugin being rendered.
+- `isSearchOpen: boolean`: Whether the Search overlay is currently visible.
+- `openSearch(): void` / `closeSearch(): void`: Control the Search overlay.
+- `searchProviders?: Array<Provider>`: Active provider descriptors collected from enabled plugins.
+- `menuBarBottom`, `overlayRightInset`, `corePanelOffset`, `pluginSidePanelWidth`: Layout hints for positioning overlays/panels.
+- `registerExportDecorator(fn: (ctx: any) => void)`: Register a PNG export decorator (see Export Watermark core plugin for an example).
+- `resetView(): void`: Fit content to view (centers and resets zoom).
+ - `plugin: { id: string, log(message: string, level?: 'info'|'warn'|'error'), openHub(): void, openConfig(): void, openConsole(): void }`: Helpers scoped to the plugin being rendered.
 
 Command runners receive a minimal `api` subset (selection and nodes) and `ctx`:
 - `api.nodes`, `api.selectedNodeIds`, `api.selectedNodes`
 - `api.edges` (optional): current edges if present
-- `api.setHighlightedNodes(ids: string[])`: set highlight state (non‑destructive)
+- `api.onHighlightNodes(ids: string[])`: set highlight state (non‑destructive)
 - `ctx.nodeId` (if present), `ctx.worldX`, `ctx.worldY`
 
 This surface is intentionally small and may grow. Plugins should feature‑detect fields they use and avoid assuming more than listed.

@@ -75,3 +75,7 @@ This document outlines proposed plugins to expand Vertex Lab’s extension ecosy
 - Introduce new setters as explicit, well‑scoped actions (e.g., export) with user intent.
 - All plugins should feature‑detect API fields and fail gracefully.
 - When shipping “bundled custom” plugins (examples that are authored in-repo but meant to appear in the Custom tab), register them in `bundledCustomPlugins` and ensure every discovery surface (plugin manager preload, control hub router, etc.) merges `corePlugins`, `bundledCustomPlugins`, and stored user imports. Missing any surface leads to “Plugin not found” errors in the Control Hub and inconsistent toggle state.
+
+### Notifications Slot
+- Use `slots.notifications` for transient, non-blocking cards in the side panel.
+- Provide `id`, `render(api)`, and optionally `visible(api)`, `title/label`, `badge`, `priority`, and `order`.
