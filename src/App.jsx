@@ -2727,7 +2727,16 @@ function App({ graphId = 'default' }) {
           case 'f': {
             e.preventDefault();
             console.log('Search shortcut');
-            handleShowSearch();
+            try {
+              const cmd = (pluginCommands || []).find(c => c.id === 'core.search.open');
+              if (cmd && typeof cmd.run === 'function') {
+                cmd.run(pluginAppApi, { nodeId: null });
+              } else {
+                handleShowSearch();
+              }
+            } catch {
+              handleShowSearch();
+            }
             break;
           }
 
@@ -2783,7 +2792,7 @@ function App({ graphId = 'default' }) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canvasRef, fileInputRef, handleUndo, handleRedo, handleExport, handleAutoLayout, handleShowSearch, handleToggleNodeInfoPanel, selectedNodeId, nodes, pushUndo, intl, createNewNode, findNonOverlappingPosition, handleDeleteNode, maxLevel, selectNodes, setEdges, previewAltNavigation, finalizeAltNavigation]);
+  }, [canvasRef, fileInputRef, handleUndo, handleRedo, handleExport, handleAutoLayout, handleShowSearch, handleToggleNodeInfoPanel, selectedNodeId, nodes, pushUndo, intl, createNewNode, findNonOverlappingPosition, handleDeleteNode, maxLevel, selectNodes, setEdges, previewAltNavigation, finalizeAltNavigation, pluginCommands, pluginAppApi]);
 
   useEffect(() => {
     const handleKeyUp = (e) => {
@@ -3327,6 +3336,8 @@ function App({ graphId = 'default' }) {
     user,
     replaceGraph,
     isModalActive: hasBlockingModal,
+    openSearch: () => setShowSearch(true),
+    closeSearch: () => setShowSearch(false),
     resetView: () => {
       canvasRef.current?.fitToView?.();
     },
