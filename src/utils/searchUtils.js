@@ -46,22 +46,24 @@ export function searchNodes(nodes, query) {
   }
   
   const results = [];
-  
+  const ql = query.toLowerCase();
+
   nodes.forEach(node => {
-    const searchResult = fuzzySearch(query, node.label);
+    const label = String(node.label ?? '');
+    const searchResult = fuzzySearch(query, label);
     if (searchResult.matches) {
-      results.push({
-        node,
-        ...searchResult
-      });
+      const prefix = label.toLowerCase().startsWith(ql);
+      const rankGroup = searchResult.exact ? 0 : (prefix ? 1 : 2);
+      const rankScore = (searchResult.score || 0) + (prefix ? 0.3 : 0) + (searchResult.exact ? 0.5 : 0);
+      results.push({ node, prefix, rankGroup, rankScore, ...searchResult });
     }
   });
   
-  // Sort by score (highest first), then by exact matches
+  // Sort by: exact > prefix > others, then by score, then alphabetically
   results.sort((a, b) => {
-    if (a.exact && !b.exact) return -1;
-    if (!a.exact && b.exact) return 1;
-    return b.score - a.score;
+    if (a.rankGroup !== b.rankGroup) return a.rankGroup - b.rankGroup;
+    if (b.rankScore !== a.rankScore) return b.rankScore - a.rankScore;
+    return String(a.node.label).localeCompare(String(b.node.label));
   });
   
   return results;
@@ -71,7 +73,13 @@ export function highlightMatches(text, matchedIndices) {
   if (!matchedIndices || matchedIndices.length === 0) {
     return text;
   }
-  
+  const escapeHtml = (s) => s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
   let result = '';
   let lastIndex = 0;
   
@@ -95,14 +103,14 @@ export function highlightMatches(text, matchedIndices) {
     const end = group[group.length - 1];
     
     // Add text before highlight
-    result += text.slice(lastIndex, start);
+    result += escapeHtml(text.slice(lastIndex, start));
     // Add highlighted text
-    result += `<mark>${text.slice(start, end + 1)}</mark>`;
+    result += `<mark>${escapeHtml(text.slice(start, end + 1))}</mark>`;
     lastIndex = end + 1;
   });
   
   // Add remaining text
-  result += text.slice(lastIndex);
+  result += escapeHtml(text.slice(lastIndex));
   
   return result;
 }

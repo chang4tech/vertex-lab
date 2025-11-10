@@ -72,6 +72,20 @@ const Search = ({
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setSelectedIndex(prev => Math.max(prev - 1, 0));
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      setSelectedIndex(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      const maxIndex = showHistory ? searchHistory.length - 1 : results.length - 1;
+      setSelectedIndex(Math.max(0, maxIndex));
+    } else if (e.key === 'PageDown') {
+      e.preventDefault();
+      const maxIndex = showHistory ? searchHistory.length - 1 : results.length - 1;
+      setSelectedIndex(prev => Math.min(prev + 5, maxIndex));
+    } else if (e.key === 'PageUp') {
+      e.preventDefault();
+      setSelectedIndex(prev => Math.max(prev - 5, 0));
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (showHistory && searchHistory[selectedIndex]) {
@@ -81,6 +95,17 @@ const Search = ({
       }
     }
   }, [onClose, showHistory, searchHistory, results, selectedIndex, handleSearch, handleSelectResult]);
+
+  // Keep the focused option visible when navigating
+  useEffect(() => {
+    const container = resultsRef.current;
+    if (!container) return;
+    const options = container.querySelectorAll('[data-search-option="true"]');
+    const el = options[selectedIndex];
+    if (el && typeof el.scrollIntoView === 'function') {
+      el.scrollIntoView({ block: 'nearest' });
+    }
+  }, [selectedIndex, results.length, showHistory, searchHistory.length]);
 
   const handleInputFocus = () => {
     if (query.trim() === '') {
@@ -102,7 +127,7 @@ const Search = ({
   };
 
   return (
-    <div className="search-overlay" onClick={handleOverlayClick} style={{
+    <div className="search-overlay" role="dialog" aria-modal="true" onClick={handleOverlayClick} style={{
       position: 'fixed',
       top: 0,
       left: 0,
@@ -136,6 +161,10 @@ const Search = ({
           <input
             ref={inputRef}
             type="text"
+            role="combobox"
+            aria-expanded={!showHistory && query.trim() !== ''}
+            aria-controls="search-listbox"
+            aria-autocomplete="list"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -223,7 +252,7 @@ const Search = ({
           )}
 
           {!showHistory && query.trim() !== '' && (
-            <div>
+            <div role="listbox" id="search-listbox" aria-label={intl.formatMessage({ id: 'search.results', defaultMessage: 'Search results' })}>
               {results.length === 0 ? (
                 <div style={{
                   padding: '40px 20px',
@@ -255,7 +284,9 @@ const Search = ({
                   {results.map((result, index) => (
                     <div
                       key={result.node.id}
+                      role="option"
                       data-testid={`search-result-${result.node.id}`}
+                      data-search-option="true"
                       onClick={() => handleSelectResult(result)}
                       style={{
                         padding: '12px 20px',

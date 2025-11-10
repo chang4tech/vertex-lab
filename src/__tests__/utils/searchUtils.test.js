@@ -56,6 +56,16 @@ describe('searchUtils', () => {
       expect(results[0].exact).toBe(true);
     });
 
+    it('boosts prefix matches above mid-string matches', () => {
+      const custom = [
+        { id: 10, label: 'Alpha Beta' },
+        { id: 11, label: 'Gamma Alpha' },
+        { id: 12, label: 'Alphanumeric' },
+      ];
+      const results = searchNodes(custom, 'Al');
+      expect(results.map(r => r.node.id)).toEqual([10, 12, 11]);
+    });
+
     it('returns empty array for empty query', () => {
       const results = searchNodes(nodes, '');
       expect(results).toHaveLength(0);
