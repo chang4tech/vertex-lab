@@ -14,6 +14,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Plugin Conflicts: Comprehensive test suite (16 tests) for conflict detection logic
 - Plugin Examples: Added `conflictExample.jsx` demonstrating two mutually exclusive layout algorithm plugins
 - Documentation: Added "Plugin Conflicts" section to `doc/PLUGIN_SPEC.md` with examples and use cases
+- Release tooling: Add `tools/release.mjs` and npm scripts to bump version, update changelog, commit, and push (no tags)
 
 ### Changed
 - PluginsManager: Refactored `handleTogglePlugin` function - reduced cyclomatic complexity from ~5 to ~2
