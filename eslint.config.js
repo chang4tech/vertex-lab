@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'coverage']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [
@@ -24,6 +24,27 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+    },
+  },
+  // Node-specific overrides
+  {
+    files: ['playwright.config.js', 'verify_all_functions.cjs', 'server/**/*.{js,jsx}'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: globals.node,
+    },
+    rules: {
+      // Server and tooling code can have unused vars during scaffolding
+      'no-unused-vars': 'off',
+    },
+  },
+  // App monolith file has intentional unused props and empty handlers in MenuBar area
+  {
+    files: ['src/App.jsx'],
+    rules: {
+      'no-unused-vars': 'off',
+      'no-empty': 'warn',
     },
   },
 ])

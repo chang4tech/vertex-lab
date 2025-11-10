@@ -31,6 +31,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Code Quality: Improved separation of concerns with focused, single-responsibility functions
 - Search: Ranking now boosts prefix matches while preserving exact-match priority; adds stable tie-breakers (score → label)
 - Search: Highlight rendering escapes HTML to prevent XSS with untrusted labels
+- Tooling: ESLint updated to ignore coverage, add Node env overrides for server/Playwright, and relax App.jsx unused-vars to reduce false positives
 
 ### Fixed
 - Follow-up Reminders: Mobile drawer no longer auto-opens; reminders surface via notifications while controls stay accessible.
