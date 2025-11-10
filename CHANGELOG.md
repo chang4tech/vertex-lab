@@ -21,6 +21,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Roadmap: Added `ROADMAP.md` outlining milestones (v0.4.0, v0.5.0, v0.6.0) and created `tools/milestones.mjs` to open GitHub milestones
 - Search: Accessibility and UX improvements — combobox/listbox semantics, option roles, Home/End/PageUp/PageDown keys, and auto-scroll to the active option
 - Search: Plugin-extensible search via new `slots.searchProviders`; aggregation merges provider results with fallback search and stable ranking
+- Search: Added `core.search.open` plugin command and routed Cmd/Ctrl+F to go through plugin command path (plugins can override)
 
 ### Changed
 - PluginsManager: Refactored `handleTogglePlugin` function - reduced cyclomatic complexity from ~5 to ~2
