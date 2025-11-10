@@ -16,6 +16,7 @@
     "release:patch": "node tools/release.mjs patch",
     "release:minor": "node tools/release.mjs minor",
     "release:major": "node tools/release.mjs major",
+    "milestones": "node tools/milestones.mjs",
     "pretest:e2e": "npm run build",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",

@@ -15,6 +15,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Plugin Examples: Added `conflictExample.jsx` demonstrating two mutually exclusive layout algorithm plugins
 - Documentation: Added "Plugin Conflicts" section to `doc/PLUGIN_SPEC.md` with examples and use cases
 - Release tooling: Add `tools/release.mjs` and npm scripts to bump version, update changelog, commit, and push (no tags)
+- Roadmap: Added `ROADMAP.md` outlining milestones (v0.4.0, v0.5.0, v0.6.0) and created `tools/milestones.mjs` to open GitHub milestones
 
 ### Changed
 - PluginsManager: Refactored `handleTogglePlugin` function - reduced cyclomatic complexity from ~5 to ~2
