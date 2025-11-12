@@ -38,9 +38,13 @@ const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'))
 const currentVersion = pkg.version
 const newVersion = bumpSemver(currentVersion, bumpType)
 
-// Run checks first
-run('npm', ['run', 'lint'])
-run('npm', ['test'])
+// Run checks first (can skip with SKIP_CHECKS=1)
+if (!process.env.SKIP_CHECKS && !process.env.NO_CHECKS) {
+  run('npm', ['run', 'lint'])
+  run('npm', ['test'])
+} else {
+  console.log('Skipping lint/tests due to SKIP_CHECKS flag')
+}
 
 // Update package.json
 pkg.version = newVersion
@@ -75,4 +79,3 @@ run('git', ['commit', '-m', `chore(release): v${newVersion}`])
 run('git', ['push'])
 
 console.log(`Released ${newVersion} (pushed). No tag created.`)
-

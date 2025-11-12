@@ -79,7 +79,7 @@ describe('Search component', () => {
     expect(screen.getByText(/No nodes found for/)).toBeInTheDocument();
   });
 
-  it.skip('handles keyboard navigation down and up', async () => {
+  it('handles keyboard navigation down and up', async () => {
     renderSearch();
     const input = screen.getByPlaceholderText('Search nodes...');
     
