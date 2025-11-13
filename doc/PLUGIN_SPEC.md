@@ -214,6 +214,8 @@ The host provides an `api` object with commonly needed state and actions. Curren
 - `onDeleteNodes: (ids: string[]) => void`: Delete nodes by IDs.
 - `onToggleCollapse: (id: string) => void`: Collapse/expand a node.
 - `onHighlightNodes: (ids: string[]) => void`: Highlight nodes (non‑destructive visual state).
+- `updateNodes(updater: Node[] | (draft: Node[]) => Node[])`: Safely update nodes with undo support.
+- `updateEdges(updater: Edge[] | (draft: Edge[]) => Edge[])`: Safely update edges with undo support (aligned with node undo/redo).
 - `setPluginEnabled: (pluginId: string, enabled: boolean) => void`: Toggle a plugin.
 - `pluginPrefs: Record<string, boolean>`: Current plugin enabled/disabled state.
 - `overlayLayout: { items: Record<string, { slot?: string, order?: number, style?: object }>, slots: Record<string, { className?: string, style?: object }>, overrides: { items: Record<string, any>, slots: Record<string, any> } }`: Snapshot of overlay placement (help button, minimap, mobile controls, and plugin entries).

@@ -1432,6 +1432,8 @@ function App({ graphId = 'default' }) {
   // Undo/redo stacks
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
+  const [edgeUndoStack, setEdgeUndoStack] = useState([]);
+  const [edgeRedoStack, setEdgeRedoStack] = useState([]);
 
   // Canvas ref for view actions
   const canvasRef = useRef();
@@ -2040,13 +2042,19 @@ function App({ graphId = 'default' }) {
     console.log('Undo:', {
       undoStackSize: undoStack.length,
       redoStackSize: redoStack.length,
-      currentNodes: nodes.length
+      currentNodes: nodes.length,
+      edgeUndoStackSize: edgeUndoStack.length,
+      edgeRedoStackSize: edgeRedoStack.length,
     });
     const prevNodes = undoStack[undoStack.length - 1];
+    const prevEdges = edgeUndoStack[edgeUndoStack.length - 1];
     setNodes([...prevNodes]);
+    if (Array.isArray(prevEdges)) setEdges([...prevEdges]);
     setRedoStack(rstack => [[...nodes], ...rstack]);
+    setEdgeRedoStack(rstack => [cloneEdgesForState(edges), ...rstack]);
     setUndoStack(stack => stack.slice(0, -1));
-  }, [undoStack, redoStack, nodes]);
+    setEdgeUndoStack(stack => stack.slice(0, -1));
+  }, [undoStack, redoStack, edgeUndoStack, edgeRedoStack, nodes, edges]);
 
   const handleRedo = useCallback(() => {
     if (redoStack.length === 0) {
@@ -2056,13 +2064,19 @@ function App({ graphId = 'default' }) {
     console.log('Redo:', {
       undoStackSize: undoStack.length,
       redoStackSize: redoStack.length,
-      currentNodes: nodes.length
+      currentNodes: nodes.length,
+      edgeUndoStackSize: edgeUndoStack.length,
+      edgeRedoStackSize: edgeRedoStack.length,
     });
     const nextNodes = redoStack[0];
+    const nextEdges = edgeRedoStack[0];
     setNodes([...nextNodes]);
+    if (Array.isArray(nextEdges)) setEdges([...nextEdges]);
     setUndoStack(stack => [...stack, [...nodes]]);
+    setEdgeUndoStack(stack => [...stack, cloneEdgesForState(edges)]);
     setRedoStack(stack => stack.slice(1));
-  }, [undoStack, redoStack, nodes]);
+    setEdgeRedoStack(stack => stack.slice(1));
+  }, [undoStack, redoStack, edgeUndoStack, edgeRedoStack, nodes, edges]);
 
   const handleLibrarySave = useCallback(async () => {
     if (typeof window === 'undefined') return;
@@ -2255,13 +2269,16 @@ function App({ graphId = 'default' }) {
       currentNodes: nodes.length,
       newNodes: newNodes.length,
       undoStackSize: undoStack.length,
-      redoStackSize: redoStack.length
+      redoStackSize: redoStack.length,
+      currentEdges: Array.isArray(edges) ? edges.length : 0,
     });
     // Use functional updates to ensure state consistency
     setUndoStack(stack => [...stack, [...nodes]]);
     setRedoStack(() => []);
+    setEdgeUndoStack(stack => [...stack, cloneEdgesForState(edges)]);
+    setEdgeRedoStack(() => []);
     setNodes(() => Array.isArray(newNodes) ? [...newNodes] : []);
-  }, [nodes, undoStack.length, redoStack.length]);
+  }, [nodes, edges, undoStack.length, redoStack.length]);
 
   const replaceGraph = useCallback((nextNodes, nextEdges, options = {}) => {
     const { resetUndo = false } = options;
@@ -2951,6 +2968,18 @@ function App({ graphId = 'default' }) {
     pushUndo(next);
   }, [nodes, pushUndo]);
 
+  const updateEdgesFromPlugin = useCallback((updater) => {
+    const draft = Array.isArray(edges) ? edges.map(e => ({ ...e })) : [];
+    const next = typeof updater === 'function' ? updater(draft) : updater;
+    if (!Array.isArray(next)) return;
+    // Capture current state for undo/redo parity
+    setUndoStack(stack => [...stack, [...nodes]]);
+    setRedoStack(() => []);
+    setEdgeUndoStack(stack => [...stack, cloneEdgesForState(edges)]);
+    setEdgeRedoStack(() => []);
+    setEdges([...next]);
+  }, [nodes, edges]);
+
   // Hook-based common keyboard shortcuts to avoid drift with menus/help
   useKeyboardShortcuts({
     onNew: handleNewDiagram,
@@ -3304,6 +3333,7 @@ function App({ graphId = 'default' }) {
       handleToggleConnections([a, b], options);
     },
     updateNodes: updateNodesFromPlugin,
+    updateEdges: updateEdgesFromPlugin,
     maxLevel,
     showNodeInfoPanel: nodeInfoPanelVisible,
     hideNodeInfoPanel,

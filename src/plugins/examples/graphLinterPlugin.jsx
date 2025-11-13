@@ -194,17 +194,10 @@ function RuleSection({ api, rule, issues, settings }) {
         return draft;
       });
     } else if (rule === 'cycles') {
-      // Tag nodes participating in cycles (non-destructive)
-      api.updateNodes?.((draft) => {
-        const ids = new Set(issues.map(i => i.nodeId));
-        draft.forEach(n => {
-          if (ids.has(n.id)) {
-            const tags = Array.isArray(n.tags) ? n.tags : [];
-            if (!tags.includes('cycle')) tags.push('cycle');
-            n.tags = tags;
-          }
-        });
-        return draft;
+      // Auto-break cycles by removing directed edges within the cycle set
+      const cycleIds = new Set(issues.map(i => i.nodeId).filter(Boolean));
+      api.updateEdges?.((draft) => {
+        return (draft || []).filter(e => !(e.directed && cycleIds.has(e.source) && cycleIds.has(e.target)));
       });
     }
   };
@@ -362,4 +355,3 @@ Commands
 };
 
 export default graphLinterPlugin;
-
