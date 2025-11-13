@@ -1216,6 +1216,22 @@ const MenuBar = React.forwardRef(({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                console.log('Graph Linter clicked');
+                try {
+                  const evt = new CustomEvent('vertex:open-graph-linter');
+                  window.dispatchEvent(evt);
+                } catch {}
+                setOpenMenu(null);
+              }}
+            >
+              <span><FormattedMessage id="settings.graphLinter" defaultMessage="Graph Linter" /></span>
+              <span className="menu-shortcut">⌘⇧L</span>
+            </div>
+            <div
+              className="menu-item"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 console.log('Tag Manager clicked');
                 onOpenTagManager?.();
                 setOpenMenu(null);
@@ -2735,8 +2751,13 @@ function App({ graphId = 'default' }) {
 
           case 'l': {
             e.preventDefault();
-            console.log('Auto layout shortcut');
-            handleAutoLayout();
+            if (e.shiftKey) {
+              console.log('Open Graph Linter shortcut');
+              openGraphLinter();
+            } else {
+              console.log('Auto layout shortcut');
+              handleAutoLayout();
+            }
             break;
           }
 
@@ -2808,7 +2829,7 @@ function App({ graphId = 'default' }) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canvasRef, fileInputRef, handleUndo, handleRedo, handleExport, handleAutoLayout, handleShowSearch, handleToggleNodeInfoPanel, selectedNodeId, nodes, pushUndo, intl, createNewNode, findNonOverlappingPosition, handleDeleteNode, maxLevel, selectNodes, setEdges, previewAltNavigation, finalizeAltNavigation, pluginCommands, pluginAppApi]);
+  }, [canvasRef, fileInputRef, handleUndo, handleRedo, handleExport, handleAutoLayout, handleShowSearch, handleToggleNodeInfoPanel, selectedNodeId, nodes, pushUndo, intl, createNewNode, findNonOverlappingPosition, handleDeleteNode, maxLevel, selectNodes, setEdges, previewAltNavigation, finalizeAltNavigation, pluginCommands, pluginAppApi, openGraphLinter]);
 
   useEffect(() => {
     const handleKeyUp = (e) => {
@@ -3414,6 +3435,27 @@ function App({ graphId = 'default' }) {
     hasBlockingModal,
     canvasRef,
   ]);
+
+  const openGraphLinter = useCallback(() => {
+    try {
+      const cmd = (pluginCommands || []).find(c => c.id === 'examples.graphLinter.open');
+      if (cmd && typeof cmd.run === 'function') {
+        cmd.run(pluginAppApi, { nodeId: null });
+      } else {
+        // fallback: open Plugins Manager on the plugin
+        window.location.hash = '#/plugin/examples.graphLinter';
+      }
+    } catch (e) {
+      console.warn('[GraphLinter] open command failed', e);
+    }
+  }, [pluginCommands, pluginAppApi]);
+
+  // Bridge menu click to openGraphLinter
+  useEffect(() => {
+    const onOpen = () => openGraphLinter();
+    window.addEventListener('vertex:open-graph-linter', onOpen);
+    return () => window.removeEventListener('vertex:open-graph-linter', onOpen);
+  }, [openGraphLinter]);
 
 
   return (
