@@ -265,6 +265,32 @@ function settingsSig(s) {
   return `${s?.maxLabelLength}|${sev.duplicates}|${sev.orphans}|${sev.cycles}|${sev.longLabel}`;
 }
 
+// Simple 32-bit hash for cache keys
+function hash32(str) {
+  let h = 2166136261 >>> 0; // FNV-1a basis
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(16);
+}
+
+function graphSignature(nodes = [], edges = []) {
+  // Build stable string using sorted nodes and edges
+  const ns = [...(nodes || [])]
+    .map(n => ({ id: n.id, label: String(n.label || '') }))
+    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+    .map(n => `${n.id}:${n.label}`)
+    .join('|');
+  const es = [...(edges || [])]
+    .map(e => ({ s: e.source, t: e.target, d: !!e.directed }))
+    .sort((a, b) => (a.s - b.s) || (a.t - b.t) || ((a.d === b.d) ? 0 : a.d ? 1 : -1))
+    .map(e => `${e.s}->${e.t}${e.d ? 'd' : 'u'}`)
+    .join('|');
+  const sig = `n${nodes.length}|e${edges.length}|${ns}#${es}`;
+  return hash32(sig);
+}
+
 function LinterPanel({ api }) {
   const [settings, setSettings] = React.useState(() => loadSettings());
   const [issues, setIssues] = React.useState([]);
@@ -272,7 +298,7 @@ function LinterPanel({ api }) {
   const nodes = api.nodes || [];
   const edges = api.edges || [];
   const gId = api.graphId || 'default';
-  const key = `${gId}|n${nodes.length}|e${edges.length}|${settingsSig(settings)}`;
+  const key = `${gId}|${graphSignature(nodes, edges)}|${settingsSig(settings)}`;
 
   React.useEffect(() => {
     let cancelled = false;
