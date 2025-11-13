@@ -28,6 +28,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Docs: Expanded Plugin Spec with `slots.notifications`, updated App API (highlight, search state, export decorators), and corrected command runner API
 - Plugin: Added `examples.graphLinter` bundled custom plugin (Graph Linter) with side panel + commands, severity config, suppression per node, and one‑click fixes for duplicates/orphans/long labels; tags nodes in directed cycles
 - API: Added `updateEdges` to plugin API with undo support; undo/redo now tracks edges alongside nodes
+- Linter: Workerized cycle detection and large-graph scans with caching by graphId + counts; falls back to sync in test environments
 
 ### Changed
 - PluginsManager: Refactored `handleTogglePlugin` function - reduced cyclomatic complexity from ~5 to ~2

@@ -243,18 +243,83 @@ function RuleSection({ api, rule, issues, settings }) {
   );
 }
 
+// Worker + cache (by graphId + counts + settings)
+let workerRef = null;
+let nextReqId = 1;
+const lintCache = new Map();
+
+function getWorker() {
+  if (typeof Worker === 'undefined') return null;
+  if (workerRef) return workerRef;
+  try {
+    workerRef = new Worker(new URL('../../workers/graphLinterWorker.js', import.meta.url), { type: 'module' });
+    return workerRef;
+  } catch (e) {
+    console.warn('[GraphLinter] Worker init failed, falling back to sync', e);
+    return null;
+  }
+}
+
+function settingsSig(s) {
+  const sev = s?.severity || {};
+  return `${s?.maxLabelLength}|${sev.duplicates}|${sev.orphans}|${sev.cycles}|${sev.longLabel}`;
+}
+
 function LinterPanel({ api }) {
   const [settings, setSettings] = React.useState(() => loadSettings());
+  const [issues, setIssues] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
   const nodes = api.nodes || [];
   const edges = api.edges || [];
-  const issues = React.useMemo(() => {
-    const arr = [];
-    arr.push(...detectDuplicates(nodes, settings));
-    arr.push(...detectOrphans(nodes, edges, settings));
-    arr.push(...detectDirectedCycles(nodes, edges, settings));
-    arr.push(...detectLongLabels(nodes, settings));
-    return arr;
-  }, [nodes, edges, settings]);
+  const gId = api.graphId || 'default';
+  const key = `${gId}|n${nodes.length}|e${edges.length}|${settingsSig(settings)}`;
+
+  React.useEffect(() => {
+    let cancelled = false;
+    const cached = lintCache.get(key);
+    if (cached) {
+      setIssues(cached);
+      return () => { cancelled = true; };
+    }
+
+    const worker = getWorker();
+    if (!worker) {
+      // Fallback to sync computation when Worker is unavailable (tests/jsdom)
+      const arr = [];
+      arr.push(...detectDuplicates(nodes, settings));
+      arr.push(...detectOrphans(nodes, edges, settings));
+      arr.push(...detectDirectedCycles(nodes, edges, settings));
+      arr.push(...detectLongLabels(nodes, settings));
+      lintCache.set(key, arr);
+      setIssues(arr);
+      return () => { cancelled = true; };
+    }
+
+    setLoading(true);
+    const requestId = nextReqId++;
+    const onMessage = (e) => {
+      const { type, requestId: rid, issues: res } = e.data || {};
+      if (type !== 'lintResult' || rid !== requestId) return;
+      if (!cancelled) {
+        lintCache.set(key, res || []);
+        setIssues(res || []);
+        setLoading(false);
+      }
+      worker.removeEventListener('message', onMessage);
+    };
+    const onError = () => {
+      if (!cancelled) setLoading(false);
+      worker.removeEventListener('error', onError);
+    };
+    worker.addEventListener('message', onMessage);
+    worker.addEventListener('error', onError);
+    worker.postMessage({ type: 'lint', requestId, payload: { nodes, edges, settings } });
+    return () => {
+      cancelled = true;
+      worker.removeEventListener('message', onMessage);
+      worker.removeEventListener('error', onError);
+    };
+  }, [key, nodes, edges, settings]);
 
   const groups = React.useMemo(() => groupByRule(issues), [issues]);
 
@@ -264,11 +329,13 @@ function LinterPanel({ api }) {
         <h3 style={{ margin: 0 }}>Graph Linter</h3>
         <HeaderActions api={api} issues={issues} settings={settings} />
       </div>
-      <div style={{ fontSize: 12, opacity: 0.8 }}>{issues.length} total issue(s)</div>
+      <div style={{ fontSize: 12, opacity: 0.8 }}>
+        {loading ? 'Analyzing…' : `${issues.length} total issue(s)`}
+      </div>
       {[...groups.entries()].map(([rule, groupIssues]) => (
         <RuleSection key={rule} api={api} rule={rule} issues={groupIssues} settings={settings} />
       ))}
-      {issues.length === 0 && (
+      {!loading && issues.length === 0 && (
         <div style={{ padding: 12, color: '#16a34a' }}>No issues found.</div>
       )}
     </div>
