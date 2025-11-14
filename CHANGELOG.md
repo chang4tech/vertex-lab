@@ -30,6 +30,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - API: Added `updateEdges` to plugin API with undo support; undo/redo now tracks edges alongside nodes
 - Linter: Workerized cycle detection and large-graph scans with caching by graphId + counts; falls back to sync in test environments
 - Linter: Strengthened cache key with content hashing (labels + edges) to avoid stale results when counts match
+- Linter: Optional cluster detection (connected components) computed in worker; panel shows largest clusters with Select/Highlight actions; configurable toggle and min size
 
 ### Changed
 - PluginsManager: Refactored `handleTogglePlugin` function - reduced cyclomatic complexity from ~5 to ~2

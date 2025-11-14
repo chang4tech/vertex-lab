@@ -11,6 +11,8 @@ const defaultSettings = {
     cycles: 'error',
     longLabel: 'info',
   },
+  detectClusters: true,
+  clustersMinSize: 3,
 };
 
 function loadSettings() {
@@ -262,7 +264,7 @@ function getWorker() {
 
 function settingsSig(s) {
   const sev = s?.severity || {};
-  return `${s?.maxLabelLength}|${sev.duplicates}|${sev.orphans}|${sev.cycles}|${sev.longLabel}`;
+  return `${s?.maxLabelLength}|${sev.duplicates}|${sev.orphans}|${sev.cycles}|${sev.longLabel}|C${s?.detectClusters?'1':'0'}|M${s?.clustersMinSize??0}`;
 }
 
 // Simple 32-bit hash for cache keys
@@ -294,6 +296,7 @@ function graphSignature(nodes = [], edges = []) {
 function LinterPanel({ api }) {
   const [settings, setSettings] = React.useState(() => loadSettings());
   const [issues, setIssues] = React.useState([]);
+  const [clusters, setClusters] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
   const nodes = api.nodes || [];
   const edges = api.edges || [];
@@ -304,7 +307,8 @@ function LinterPanel({ api }) {
     let cancelled = false;
     const cached = lintCache.get(key);
     if (cached) {
-      setIssues(cached);
+      setIssues(cached.issues || []);
+      setClusters(cached.clusters || []);
       return () => { cancelled = true; };
     }
 
@@ -316,19 +320,22 @@ function LinterPanel({ api }) {
       arr.push(...detectOrphans(nodes, edges, settings));
       arr.push(...detectDirectedCycles(nodes, edges, settings));
       arr.push(...detectLongLabels(nodes, settings));
-      lintCache.set(key, arr);
+      const comps = settings.detectClusters ? detectClustersSync(nodes, edges) : [];
+      lintCache.set(key, { issues: arr, clusters: comps });
       setIssues(arr);
+      setClusters(comps);
       return () => { cancelled = true; };
     }
 
     setLoading(true);
     const requestId = nextReqId++;
     const onMessage = (e) => {
-      const { type, requestId: rid, issues: res } = e.data || {};
+      const { type, requestId: rid, issues: res, clusters: comps } = e.data || {};
       if (type !== 'lintResult' || rid !== requestId) return;
       if (!cancelled) {
-        lintCache.set(key, res || []);
+        lintCache.set(key, { issues: res || [], clusters: comps || [] });
         setIssues(res || []);
+        setClusters(comps || []);
         setLoading(false);
       }
       worker.removeEventListener('message', onMessage);
@@ -361,11 +368,61 @@ function LinterPanel({ api }) {
       {[...groups.entries()].map(([rule, groupIssues]) => (
         <RuleSection key={rule} api={api} rule={rule} issues={groupIssues} settings={settings} />
       ))}
+      {settings.detectClusters && (
+        <div style={{ border: '1px solid #94a3b855', borderRadius: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#94a3b811', color: '#334155' }}>
+            <strong>Clusters</strong>
+            <span style={{ fontSize: 12, opacity: 0.8 }}>{clusters.length} component(s)</span>
+          </div>
+          <div style={{ padding: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {clusters.filter(c => c.size >= (settings.clustersMinSize || 1)).slice(0, 10).map((c, idx) => (
+              <div key={`cluster-${idx}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ fontSize: 13 }}>Cluster #{idx + 1}: {c.size} node(s)</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button onClick={() => api.selectNodes?.(c.nodes)}>Select</button>
+                  <button onClick={() => api.onHighlightNodes?.(c.nodes)}>Highlight</button>
+                </div>
+              </div>
+            ))}
+            {clusters.length === 0 && <div style={{ fontSize: 12, opacity: 0.7 }}>No clusters computed.</div>}
+          </div>
+        </div>
+      )}
       {!loading && issues.length === 0 && (
         <div style={{ padding: 12, color: '#16a34a' }}>No issues found.</div>
       )}
     </div>
   );
+}
+
+function detectClustersSync(nodes = [], edges = []) {
+  const idSet = new Set(nodes.map(n => n.id));
+  const adj = new Map();
+  nodes.forEach(n => adj.set(n.id, []));
+  (edges || []).forEach(e => {
+    const s = e.source; const t = e.target;
+    if (!idSet.has(s) || !idSet.has(t)) return;
+    adj.get(s).push(t);
+    adj.get(t).push(s);
+  });
+  const visited = new Set();
+  const clusters = [];
+  for (const n of nodes) {
+    if (visited.has(n.id)) continue;
+    const comp = [];
+    const stack = [n.id];
+    visited.add(n.id);
+    while (stack.length) {
+      const u = stack.pop();
+      comp.push(u);
+      for (const v of adj.get(u) || []) {
+        if (!visited.has(v)) { visited.add(v); stack.push(v); }
+      }
+    }
+    clusters.push({ size: comp.length, nodes: comp });
+  }
+  clusters.sort((a, b) => b.size - a.size);
+  return clusters;
 }
 
 export const graphLinterPlugin = {
@@ -421,6 +478,17 @@ export const graphLinterPlugin = {
                 </select>
               </label>
             ))}
+            <div style={{ fontWeight: 600, marginTop: 8 }}>Clusters</div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input type="checkbox" checked={!!settings.detectClusters} onChange={(e) => set({ detectClusters: e.target.checked })} />
+              Compute clusters (connected components)
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>Minimum cluster size</span>
+              <input type="number" min={1} max={1000} value={settings.clustersMinSize}
+                onChange={(e) => set({ clustersMinSize: Math.max(1, parseInt(e.target.value || '1', 10)) })}
+                style={{ width: 120 }} />
+            </label>
           </div>
         );
       }

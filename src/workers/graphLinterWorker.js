@@ -105,9 +105,45 @@ self.onmessage = (e) => {
     issues.push(...detectOrphans(nodes, edges, settings));
     issues.push(...detectDirectedCycles(nodes, edges, settings));
     issues.push(...detectLongLabels(nodes, settings));
-    self.postMessage({ type: 'lintResult', requestId, issues });
+
+    let clusters = [];
+    if (settings?.detectClusters) {
+      clusters = detectClusters(nodes, edges);
+    }
+
+    self.postMessage({ type: 'lintResult', requestId, issues, clusters });
   } catch (err) {
     self.postMessage({ type: 'lintError', requestId, message: String(err && err.message || err) });
   }
 };
 
+// Compute connected components treating edges as undirected
+function detectClusters(nodes = [], edges = []) {
+  const idSet = new Set(nodes.map(n => n.id));
+  const adj = new Map();
+  nodes.forEach(n => adj.set(n.id, []));
+  (edges || []).forEach(e => {
+    const s = e.source; const t = e.target;
+    if (!idSet.has(s) || !idSet.has(t)) return;
+    adj.get(s).push(t);
+    adj.get(t).push(s);
+  });
+  const visited = new Set();
+  const clusters = [];
+  for (const n of nodes) {
+    if (visited.has(n.id)) continue;
+    const comp = [];
+    const stack = [n.id];
+    visited.add(n.id);
+    while (stack.length) {
+      const u = stack.pop();
+      comp.push(u);
+      for (const v of adj.get(u) || []) {
+        if (!visited.has(v)) { visited.add(v); stack.push(v); }
+      }
+    }
+    clusters.push({ size: comp.length, nodes: comp });
+  }
+  clusters.sort((a, b) => b.size - a.size);
+  return clusters;
+}
