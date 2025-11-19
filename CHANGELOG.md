@@ -57,6 +57,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Tests (planned for 0.38.0)
 - Graph Linter: Added unit tests for schemaEdgeChecks covering unknownEdgeType, edgeTypeMismatch, and relationCycle
 
+### Added (planned for 0.39.0)
+- Edge Editor: Edge Info panel now allows setting `edge.type` using schema.edgeTypes; updates persist via plugin API `updateEdges`
+
 ## [0.23.0] - 2025-11-19
 
 ### Added

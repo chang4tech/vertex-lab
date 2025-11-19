@@ -93,6 +93,8 @@ const normalizeEdge = (edge, index, nodeMap, intl) => {
   };
 };
 
+import { loadSchema } from '../utils/schemaUtils';
+
 const EdgeInfoPanel = ({
   edges = [],
   nodes = [],
@@ -103,6 +105,8 @@ const EdgeInfoPanel = ({
   rightOffset = 0,
   onResetView,
   layout = 'floating',
+  graphId = 'default',
+  updateEdges,
 }) => {
   const { currentTheme } = useTheme();
   const intl = useIntl();
@@ -312,6 +316,37 @@ const EdgeInfoPanel = ({
     ));
   };
 
+  const schema = React.useMemo(() => loadSchema(graphId || 'default'), [graphId]);
+  const edgeTypeNames = React.useMemo(() => (Array.isArray(schema?.edgeTypes) ? schema.edgeTypes : []).map((et) => String(et.name || '')).filter(Boolean), [schema]);
+
+  const handleEdgeTypeChange = (edge, newType) => {
+    if (typeof updateEdges !== 'function') return;
+    const id = edge.original?.id;
+    const s = edge.sourceId;
+    const t = edge.targetId;
+    const d = !!edge.directed;
+    updateEdges((draft) => {
+      const arr = Array.isArray(draft) ? draft : [];
+      let idx = -1;
+      if (id != null) {
+        idx = arr.findIndex((e) => e && e.id === id);
+      }
+      if (idx === -1) {
+        idx = arr.findIndex((e) => e && e.source === s && e.target === t && !!e.directed === d);
+      }
+      if (idx >= 0) {
+        const e = arr[idx];
+        if (!newType) {
+          // remove type when cleared
+          delete e.type;
+        } else {
+          e.type = newType;
+        }
+      }
+      return arr;
+    });
+  };
+
   const renderEdgeButton = (edge) => {
     const isActive = activeEdgeId === edge.id;
     const touches = selectedSet.has(edge.sourceId) || selectedSet.has(edge.targetId);
@@ -490,6 +525,31 @@ const EdgeInfoPanel = ({
                         <FormattedMessage id="edgeInfo.directedNo" defaultMessage="No" />
                       )}
                     </span>
+                  </div>
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ fontWeight: 600, fontSize: '13px', color: currentTheme.colors.secondaryText, marginBottom: 6 }}>
+                      <FormattedMessage id="edgeInfo.edgeType" defaultMessage="Edge Type" />
+                    </div>
+                    <div>
+                      <select
+                        value={String(activeEdge.original?.type || '')}
+                        onChange={(e) => handleEdgeTypeChange(activeEdge, e.target.value || '')}
+                        style={{
+                          border: `1px solid ${currentTheme.colors.inputBorder}`,
+                          background: currentTheme.colors.panelBackground,
+                          color: currentTheme.colors.primaryText,
+                          borderRadius: 6,
+                          padding: '6px 8px',
+                          fontSize: 13,
+                          minWidth: 160,
+                        }}
+                      >
+                        <option value="">(none)</option>
+                        {edgeTypeNames.map((name) => (
+                          <option key={name} value={name}>{name}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                   <div style={{ marginTop: 12 }}>
                     <div style={{ fontWeight: 600, fontSize: '13px', color: currentTheme.colors.secondaryText }}>

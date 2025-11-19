@@ -64,6 +64,8 @@ Tips:
             topOffset={api?.menuBarBottom}
             rightOffset={api?.showNodeInfoPanel ? (api?.isMobile ? 280 : 320) : 0}
             onResetView={api.resetView}
+            graphId={api?.graphId}
+            updateEdges={api?.updateEdges}
             layout="floating"
           />
         ),
@@ -75,6 +77,8 @@ Tips:
             visible={api?.showEdgeInfoPanel}
             onClose={api?.hideEdgeInfoPanel}
             topOffset={api?.menuBarBottom}
+            graphId={api?.graphId}
+            updateEdges={api?.updateEdges}
             onResetView={api.resetView}
             layout="inline"
           />
