@@ -36,3 +36,155 @@ Template Packs are data-only bundles that include tag sets, optional schema frag
 - Strict JSON schema validation for packs with richer error messages.
 - Schema promotion to core API (watch/set/validate) beyond the plugin-managed manager.
 - Capability registry for softer dependency checks (e.g., `updateEdges`).
+
+## JSON Schema (Author Guidance)
+
+The following JSON Schema (Draft-07 style) describes the expected shape of a Template Pack. It is intended to help authors validate packs during authoring. The app performs its own validation and may accept additional fields; unknown fields are ignored.
+
+```
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["meta"],
+  "additionalProperties": true,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": true,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string" },
+        "author": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "requires": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "app": { "type": "string" },
+        "plugins": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id"],
+            "properties": { "id": { "type": "string", "minLength": 1 } },
+            "additionalProperties": true
+          }
+        },
+        "capabilities": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "schema": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "additionalProperties": true,
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "color": { "type": "string" },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "type"],
+                  "additionalProperties": true,
+                  "properties": {
+                    "name": { "type": "string", "minLength": 1 },
+                    "type": { "enum": ["string", "number", "boolean", "string[]", "number[]"] },
+                    "required": { "type": "boolean" },
+                    "default": {},
+                    "enum": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "edgeTypes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "additionalProperties": true,
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "directed": { "type": "boolean" },
+              "sourceTypes": { "type": "array", "items": { "type": "string" } },
+              "targetTypes": { "type": "array", "items": { "type": "string" } },
+              "noCycle": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": true,
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string", "minLength": 1 },
+          "color": { "type": "string" }
+        }
+      }
+    },
+    "properties": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type"],
+        "additionalProperties": true,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "type": { "enum": ["string", "number", "boolean", "string[]", "number[]"] },
+          "default": {}
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "id": { "type": ["integer", "string"] },
+          "type": { "type": "string" },
+          "label": { "type": "string" },
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "level": { "type": ["integer", "number"] },
+          "tags": { "type": "array", "items": { "type": ["string", "number"] } }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source", "target"],
+        "additionalProperties": true,
+        "properties": {
+          "source": {},
+          "target": {},
+          "directed": { "type": "boolean" },
+          "type": { "type": "string" }
+        }
+      }
+    }
+  }
+}
+```
+
+Tips
+- Keep packs JSON-only (no code).
+- Prefer stable names for types/properties; use the importer to map/rename on load.
+- Use the importer’s pre-flight to review dependencies, tag plan, and mapping before apply.

@@ -35,6 +35,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Improved (planned for 0.31.0)
 - Templates: Validation errors are grouped by section (Meta, Requires, Schema, Tags, Properties, Nodes, Edges)
 
+### Docs (planned for 0.32.0)
+- Templates: Added Template Pack JSON Schema snippet to doc/TEMPLATES.md for author guidance
+
 ## [0.23.0] - 2025-11-19
 
 ### Added
