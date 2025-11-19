@@ -12,6 +12,7 @@ import { exportWatermarkPlugin } from './core/exportWatermarkPlugin.jsx';
 import { versionHistoryPlugin } from './core/versionHistoryPlugin.jsx';
 import { searchCommandPlugin } from './core/searchCommandPlugin.jsx';
 import { templatesPlugin } from './core/templatesPlugin.jsx';
+import { workspacePlugin } from './core/workspacePlugin.jsx';
 import { showcasePlugin } from './examples/showcasePlugin.jsx';
 import { followUpRemindersPlugin } from './examples/followUpRemindersPlugin.jsx';
 import { gamificationPlugin } from './examples/gamificationPlugin.jsx';
@@ -24,6 +25,7 @@ export const corePlugins = [
   edgeInfoPlugin,
   graphStatsPlugin,
   helpOverlayPlugin,
+  workspacePlugin,
   templatesPlugin,
   exportWatermarkPlugin,
   versionHistoryPlugin,
