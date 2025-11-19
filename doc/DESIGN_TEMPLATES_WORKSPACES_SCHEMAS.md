@@ -55,7 +55,8 @@ Rationale: separates domain content from user environment, simplifies sharing an
         ] }
     ],
     "edgeTypes": [
-      { "name": "cites", "directed": true, "sourceTypes": ["Paper"], "targetTypes": ["Paper"] }
+      { "name": "cites", "directed": true, "sourceTypes": ["Paper"], "targetTypes": ["Paper"] },
+      { "name": "depends_on", "directed": true, "noCycle": true }
     ]
   },
   "tags": [ { "id": "ml", "name": "ML", "color": "#10b981" } ],
@@ -111,6 +112,7 @@ Rationale: separates domain content from user environment, simplifies sharing an
 
 Integration:
 - Linter: add rules for required fields, enum, edge type constraints; use `updateNodes/updateEdges` to fix.
+  - Includes `noCycle` for relations like `depends_on` (enforce DAGs) and source/target compatibility.
 - Node Editor: start with a “Typed Props” side panel; consider an editor slot later if needed.
 - Search: schema DSL provider (filters by type/props), merged with aggregator.
 - Export: JSON‑LD/RDF mapping plugin reads shared schema.

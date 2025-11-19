@@ -42,7 +42,9 @@ export const SCHEMA_JSON_SCHEMA = {
           name: { type: 'string', minLength: 1 },
           directed: { type: 'boolean' },
           sourceTypes: { type: 'array', items: { type: 'string' } },
-          targetTypes: { type: 'array', items: { type: 'string' } }
+          targetTypes: { type: 'array', items: { type: 'string' } },
+          // When true, the relation must be acyclic (no directed cycles)
+          noCycle: { type: 'boolean' }
         }
       }
     }
@@ -90,9 +92,9 @@ export function validateSchema(schema) {
       if (typeof et.name !== 'string' || et.name.trim() === '') errors.push(`edgeTypes[${i}].name is required`);
       if (et.sourceTypes != null && !Array.isArray(et.sourceTypes)) errors.push(`edgeTypes[${i}].sourceTypes must be an array`);
       if (et.targetTypes != null && !Array.isArray(et.targetTypes)) errors.push(`edgeTypes[${i}].targetTypes must be an array`);
+      if (et.noCycle != null && typeof et.noCycle !== 'boolean') errors.push(`edgeTypes[${i}].noCycle must be boolean when provided`);
     });
   }
 
   return errors;
 }
-

@@ -232,6 +232,27 @@ function RuleSection({ api, rule, issues, settings }) {
         });
         return draft;
       });
+    } else if (rule === 'relationCycle') {
+      // Break cycles for specific typed relations that require acyclicity
+      // Collect by edgeType to avoid removing unrelated edges
+      const byType = new Map();
+      issues.forEach(iss => {
+        const k = iss.edgeType || 'unknown';
+        if (!byType.has(k)) byType.set(k, new Set());
+        if (iss.nodeId != null) byType.get(k).add(iss.nodeId);
+      });
+      api.updateEdges?.((draft) => {
+        let next = draft || [];
+        byType.forEach((nodeSet, typeName) => {
+          const lname = String(typeName || '').toLowerCase();
+          next = next.filter(e => {
+            const t = String(e.type || '').toLowerCase();
+            const remove = e.directed && t === lname && nodeSet.has(e.source) && nodeSet.has(e.target);
+            return !remove;
+          });
+        });
+        return next;
+      });
     }
   };
 
@@ -360,6 +381,7 @@ function LinterPanel({ api }) {
       // Schema-based checks
       const schema = loadSchema(gId);
       arr.push(...schemaChecks(nodes, schema, settings));
+      arr.push(...schemaEdgeChecks(nodes, edges, schema));
       const comps = settings.detectClusters ? detectClustersSync(nodes, edges) : [];
       lintCache.set(key, { issues: arr, clusters: comps });
       setIssues(arr);
@@ -374,7 +396,11 @@ function LinterPanel({ api }) {
       if (type !== 'lintResult' || rid !== requestId) return;
       if (!cancelled) {
         const schema = loadSchema(gId);
-        const augmented = [...(res || []), ...schemaChecks(nodes, schema, settings)];
+        const augmented = [
+          ...(res || []),
+          ...schemaChecks(nodes, schema, settings),
+          ...schemaEdgeChecks(nodes, edges, schema)
+        ];
         lintCache.set(key, { issues: augmented, clusters: comps || [] });
         setIssues(augmented);
         setClusters(comps || []);
@@ -491,6 +517,79 @@ function schemaChecks(nodes = [], schema = { types: [] }, settings) {
       }
     });
   });
+  return issues;
+}
+
+function schemaEdgeChecks(nodes = [], edges = [], schema = { types: [], edgeTypes: [] }) {
+  const issues = [];
+  const nodeById = new Map((nodes || []).map(n => [n.id, n]));
+  const nodeTypeById = new Map((nodes || []).map(n => [n.id, String(n.type || '').toLowerCase()]));
+
+  const etDefs = Array.isArray(schema.edgeTypes) ? schema.edgeTypes : [];
+  const etByName = new Map(etDefs.map(et => [String(et.name || '').toLowerCase(), et]));
+
+  // Validate typed edges against schema edge type defs
+  (edges || []).forEach((e, idx) => {
+    const tname = String(e.type || '').trim().toLowerCase();
+    if (!tname) return; // untyped edge => skip
+    const def = etByName.get(tname);
+    const sNode = nodeById.get(e.source);
+    const tNode = nodeById.get(e.target);
+    if (!def) {
+      issues.push({ id: `edge_unknownType:${idx}`, rule: 'unknownEdgeType', severity: 'error', nodeId: sNode?.id ?? null, message: `Unknown edge type: "${e.type}"` });
+      return;
+    }
+    const srcT = nodeTypeById.get(e.source) || '';
+    const dstT = nodeTypeById.get(e.target) || '';
+    const allowedSrc = Array.isArray(def.sourceTypes) ? def.sourceTypes.map(s => String(s || '').toLowerCase()) : null;
+    const allowedDst = Array.isArray(def.targetTypes) ? def.targetTypes.map(s => String(s || '').toLowerCase()) : null;
+    if (allowedSrc && srcT && !allowedSrc.includes(srcT)) {
+      issues.push({ id: `edge_srcTypeMismatch:${idx}`, rule: 'edgeTypeMismatch', severity: 'error', nodeId: sNode?.id ?? null, message: `Edge '${def.name}' source type mismatch: got '${sNode?.type || ''}', allowed: ${def.sourceTypes.join(', ')}` });
+    }
+    if (allowedDst && dstT && !allowedDst.includes(dstT)) {
+      issues.push({ id: `edge_dstTypeMismatch:${idx}`, rule: 'edgeTypeMismatch', severity: 'error', nodeId: tNode?.id ?? null, message: `Edge '${def.name}' target type mismatch: got '${tNode?.type || ''}', allowed: ${def.targetTypes.join(', ')}` });
+    }
+  });
+
+  // Acyclic constraints per edge type (e.g., depends_on)
+  // def.noCycle === true signals that directed cycles are not allowed
+  etDefs.forEach((def) => {
+    const defName = String(def?.name || '').toLowerCase();
+    const enforceAcyclic = !!def?.noCycle || defName === 'depends_on';
+    if (!enforceAcyclic) return;
+    // Work with directed edges of this type only
+    const typed = (edges || []).filter(e => String(e.type || '').toLowerCase() === defName && !!e.directed);
+    if (typed.length === 0) return;
+    // Build adjacency for directed graph
+    const adj = new Map();
+    (nodes || []).forEach(n => adj.set(n.id, []));
+    typed.forEach(e => { if (adj.has(e.source)) adj.get(e.source).push(e.target); });
+    const temp = new Set();
+    const perm = new Set();
+    const stack = [];
+    function dfs(u) {
+      temp.add(u);
+      stack.push(u);
+      const nbrs = adj.get(u) || [];
+      for (const v of nbrs) {
+        if (!temp.has(v) && !perm.has(v)) dfs(v);
+        else if (temp.has(v)) {
+          // Found a cycle; report nodes in the cycle set
+          const cycleNodes = [...stack.slice(stack.indexOf(v)), v];
+          cycleNodes.forEach(id => {
+            const n = nodeById.get(id);
+            if (!n) return;
+            issues.push({ id: `edge_cycle:${defName}:${id}:${Math.random().toString(36).slice(2)}`, rule: 'relationCycle', severity: 'error', nodeId: id, message: `Cycle in '${def.name}' relation`, edgeType: def.name });
+          });
+        }
+      }
+      stack.pop();
+      temp.delete(u);
+      perm.add(u);
+    }
+    (nodes || []).forEach(n => { if (!perm.has(n.id)) dfs(n.id); });
+  });
+
   return issues;
 }
 

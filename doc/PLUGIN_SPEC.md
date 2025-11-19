@@ -372,6 +372,18 @@ Use cases for conflicts:
 - New slots may be added over time; existing slots won't break without a major version.
 - Feature‑detect optional `api` fields and guard access.
 
+## Edge Types & Constraints
+
+- Edges may include an optional `type` string (e.g., `{ source, target, directed: true, type: 'depends_on' }`).
+- The Schema Manager and schema JSON support `edgeTypes` with optional constraints:
+  - `name` (string): edge type identifier, case‑insensitive.
+  - `directed` (boolean): indicates typical directionality for the relation.
+  - `sourceTypes` / `targetTypes` (string[]): allowed node types on each side.
+  - `noCycle` (boolean): when true, directed cycles for this relation are invalid.
+- The bundled Graph Linter validates typed edges against the active schema:
+  - Flags unknown edge types and source/target type mismatches.
+  - Enforces `noCycle` on typed relations (e.g., `depends_on`) and offers a Fix All that removes offending typed edges via `api.updateEdges` (with undo parity).
+
 ## Security
 
 - Do not execute untrusted code, fetch remote scripts, or eval dynamic sources.

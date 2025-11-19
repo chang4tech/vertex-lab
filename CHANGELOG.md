@@ -6,6 +6,11 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## Unreleased
 
+### Added (planned for 0.24.0)
+- Linter: Edge type validation against schema.edgeTypes (unknown edge types; source/target type mismatch)
+- Linter: Enforce acyclic constraint for typed relations with `noCycle` (e.g., `depends_on`) and Fix All to break offending typed edges via `updateEdges`
+- Schema: `edgeTypes[].noCycle` boolean supported in validation
+- Docs: Plugin Spec updated with Edge Types & Constraints; Design doc updated with `noCycle` example and notes
 
 ## [0.23.0] - 2025-11-19
 
