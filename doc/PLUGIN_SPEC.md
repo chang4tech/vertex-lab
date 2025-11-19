@@ -212,8 +212,9 @@ Providers registered by plugins are passed to the Search UI automatically; the c
   - Edge constraints: unknown edge type, source/target type mismatch, and `noCycle` violations for typed relations.
 
 - Node Editor cues
-  - Typed tab displays a required marker (asterisk) next to required properties defined in the schema.
-  - Enum hints are shown as an “Allowed: …” list under inputs when present.
+  - Typed tab displays a required marker (asterisk) next to required properties.
+  - Inline validation messages appear for missing required fields and invalid enum selections.
+  - Enums are rendered as dropdowns; array-typed enums use multi‑select.
 
 ### controlHub (single page)
 

@@ -44,6 +44,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Docs (planned for 0.34.0)
 - Plugin Spec: Added Schema Integration (Validation) section describing linter enforcement and Node Editor required markers
 
+### Improved (planned for 0.35.0)
+- Node Editor (Typed): Inline validation messages for required fields and invalid enum values; enums rendered as dropdowns (multi-select for array types)
+
 ## [0.23.0] - 2025-11-19
 
 ### Added

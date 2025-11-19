@@ -410,6 +410,38 @@ const TypedTab = ({ editedNode, setEditedNode, currentTheme, graphId }) => {
     setEditedNode(next);
   };
 
+  const isMissing = (p, val) => {
+    if (!p.required) return false;
+    if (val == null) return true;
+    if (p.type === 'string') return String(val).trim() === '';
+    if (p.type === 'number') return val === '' || val == null;
+    if (p.type === 'boolean') return false; // boolean false is valid
+    if (p.type === 'string[]' || p.type === 'number[]') return !Array.isArray(val) || val.length === 0;
+    return false;
+  };
+
+  const enumInvalid = (p, val) => {
+    if (!Array.isArray(p.enum) || p.enum.length === 0) return false;
+    const allowed = p.enum.map((x) => String(x));
+    if (p.type === 'string') {
+      if (val == null || String(val).trim() === '') return false; // allow empty when not required
+      return !allowed.includes(String(val));
+    }
+    if (p.type === 'number') {
+      if (val === '' || val == null) return false;
+      return !allowed.includes(String(val));
+    }
+    if (p.type === 'string[]') {
+      const arr = Array.isArray(val) ? val : [];
+      return arr.some((v) => !allowed.includes(String(v)));
+    }
+    if (p.type === 'number[]') {
+      const arr = Array.isArray(val) ? val : [];
+      return arr.some((v) => !allowed.includes(String(v)));
+    }
+    return false;
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div>
@@ -432,22 +464,57 @@ const TypedTab = ({ editedNode, setEditedNode, currentTheme, graphId }) => {
             const val = editedNode[p.name];
             const isArray = p.type === 'string[]' || p.type === 'number[]';
             const placeholder = isArray ? 'comma,separated,values' : (p.type === 'number' ? '0' : (p.type === 'boolean' ? '' : ''));
+            const hasEnum = Array.isArray(p.enum) && p.enum.length > 0;
+            const messages = [];
+            if (isMissing(p, val)) messages.push('Required');
+            if (enumInvalid(p, val)) messages.push(`Must be one of: ${p.enum.join(', ')}`);
             return (
-              <div key={idx} style={{ marginBottom: 8 }}>
+              <div key={idx} style={{ marginBottom: 10 }}>
                 <label style={labelStyle}>
                   {p.name} {p.required && <span style={{ color: '#dc2626' }}>*</span>}
                 </label>
                 {p.type === 'boolean' ? (
                   <input type="checkbox" checked={!!val} onChange={(e) => handlePropChange(p, e.target.checked)} />
+                ) : hasEnum && !isArray ? (
+                  <select
+                    style={inputBase}
+                    value={val == null || val === '' ? '' : String(val)}
+                    onChange={(e) => handlePropChange(p, p.type === 'number' ? Number(e.target.value) : e.target.value)}
+                  >
+                    <option value="">(none)</option>
+                    {p.enum.map((opt, i) => (
+                      <option key={i} value={String(opt)}>{String(opt)}</option>
+                    ))}
+                  </select>
+                ) : hasEnum && isArray ? (
+                  <select
+                    multiple
+                    style={{ ...inputBase, height: 90 }}
+                    value={Array.isArray(val) ? val.map((v) => String(v)) : []}
+                    onChange={(e) => {
+                      const sel = Array.from(e.target.selectedOptions).map((o) => o.value);
+                      handlePropChange(p, p.type === 'number[]' ? sel.map((s) => Number(s)) : sel);
+                    }}
+                  >
+                    {p.enum.map((opt, i) => (
+                      <option key={i} value={String(opt)}>{String(opt)}</option>
+                    ))}
+                  </select>
                 ) : (
                   <input
+                    type={p.type === 'number' ? 'number' : 'text'}
                     style={inputBase}
                     value={isArray ? (Array.isArray(val) ? val.join(', ') : '') : (val ?? '')}
                     onChange={(e) => handlePropChange(p, e.target.value)}
                     placeholder={placeholder}
                   />
                 )}
-                {p.enum && Array.isArray(p.enum) && p.enum.length > 0 && (
+                {messages.length > 0 && (
+                  <div style={{ color: '#dc2626', fontSize: 12, marginTop: 4 }}>
+                    {messages.join(' • ')}
+                  </div>
+                )}
+                {!hasEnum && p.enum && Array.isArray(p.enum) && p.enum.length > 0 && (
                   <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4 }}>Allowed: {p.enum.join(', ')}</div>
                 )}
               </div>
