@@ -47,6 +47,10 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Improved (planned for 0.35.0)
 - Node Editor (Typed): Inline validation messages for required fields and invalid enum values; enums rendered as dropdowns (multi-select for array types)
 
+### Added (planned for 0.36.0)
+- Slots: Introduced `slots.nodeEditor` to let plugins contribute type-specific UI into a new Node Editor “Extensions” tab
+- Example: `examples.nodeEditorExample` adds quick actions for `type: Paper`
+
 ## [0.23.0] - 2025-11-19
 
 ### Added

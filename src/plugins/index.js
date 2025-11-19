@@ -22,6 +22,7 @@ import { searchPrefixProviderPlugin } from './examples/searchPrefixProviderPlugi
 import { searchDSLProviderPlugin } from './examples/searchDSLProviderPlugin.jsx';
 import { graphLinterPlugin } from './examples/graphLinterPlugin.jsx';
 import { centralityLensPlugin } from './examples/centralityLensPlugin.jsx';
+import { nodeEditorExamplePlugin } from './examples/nodeEditorExamplePlugin.jsx';
 
 export const corePlugins = [
   nodeInfoPlugin,
@@ -51,4 +52,5 @@ export const bundledCustomPlugins = [
   searchDSLProviderPlugin,
   graphLinterPlugin,
   centralityLensPlugin,
+  nodeEditorExamplePlugin,
 ];

@@ -13,6 +13,7 @@ import { MobileCanvasControls } from './components/mobile/MobileCanvasControls.j
 // Plugin system
 import { PluginHost } from './plugins/PluginHost';
 import { corePlugins, bundledCustomPlugins } from './plugins';
+import { collectNodeEditorSections } from './plugins/nodeEditorSections.js';
 import { mergePlugins } from './plugins/registry.js';
 import { loadPluginPrefs, savePluginPrefs } from './utils/pluginUtils';
 import { loadCustomPluginsFromStorage, addCustomPluginCode, removeStoredCustomPluginCodeById } from './utils/customPluginLoader';
@@ -2014,6 +2015,7 @@ function App({ graphId = 'default' }) {
   );
   const pluginCommands = React.useMemo(() => collectPluginCommands(activePlugins), [activePlugins]);
   const searchProviders = React.useMemo(() => collectSearchProviders(activePlugins), [activePlugins]);
+  const nodeEditorSections = React.useMemo(() => collectNodeEditorSections(activePlugins), [activePlugins]);
 
   useEffect(() => {
     const enabled = activePlugins.some(plugin => plugin.id === 'core.versionHistory');
@@ -3632,6 +3634,8 @@ function App({ graphId = 'default' }) {
           onClose={handleCloseNodeEditor}
           onDelete={handleDeleteNode}
           graphId={graphId}
+          editorSections={nodeEditorSections}
+          appApi={pluginAppApi}
         />
       )}
 

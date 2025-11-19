@@ -141,6 +141,47 @@ Examples:
 - `label:"Neural Networks" type:Paper`
 
 This provider is merged with other providers and the fallback search by the aggregator; it returns `{ node, score, exact }` for matches.
+
+### nodeEditor
+
+Contribute sections to the Node Editor via an Extensions tab. Each section is an object with:
+
+- `id` (string): Unique within the plugin.
+- `title?: string`: Optional section title.
+- `order?: number`: Sort order (ascending).
+- `when?: (api, node) => boolean`: Optional predicate; return false to hide.
+- `render: (api, node) => React.ReactNode`: Render function. Receives the app API plus `api.editor` helpers.
+
+Editor API passed to render:
+
+```
+api.editor = {
+  graphId: string,
+  node: Node,                    // current edited snapshot
+  setNode(partial | fn),         // shallow-merge partial or updater
+  setField(name: string, value)  // convenience setter
+}
+```
+
+Example:
+
+```
+export const myPlugin = {
+  id: 'acme.paperTools',
+  slots: {
+    nodeEditor: [{
+      id: 'paperQuick',
+      title: 'Quick Actions (Paper)',
+      when: (api, node) => (node?.type || '').toLowerCase() === 'paper',
+      render: (api) => (
+        <div>
+          <button onClick={() => api.editor.setField('year', new Date().getFullYear())}>Set year</button>
+        </div>
+      )
+    }]
+  }
+};
+```
 - The core still runs its fallback label search to guarantee baseline behavior.
 
 Example provider (label prefix boost with custom scoring):

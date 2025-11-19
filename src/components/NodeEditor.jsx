@@ -15,7 +15,7 @@ import {
 import { loadTags } from '../utils/tagUtils';
 import { loadSchema } from '../utils/schemaUtils';
 
-const NodeEditor = ({ node, visible, onSave, onClose, onDelete, graphId = 'default' }) => {
+const NodeEditor = ({ node, visible, onSave, onClose, onDelete, graphId = 'default', editorSections = [], appApi = null }) => {
   const { currentTheme } = useTheme();
   const intl = useIntl();
   const [editedNode, setEditedNode] = useState(node);
@@ -82,7 +82,8 @@ const NodeEditor = ({ node, visible, onSave, onClose, onDelete, graphId = 'defau
     { id: 'style', label: intl.formatMessage({ id: 'nodeEditor.style', defaultMessage: 'Style' }) },
     { id: 'typed', label: intl.formatMessage({ id: 'nodeEditor.typed', defaultMessage: 'Typed' }) },
     { id: 'tags', label: intl.formatMessage({ id: 'nodeEditor.tags', defaultMessage: 'Tags' }) },
-    { id: 'advanced', label: intl.formatMessage({ id: 'nodeEditor.advanced', defaultMessage: 'Advanced' }) }
+    { id: 'advanced', label: intl.formatMessage({ id: 'nodeEditor.advanced', defaultMessage: 'Advanced' }) },
+    { id: 'extensions', label: intl.formatMessage({ id: 'nodeEditor.extensions', defaultMessage: 'Extensions' }) }
   ];
 
   return (
@@ -214,6 +215,16 @@ const NodeEditor = ({ node, visible, onSave, onClose, onDelete, graphId = 'defau
               editedNode={editedNode} 
               setEditedNode={setEditedNode} 
               currentTheme={currentTheme}
+            />
+          )}
+          {activeTab === 'extensions' && (
+            <ExtensionsTab
+              editedNode={editedNode}
+              setEditedNode={setEditedNode}
+              currentTheme={currentTheme}
+              sections={editorSections}
+              appApi={appApi}
+              graphId={graphId}
             />
           )}
         </div>
@@ -522,6 +533,58 @@ const TypedTab = ({ editedNode, setEditedNode, currentTheme, graphId }) => {
           })}
         </div>
       )}
+    </div>
+  );
+};
+
+// Style tab component
+const ExtensionsTab = ({ editedNode, setEditedNode, currentTheme, sections = [], appApi = null, graphId = 'default' }) => {
+  const labelStyle = {
+    display: 'block', marginBottom: '8px', color: currentTheme.colors.primaryText, fontSize: '14px', fontWeight: '600'
+  };
+  const boxStyle = {
+    padding: '12px',
+    border: `1px solid ${currentTheme.colors.panelBorder}`,
+    borderRadius: '8px',
+    backgroundColor: currentTheme.colors.panelBackground,
+  };
+  // Build editor-scoped API for plugin sections
+  const editorApi = React.useMemo(() => ({
+    graphId,
+    node: editedNode,
+    setNode: (partial) => {
+      if (typeof partial === 'function') {
+        setEditedNode((cur) => ({ ...cur, ...partial(cur) }));
+      } else if (partial && typeof partial === 'object') {
+        setEditedNode((cur) => ({ ...cur, ...partial }));
+      }
+    },
+    setField: (name, value) => setEditedNode((cur) => ({ ...cur, [name]: value })),
+    schema: loadSchema(graphId),
+  }), [editedNode, setEditedNode, graphId]);
+
+  const renderApi = React.useMemo(() => ({ ...(appApi || {}), editor: editorApi }), [appApi, editorApi]);
+
+  const visibleSections = React.useMemo(() => {
+    const arr = Array.isArray(sections) ? sections : [];
+    return arr
+      .filter((s) => (typeof s.when === 'function' ? s.when(renderApi, editedNode) : true))
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  }, [sections, renderApi, editedNode]);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {visibleSections.length === 0 && (
+        <div style={{ color: currentTheme.colors.secondaryText, fontSize: 13 }}>No extensions available for this node.</div>
+      )}
+      {visibleSections.map((s) => (
+        <div key={`${s.pluginId || 'custom'}:${s.id}`} style={boxStyle}>
+          {s.title && <div style={labelStyle}>{s.title}</div>}
+          <div>
+            {s.render(renderApi, editedNode)}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
