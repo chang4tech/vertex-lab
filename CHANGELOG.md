@@ -33,6 +33,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Linter: Optional cluster detection (connected components) computed in worker; panel shows largest clusters with Select/Highlight actions; configurable toggle and min size
 - Linter: Cache signature now includes node levels and timestamps (created/updated) for stronger invalidation on content changes
 - Docs: Added DESIGN_TEMPLATES_WORKSPACES_SCHEMAS.md summarizing Template Packs, Workspace profiles, Schemas, workerization, and decisions
+- Docs: Clarified definitions — Plugins (feature/tag capabilities), Templates (tag sets/sample graphs/presets), Workspaces (storage/library/organization)
 
 ### Changed
 - PluginsManager: Refactored `handleTogglePlugin` function - reduced cyclomatic complexity from ~5 to ~2

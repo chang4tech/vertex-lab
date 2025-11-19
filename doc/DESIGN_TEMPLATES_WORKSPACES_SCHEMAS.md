@@ -2,6 +2,11 @@
 
 This document captures the exploration and decisions around improving knowledge representation features: templates, workspaces (environment), and schemas (types/properties/relations).
 
+## Definitions (agreed)
+- Plugins: feature capabilities and tag capabilities for graphs (behavioral/UX extensions delivered as code via slots).
+- Templates: tag sets, sample graphs, and presets for graphs (data‑only packs applied via pre‑flight merge/mapping).
+- Workspaces: storage, library, and organization of graphs (environment/profile settings, plugin prefs, theme/layout, etc.).
+
 ## Current State (relevant context)
 - Plugins: extensibility via sidePanels, canvasOverlays, commands, searchProviders, notifications, configPage.
 - Search: plugin‑extensible providers aggregated with a fallback; UI is a core plugin overlay; command routing via `core.search.open`.
@@ -181,4 +186,3 @@ Decision: ship template packs + workspace first; incubate schema UI as a plugin;
 - Graph Linter (example): workerized scans, cache signature, cluster detection.
 - Search: providers slot + aggregator + overlay + command routing.
 - App API: `updateNodes`, `updateEdges`, selection/highlight, view resets, worker‑friendly caching concepts.
-
