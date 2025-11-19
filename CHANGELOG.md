@@ -37,6 +37,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Templates: Added core Templates plugin (import/export packs, validation summary, tag merge plan, subgraph apply with ID remap, single-undo); legacy-friendly minimal MVP
 - Schema: Added Schema Manager plugin (define types/properties per graph; stored in localStorage)
 - Linter: Reads schema and adds rules for unknown type and missing required props; Fix All fills defaults for required props
+- Lenses: Added Centrality Lens example plugin (PageRank/Degree in worker, cached by structure) with side panel and Select/Highlight actions; includes basic tests
 
 ### Changed
 - PluginsManager: Refactored `handleTogglePlugin` function - reduced cyclomatic complexity from ~5 to ~2

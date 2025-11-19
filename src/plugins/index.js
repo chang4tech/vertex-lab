@@ -20,6 +20,7 @@ import { gamificationPlugin } from './examples/gamificationPlugin.jsx';
 import { paperReferenceProspectorPlugin } from './examples/paperReferenceProspectorPlugin.jsx';
 import { searchPrefixProviderPlugin } from './examples/searchPrefixProviderPlugin.jsx';
 import { graphLinterPlugin } from './examples/graphLinterPlugin.jsx';
+import { centralityLensPlugin } from './examples/centralityLensPlugin.jsx';
 
 export const corePlugins = [
   nodeInfoPlugin,
@@ -47,4 +48,5 @@ export const bundledCustomPlugins = [
   paperReferenceProspectorPlugin,
   searchPrefixProviderPlugin,
   graphLinterPlugin,
+  centralityLensPlugin,
 ];
