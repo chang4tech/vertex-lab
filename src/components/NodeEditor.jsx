@@ -13,8 +13,9 @@ import {
   getNodeTextColor
 } from '../utils/nodeUtils';
 import { loadTags } from '../utils/tagUtils';
+import { loadSchema } from '../utils/schemaUtils';
 
-const NodeEditor = ({ node, visible, onSave, onClose, onDelete }) => {
+const NodeEditor = ({ node, visible, onSave, onClose, onDelete, graphId = 'default' }) => {
   const { currentTheme } = useTheme();
   const intl = useIntl();
   const [editedNode, setEditedNode] = useState(node);
@@ -79,6 +80,7 @@ const NodeEditor = ({ node, visible, onSave, onClose, onDelete }) => {
   const tabs = [
     { id: 'basic', label: intl.formatMessage({ id: 'nodeEditor.basic', defaultMessage: 'Basic' }) },
     { id: 'style', label: intl.formatMessage({ id: 'nodeEditor.style', defaultMessage: 'Style' }) },
+    { id: 'typed', label: intl.formatMessage({ id: 'nodeEditor.typed', defaultMessage: 'Typed' }) },
     { id: 'tags', label: intl.formatMessage({ id: 'nodeEditor.tags', defaultMessage: 'Tags' }) },
     { id: 'advanced', label: intl.formatMessage({ id: 'nodeEditor.advanced', defaultMessage: 'Advanced' }) }
   ];
@@ -190,6 +192,14 @@ const NodeEditor = ({ node, visible, onSave, onClose, onDelete }) => {
               editedNode={editedNode} 
               setEditedNode={setEditedNode} 
               currentTheme={currentTheme}
+            />
+          )}
+          {activeTab === 'typed' && (
+            <TypedTab
+              editedNode={editedNode}
+              setEditedNode={setEditedNode}
+              currentTheme={currentTheme}
+              graphId={graphId}
             />
           )}
           {activeTab === 'tags' && (
@@ -364,6 +374,85 @@ const BasicTab = ({ editedNode, setEditedNode, currentTheme, textareaRef }) => {
             style={{ ...inputBase, minHeight: '72px', resize: 'vertical' }}
             placeholder="Additional notes..."
           />
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Typed tab component
+const TypedTab = ({ editedNode, setEditedNode, currentTheme, graphId }) => {
+  const schema = loadSchema(graphId);
+  const types = Array.isArray(schema.types) ? schema.types : [];
+  const labelStyle = {
+    display: 'block', marginBottom: '8px', color: currentTheme.colors.primaryText, fontSize: '14px', fontWeight: '600'
+  };
+  const inputBase = {
+    width: '100%', padding: '8px 10px', border: `1px solid ${currentTheme.colors.inputBorder}`, borderRadius: '4px', backgroundColor: currentTheme.colors.inputBackground, color: currentTheme.colors.primaryText, fontSize: '14px', fontFamily: 'inherit'
+  };
+  const tname = String(editedNode.type || '').trim();
+  const currentType = types.find(t => String(t.name || '').toLowerCase() === tname.toLowerCase());
+
+  const handlePropChange = (p, val) => {
+    const next = { ...editedNode };
+    // Convert arrays from comma-separated string if needed
+    if (p.type === 'string[]') {
+      next[p.name] = String(val || '').split(',').map(s => s.trim()).filter(Boolean);
+    } else if (p.type === 'number[]') {
+      next[p.name] = String(val || '').split(',').map(s => s.trim()).filter(Boolean).map(v => Number(v)).filter(v => !Number.isNaN(v));
+    } else if (p.type === 'number') {
+      const num = Number(val); next[p.name] = Number.isNaN(num) ? '' : num;
+    } else if (p.type === 'boolean') {
+      next[p.name] = !!val;
+    } else {
+      next[p.name] = val;
+    }
+    setEditedNode(next);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div>
+        <label style={labelStyle}>Type</label>
+        <select
+          value={tname}
+          onChange={(e) => setEditedNode({ ...editedNode, type: e.target.value })}
+          style={inputBase}
+        >
+          <option value="">(none)</option>
+          {types.map((t, idx) => (
+            <option key={idx} value={t.name}>{t.name}</option>
+          ))}
+        </select>
+      </div>
+      {currentType && (
+        <div>
+          <div style={{ fontWeight: 600, marginBottom: 6 }}>Properties</div>
+          {(currentType.properties || []).map((p, idx) => {
+            const val = editedNode[p.name];
+            const isArray = p.type === 'string[]' || p.type === 'number[]';
+            const placeholder = isArray ? 'comma,separated,values' : (p.type === 'number' ? '0' : (p.type === 'boolean' ? '' : ''));
+            return (
+              <div key={idx} style={{ marginBottom: 8 }}>
+                <label style={labelStyle}>
+                  {p.name} {p.required && <span style={{ color: '#dc2626' }}>*</span>}
+                </label>
+                {p.type === 'boolean' ? (
+                  <input type="checkbox" checked={!!val} onChange={(e) => handlePropChange(p, e.target.checked)} />
+                ) : (
+                  <input
+                    style={inputBase}
+                    value={isArray ? (Array.isArray(val) ? val.join(', ') : '') : (val ?? '')}
+                    onChange={(e) => handlePropChange(p, e.target.value)}
+                    placeholder={placeholder}
+                  />
+                )}
+                {p.enum && Array.isArray(p.enum) && p.enum.length > 0 && (
+                  <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4 }}>Allowed: {p.enum.join(', ')}</div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

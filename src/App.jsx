@@ -3617,6 +3617,7 @@ function App({ graphId = 'default' }) {
           onSave={handleSaveNode}
           onClose={handleCloseNodeEditor}
           onDelete={handleDeleteNode}
+          graphId={graphId}
         />
       )}
 
