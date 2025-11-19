@@ -21,6 +21,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Lenses: Quick toggle command `examples.centralityLens.toggle` to show/hide the panel
  - Lenses: Keyboard shortcut Cmd/Ctrl+Alt+L toggles Centrality Lens
 
+### Docs (planned for 0.28.0)
+- Updated README Keyboard Shortcuts to include Cmd/Ctrl+Alt+L for Centrality Lens toggle
+
 ## [0.23.0] - 2025-11-19
 
 ### Added

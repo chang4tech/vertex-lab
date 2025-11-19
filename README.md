@@ -32,8 +32,9 @@ A powerful and intuitive diagramming tool built with React and HTML5 Canvas. Cre
   - `⌘/Ctrl + ⇧ + S`: Export PNG
   - `⌘/Ctrl + ⇧ + O`: Import JSON
   - `⌘/Ctrl + Z` / `⌘/Ctrl + ⇧ + Z`: Undo / Redo
-  - `⌘/Ctrl + L`: Auto layout
-  - `⌘/Ctrl + F`: Search
+- `⌘/Ctrl + L`: Auto layout
+- `⌘/Ctrl + ⌥ + L`: Toggle Centrality Lens (show/hide panel)
+- `⌘/Ctrl + F`: Search
   - `⌥ + =` or `⌥ + +`: Zoom in
   - `⌥ + -`: Zoom out
   - `⌥ + 0`: Reset zoom
