@@ -1,5 +1,6 @@
 import React from 'react';
 import { loadSchema, saveSchema } from '../../utils/schemaUtils.js';
+import { validateSchema } from '../../utils/schemaValidation.js';
 
 function TypeEditor({ t, onChange, onRemove }) {
   const [propName, setPropName] = React.useState('');
@@ -63,7 +64,29 @@ function SchemaPanel({ api }) {
     next.types.push({ name: 'Type', color: '#1e293b', properties: [] });
     setSchema(next);
   };
-  const save = () => { saveSchema(graphId, schema); setStatus('Saved'); setTimeout(() => setStatus(''), 1500); };
+  const save = () => {
+    const errs = validateSchema(schema);
+    if (errs.length) { setStatus(`Validation errors: ${errs[0]} (+${Math.max(0, errs.length-1)} more)`); return; }
+    saveSchema(graphId, schema); setStatus('Saved'); setTimeout(() => setStatus(''), 1500);
+  };
+
+  const exportSchema = () => {
+    const errs = validateSchema(schema);
+    if (errs.length) { setStatus('Cannot export: invalid schema'); return; }
+    const blob = new Blob([JSON.stringify(schema, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `schema-${graphId}.json`;
+    document.body.appendChild(a); a.click(); setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
+  };
+
+  const importSchema = async (file) => {
+    const text = await file.text();
+    let json;
+    try { json = JSON.parse(text); } catch (e) { setStatus('Invalid JSON'); return; }
+    const errs = validateSchema(json);
+    if (errs.length) { setStatus(`Invalid schema: ${errs[0]}`); return; }
+    setSchema(json); setStatus('Loaded');
+  };
 
   return (
     <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -71,6 +94,11 @@ function SchemaPanel({ api }) {
       <div style={{ display: 'flex', gap: 8 }}>
         <button onClick={addType}>Add Type</button>
         <button onClick={save}>Save</button>
+        <button onClick={exportSchema}>Export</button>
+        <label>
+          <input type="file" accept="application/json" style={{ display: 'none' }} onChange={async (e)=>{ const f=e.target.files?.[0]; if (f) await importSchema(f); e.target.value=''; }} />
+          <span role="button" style={{ padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer' }}>Import…</span>
+        </label>
         {status && <span style={{ fontSize: 12, opacity: 0.8 }}>{status}</span>}
       </div>
       <div>
@@ -124,4 +152,3 @@ Stored per graph (localStorage). Other plugins (e.g., linter) can read the schem
 };
 
 export default schemaManagerPlugin;
-
