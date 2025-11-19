@@ -280,9 +280,15 @@ function hash32(str) {
 function graphSignature(nodes = [], edges = []) {
   // Build stable string using sorted nodes and edges
   const ns = [...(nodes || [])]
-    .map(n => ({ id: n.id, label: String(n.label || '') }))
+    .map(n => ({
+      id: n.id,
+      label: String(n.label || ''),
+      level: n.level ?? '',
+      c: n.createdAt ?? '',
+      u: n.updatedAt ?? '',
+    }))
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
-    .map(n => `${n.id}:${n.label}`)
+    .map(n => `${n.id}:${n.label}:${n.level}:${n.c}:${n.u}`)
     .join('|');
   const es = [...(edges || [])]
     .map(e => ({ s: e.source, t: e.target, d: !!e.directed }))
