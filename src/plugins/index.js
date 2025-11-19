@@ -13,6 +13,7 @@ import { versionHistoryPlugin } from './core/versionHistoryPlugin.jsx';
 import { searchCommandPlugin } from './core/searchCommandPlugin.jsx';
 import { templatesPlugin } from './core/templatesPlugin.jsx';
 import { workspacePlugin } from './core/workspacePlugin.jsx';
+import { schemaManagerPlugin } from './core/schemaManagerPlugin.jsx';
 import { showcasePlugin } from './examples/showcasePlugin.jsx';
 import { followUpRemindersPlugin } from './examples/followUpRemindersPlugin.jsx';
 import { gamificationPlugin } from './examples/gamificationPlugin.jsx';
@@ -25,6 +26,7 @@ export const corePlugins = [
   edgeInfoPlugin,
   graphStatsPlugin,
   helpOverlayPlugin,
+  schemaManagerPlugin,
   workspacePlugin,
   templatesPlugin,
   exportWatermarkPlugin,

@@ -35,6 +35,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Docs: Added DESIGN_TEMPLATES_WORKSPACES_SCHEMAS.md summarizing Template Packs, Workspace profiles, Schemas, workerization, and decisions
 - Docs: Clarified definitions — Plugins (feature/tag capabilities), Templates (tag sets/sample graphs/presets), Workspaces (storage/library/organization)
 - Templates: Added core Templates plugin (import/export packs, validation summary, tag merge plan, subgraph apply with ID remap, single-undo); legacy-friendly minimal MVP
+- Schema: Added Schema Manager plugin (define types/properties per graph; stored in localStorage)
+- Linter: Reads schema and adds rules for unknown type and missing required props; Fix All fills defaults for required props
 
 ### Changed
 - PluginsManager: Refactored `handleTogglePlugin` function - reduced cyclomatic complexity from ~5 to ~2

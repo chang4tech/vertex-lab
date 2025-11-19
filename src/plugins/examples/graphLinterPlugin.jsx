@@ -1,4 +1,5 @@
 import React from 'react';
+import { loadSchema } from '../../utils/schemaUtils.js';
 
 const STORAGE_KEY = 'plugin_examples.graphLinter.settings';
 const PANEL_VIS_KEY = 'plugin_examples.graphLinter.showPanel';
@@ -10,6 +11,8 @@ const defaultSettings = {
     orphans: 'warn',
     cycles: 'error',
     longLabel: 'info',
+    missingProp: 'error',
+    unknownType: 'info',
   },
   detectClusters: true,
   clustersMinSize: 3,
@@ -201,6 +204,34 @@ function RuleSection({ api, rule, issues, settings }) {
       api.updateEdges?.((draft) => {
         return (draft || []).filter(e => !(e.directed && cycleIds.has(e.source) && cycleIds.has(e.target)));
       });
+    } else if (rule === 'missingProp') {
+      // Fill missing required props with default or reasonable placeholder
+      api.updateNodes?.((draft) => {
+        const grouped = issues.reduce((m, iss) => {
+          if (!m[iss.nodeId]) m[iss.nodeId] = [];
+          m[iss.nodeId].push(iss);
+          return m;
+        }, {});
+        draft.forEach(n => {
+          const arr = grouped[n.id];
+          if (!arr) return;
+          arr.forEach(iss => {
+            const name = iss.propName;
+            if (!name) return;
+            let val = iss.defaultValue;
+            if (val == null) {
+              // basic defaults by type
+              const pt = iss.propType || 'string';
+              if (pt === 'number') val = 0;
+              else if (pt === 'boolean') val = false;
+              else if (pt === 'string[]' || pt === 'number[]') val = [];
+              else val = '';
+            }
+            n[name] = val;
+          });
+        });
+        return draft;
+      });
     }
   };
 
@@ -326,6 +357,9 @@ function LinterPanel({ api }) {
       arr.push(...detectOrphans(nodes, edges, settings));
       arr.push(...detectDirectedCycles(nodes, edges, settings));
       arr.push(...detectLongLabels(nodes, settings));
+      // Schema-based checks
+      const schema = loadSchema(gId);
+      arr.push(...schemaChecks(nodes, schema, settings));
       const comps = settings.detectClusters ? detectClustersSync(nodes, edges) : [];
       lintCache.set(key, { issues: arr, clusters: comps });
       setIssues(arr);
@@ -339,8 +373,10 @@ function LinterPanel({ api }) {
       const { type, requestId: rid, issues: res, clusters: comps } = e.data || {};
       if (type !== 'lintResult' || rid !== requestId) return;
       if (!cancelled) {
-        lintCache.set(key, { issues: res || [], clusters: comps || [] });
-        setIssues(res || []);
+        const schema = loadSchema(gId);
+        const augmented = [...(res || []), ...schemaChecks(nodes, schema, settings)];
+        lintCache.set(key, { issues: augmented, clusters: comps || [] });
+        setIssues(augmented);
         setClusters(comps || []);
         setLoading(false);
       }
@@ -429,6 +465,33 @@ function detectClustersSync(nodes = [], edges = []) {
   }
   clusters.sort((a, b) => b.size - a.size);
   return clusters;
+}
+
+function schemaChecks(nodes = [], schema = { types: [] }, settings) {
+  const s = schema && Array.isArray(schema.types) ? schema : { types: [] };
+  const typeByName = new Map((s.types || []).map(t => [String(t.name || '').toLowerCase(), t]));
+  const severities = settings?.severity || {};
+  const issues = [];
+  nodes.forEach(n => {
+    const tname = String(n.type || '').trim().toLowerCase();
+    if (!tname) return; // ignore untyped nodes
+    const t = typeByName.get(tname);
+    if (!t) {
+      issues.push({ id: `unknownType:${n.id}`, rule: 'unknownType', severity: severities.unknownType || 'info', nodeId: n.id, message: `Unknown type: "${n.type}"` });
+      return;
+    }
+    const props = Array.isArray(t.properties) ? t.properties : [];
+    props.forEach(p => {
+      if (p.required) {
+        const v = n[p.name];
+        const missing = v == null || (typeof v === 'string' && v.trim() === '') || (Array.isArray(v) && v.length === 0);
+        if (missing) {
+          issues.push({ id: `missingProp:${n.id}:${p.name}`, rule: 'missingProp', severity: severities.missingProp || 'error', nodeId: n.id, message: `Missing required prop "${p.name}"`, propName: p.name, defaultValue: p.default, propType: p.type });
+        }
+      }
+    });
+  });
+  return issues;
 }
 
 export const graphLinterPlugin = {
