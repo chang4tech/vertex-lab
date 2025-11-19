@@ -51,6 +51,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Slots: Introduced `slots.nodeEditor` to let plugins contribute type-specific UI into a new Node Editor “Extensions” tab
 - Example: `examples.nodeEditorExample` adds quick actions for `type: Paper`
 
+### Added (planned for 0.37.0)
+- Schema Manager: Edge Types UI (name, directed, sourceTypes, targetTypes, noCycle) with Add/Remove and live validation on save
+
 ## [0.23.0] - 2025-11-19
 
 ### Added

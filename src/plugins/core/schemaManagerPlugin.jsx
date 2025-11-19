@@ -54,6 +54,50 @@ function TypeEditor({ t, onChange, onRemove }) {
   );
 }
 
+function EdgeTypeEditor({ et, onChange, onRemove }) {
+  const [src, setSrc] = React.useState(Array.isArray(et.sourceTypes) ? et.sourceTypes.join(', ') : '');
+  const [dst, setDst] = React.useState(Array.isArray(et.targetTypes) ? et.targetTypes.join(', ') : '');
+
+  const applyLists = (partial = {}) => {
+    const toList = (s) => String(s || '')
+      .split(',')
+      .map((x) => x.trim())
+      .filter(Boolean);
+    const next = {
+      ...et,
+      sourceTypes: toList(src),
+      targetTypes: toList(dst),
+      ...partial,
+    };
+    onChange(next);
+  };
+
+  return (
+    <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 8, marginBottom: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 120px 100px auto', gap: 8, alignItems: 'center' }}>
+        <input value={et.name || ''} onChange={(e) => onChange({ ...et, name: e.target.value })} placeholder="Edge type name" />
+        <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <input type="checkbox" checked={!!et.directed} onChange={(e) => onChange({ ...et, directed: e.target.checked })} /> directed
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <input type="checkbox" checked={!!et.noCycle} onChange={(e) => onChange({ ...et, noCycle: e.target.checked })} /> noCycle
+        </label>
+        <button onClick={onRemove} aria-label={`remove-edgeType-${et.name}`}>Remove</button>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 6 }}>
+        <div>
+          <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 4 }}>Source types (comma-separated)</div>
+          <input value={src} onChange={(e) => setSrc(e.target.value)} onBlur={() => applyLists()} placeholder="TypeA, TypeB" style={{ width: '100%' }} />
+        </div>
+        <div>
+          <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 4 }}>Target types (comma-separated)</div>
+          <input value={dst} onChange={(e) => setDst(e.target.value)} onBlur={() => applyLists()} placeholder="TypeA, TypeB" style={{ width: '100%' }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SchemaPanel({ api }) {
   const graphId = api.graphId || 'default';
   const [schema, setSchema] = React.useState(() => loadSchema(graphId));
@@ -93,6 +137,11 @@ function SchemaPanel({ api }) {
       <h3 style={{ margin: 0 }}>Schema Manager</h3>
       <div style={{ display: 'flex', gap: 8 }}>
         <button onClick={addType}>Add Type</button>
+        <button onClick={() => {
+          const next = { ...(schema || {}), edgeTypes: Array.isArray(schema.edgeTypes) ? [...schema.edgeTypes] : [] };
+          next.edgeTypes.push({ name: 'relates_to', directed: false, sourceTypes: [], targetTypes: [], noCycle: false });
+          setSchema(next);
+        }}>Add Edge Type</button>
         <button onClick={save}>Save</button>
         <button onClick={exportSchema}>Export</button>
         <label>
@@ -113,6 +162,24 @@ function SchemaPanel({ api }) {
             onRemove={() => {
               const next = { ...schema, types: [...(schema.types || [])] };
               next.types.splice(idx, 1); setSchema(next);
+            }}
+          />
+        ))}
+      </div>
+      <div>
+        <div style={{ fontWeight: 600, marginBottom: 6, marginTop: 6 }}>Edge Types</div>
+        {(schema.edgeTypes || []).length === 0 && <div style={{ fontSize: 12, opacity: 0.7 }}>No edge types defined</div>}
+        {(schema.edgeTypes || []).map((et, i) => (
+          <EdgeTypeEditor
+            key={i}
+            et={et}
+            onChange={(newET) => {
+              const next = { ...schema, edgeTypes: [...(schema.edgeTypes || [])] };
+              next.edgeTypes[i] = newET; setSchema(next);
+            }}
+            onRemove={() => {
+              const next = { ...schema, edgeTypes: [...(schema.edgeTypes || [])] };
+              next.edgeTypes.splice(i, 1); setSchema(next);
             }}
           />
         ))}
@@ -143,7 +210,7 @@ export const schemaManagerPlugin = {
       markdown: `
 # Schema Manager
 
-Define types and properties for your graph. Types have a name, color, and a list of properties (name, type, required, default, enum).
+Define node types (with properties) and edge types for your graph. Node types have a name, color, and a list of properties (name, type, required, default, enum). Edge types include a name, direction, optional source/target type constraints, and an optional no-cycle constraint.
 
 Stored per graph (localStorage). Other plugins (e.g., linter) can read the schema to validate nodes.
       `.trim(),
