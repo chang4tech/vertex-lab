@@ -16,6 +16,10 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Search: Semantic Search DSL provider (examples.searchDSLProvider) enabling queries like `type:Paper year>=2020 tag:ml` merged via provider aggregator
 - Docs: Plugin Spec includes Search DSL syntax and examples
 
+### Added (planned for 0.26.0)
+- Lenses: Persist Centrality Lens settings per graph (metric, Top K)
+- Lenses: Quick toggle command `examples.centralityLens.toggle` to show/hide the panel
+
 ## [0.23.0] - 2025-11-19
 
 ### Added

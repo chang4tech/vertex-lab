@@ -20,9 +20,34 @@ function computeDegreeSync(nodes=[], edges=[]) {
   return nodes.map(n=>({ id:n.id, score: deg.get(n.id)||0 }));
 }
 
+const SETTINGS_PREFIX = 'plugin_examples.centralityLens.settings_';
+const PANEL_VIS_KEY = 'plugin_examples.centralityLens.showPanel';
+
+function settingsKey(graphId = 'default') {
+  const id = graphId || 'default';
+  return `${SETTINGS_PREFIX}${id}`;
+}
+
+function loadSettings(graphId = 'default') {
+  try {
+    const raw = localStorage.getItem(settingsKey(graphId));
+    if (raw) return { metric: 'pagerank', topK: 10, ...JSON.parse(raw) };
+  } catch {}
+  return { metric: 'pagerank', topK: 10 };
+}
+
+function saveSettings(graphId = 'default', next = {}) {
+  try { localStorage.setItem(settingsKey(graphId), JSON.stringify(next)); } catch {}
+}
+
+function isPanelVisible() { try { return localStorage.getItem(PANEL_VIS_KEY) === '1'; } catch { return false; } }
+function setPanelVisible(v) { try { localStorage.setItem(PANEL_VIS_KEY, v ? '1' : '0'); } catch {} }
+
 export function CentralityPanel({ api }) {
-  const [metric, setMetric] = React.useState('pagerank');
-  const [topK, setTopK] = React.useState(10);
+  const graphId = api.graphId || 'default';
+  const initial = React.useMemo(() => loadSettings(graphId), [graphId]);
+  const [metric, setMetric] = React.useState(initial.metric || 'pagerank');
+  const [topK, setTopK] = React.useState(initial.topK || 10);
   const [results, setResults] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
   const nodes = api.nodes || [];
@@ -48,6 +73,11 @@ export function CentralityPanel({ api }) {
     worker.postMessage({ type: 'centrality', requestId, payload: { nodes, edges, metric } });
     return () => { cancelled = true; worker.removeEventListener('message', onMessage); };
   }, [key, metric]);
+
+  // Persist settings per graph when changed
+  React.useEffect(() => {
+    saveSettings(graphId, { metric, topK });
+  }, [graphId, metric, topK]);
 
   const top = results.slice(0, Math.max(1, topK));
 
@@ -94,14 +124,15 @@ export const centralityLensPlugin = {
   author: 'Vertex Lab Examples',
   slots: {
     sidePanels: [
-      { id: 'centralityPanel', title: 'Centrality', allowCollapse: true, visible: () => true, render: (api) => <CentralityPanel api={api} /> },
+      { id: 'centralityPanel', title: 'Centrality', allowCollapse: true, visible: () => isPanelVisible(), render: (api) => <CentralityPanel api={api} /> },
     ],
     commands: [
-      { id: 'examples.centralityLens.open', title: 'Open Centrality Lens', when: 'canvas', run: () => {} },
+      { id: 'examples.centralityLens.open', title: 'Open Centrality Lens', when: 'canvas', run: () => setPanelVisible(true) },
+      { id: 'examples.centralityLens.close', title: 'Hide Centrality Lens', when: 'canvas', run: () => setPanelVisible(false) },
+      { id: 'examples.centralityLens.toggle', title: 'Toggle Centrality Lens', when: 'canvas', run: () => setPanelVisible(!isPanelVisible()) },
     ],
-    aboutPage: { markdown: `\n# Centrality Lens\n\nCompute centrality metrics (PageRank, Degree) in a worker and list the top nodes with quick Select/Highlight actions. Cached by graph structure.\n`.trim() },
+    aboutPage: { markdown: `\n# Centrality Lens\n\nCompute centrality metrics (PageRank, Degree) in a worker and list the top nodes with quick Select/Highlight actions. Cached by graph structure.\n\nSettings persist per graph (metric, Top K). Use the command \`examples.centralityLens.toggle\` to quickly show/hide the panel.\n`.trim() },
   }
 };
 
 export default centralityLensPlugin;
-
