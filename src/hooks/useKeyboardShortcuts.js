@@ -24,7 +24,8 @@ export function useKeyboardShortcuts({
   onZoomOut,
   onResetZoom,
   onToggleMinimap,
-  onToggleConnections
+  onToggleConnections,
+  onToggleCentralityLens,
 }) {
   const handleKeyDown = useCallback((e) => {
     // Don't trigger shortcuts when typing in inputs
@@ -54,6 +55,11 @@ export function useKeyboardShortcuts({
       if (isLetter(e, 'p')) {
         e.preventDefault();
         onExportPNG?.();
+        return;
+      }
+      if (isLetter(e, 'l')) {
+        e.preventDefault();
+        onToggleCentralityLens?.();
         return;
       }
       return;
@@ -221,7 +227,8 @@ export function useKeyboardShortcuts({
     onZoomOut,
     onResetZoom,
     onToggleMinimap,
-    onToggleConnections
+    onToggleConnections,
+    onToggleCentralityLens,
   ]);
 
   useEffect(() => {

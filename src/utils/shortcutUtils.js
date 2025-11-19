@@ -47,6 +47,9 @@ export const APP_SHORTCUTS = [
   { key: 'l', modifiers: ['ctrl'], description: 'Auto Layout' },
   { key: 'f', modifiers: ['cmd'], description: 'Search' },
   { key: 'f', modifiers: ['ctrl'], description: 'Search' },
+  // Lenses
+  { key: 'l', modifiers: ['cmd', 'alt'], description: 'Toggle Centrality Lens' },
+  { key: 'l', modifiers: ['ctrl', 'alt'], description: 'Toggle Centrality Lens' },
 
   // View
   { key: '+', modifiers: ['alt'], description: 'Zoom In' },

@@ -3018,7 +3018,8 @@ function App({ graphId = 'default' }) {
     onZoomOut: () => canvasRef.current?.zoom?.(0.9),
     onResetZoom: () => canvasRef.current?.resetZoom?.(),
     onToggleMinimap: () => setShowMinimap(v => !v),
-    onToggleConnections: handleToggleConnections
+    onToggleConnections: handleToggleConnections,
+    onToggleCentralityLens: toggleCentralityLens,
   });
 
   const handleEditNodeFromPanel = useCallback((nodeId) => {
@@ -3447,6 +3448,19 @@ function App({ graphId = 'default' }) {
       }
     } catch (e) {
       console.warn('[GraphLinter] open command failed', e);
+    }
+  }, [pluginCommands, pluginAppApi]);
+
+  const toggleCentralityLens = useCallback(() => {
+    try {
+      const cmd = (pluginCommands || []).find(c => c.id === 'examples.centralityLens.toggle');
+      if (cmd && typeof cmd.run === 'function') {
+        cmd.run(pluginAppApi, { nodeId: null });
+      } else {
+        window.location.hash = '#/plugin/examples.centralityLens';
+      }
+    } catch (e) {
+      console.warn('[CentralityLens] toggle command failed', e);
     }
   }, [pluginCommands, pluginAppApi]);
 

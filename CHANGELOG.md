@@ -19,6 +19,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Added (planned for 0.26.0)
 - Lenses: Persist Centrality Lens settings per graph (metric, Top K)
 - Lenses: Quick toggle command `examples.centralityLens.toggle` to show/hide the panel
+ - Lenses: Keyboard shortcut Cmd/Ctrl+Alt+L toggles Centrality Lens
 
 ## [0.23.0] - 2025-11-19
 
