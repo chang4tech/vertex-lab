@@ -34,6 +34,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Linter: Cache signature now includes node levels and timestamps (created/updated) for stronger invalidation on content changes
 - Docs: Added DESIGN_TEMPLATES_WORKSPACES_SCHEMAS.md summarizing Template Packs, Workspace profiles, Schemas, workerization, and decisions
 - Docs: Clarified definitions — Plugins (feature/tag capabilities), Templates (tag sets/sample graphs/presets), Workspaces (storage/library/organization)
+- Templates: Added core Templates plugin (import/export packs, validation summary, tag merge plan, subgraph apply with ID remap, single-undo); legacy-friendly minimal MVP
 
 ### Changed
 - PluginsManager: Refactored `handleTogglePlugin` function - reduced cyclomatic complexity from ~5 to ~2
