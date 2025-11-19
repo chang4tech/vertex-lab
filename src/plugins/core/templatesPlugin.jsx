@@ -198,6 +198,69 @@ function TemplatesPanel({ api }) {
   const [importSchemaOption, setImportSchemaOption] = React.useState(false);
   const [includeEdgeTypes, setIncludeEdgeTypes] = React.useState(true);
 
+  // Compute mapping collision warnings (duplicate targets, existing prop conflicts)
+  const mappingWarnings = React.useMemo(() => {
+    const typeWarnings = new Map(); // idx -> [msg]
+    const propWarnings = new Map(); // `${idx}:${j}` -> [msg]
+
+    if (!Array.isArray(typeMappings) || typeMappings.length === 0) {
+      return { typeWarnings, propWarnings, total: 0 };
+    }
+
+    // Type-level duplicate target detection
+    const typeTargetCount = new Map();
+    typeMappings.forEach((tm) => {
+      if (tm.skip) return;
+      const target = String(tm.target || tm.incoming || '').trim().toLowerCase();
+      if (!target) return;
+      typeTargetCount.set(target, (typeTargetCount.get(target) || 0) + 1);
+    });
+
+    typeMappings.forEach((tm, idx) => {
+      if (tm.skip) return;
+      const targetName = String(tm.target || tm.incoming || '').trim();
+      const targetKey = targetName.toLowerCase();
+      if (!targetKey) return;
+      const count = typeTargetCount.get(targetKey) || 0;
+      if (count > 1) {
+        const arr = typeWarnings.get(idx) || [];
+        arr.push(`Multiple types map to '${targetName}'. They will merge.`);
+        typeWarnings.set(idx, arr);
+      }
+
+      // Property-level duplicate target detection within the same type
+      const propTargetCount = new Map();
+      (tm.properties || []).forEach((pm) => {
+        if (pm.skip) return;
+        const t = String(pm.target || pm.incoming || '').trim().toLowerCase();
+        if (!t) return;
+        propTargetCount.set(t, (propTargetCount.get(t) || 0) + 1);
+      });
+      (tm.properties || []).forEach((pm, j) => {
+        if (pm.skip) return;
+        const targetProp = String(pm.target || pm.incoming || '').trim();
+        const key = targetProp.toLowerCase();
+        const msgs = propWarnings.get(`${idx}:${j}`) || [];
+        if (propTargetCount.get(key) > 1) {
+          msgs.push(`Duplicate target property '${targetProp}' in '${targetName}'.`);
+        }
+        // Existing schema property collision (warn)
+        const exType = (existingSchema?.types || []).find((t) => String(t.name || '').toLowerCase() === targetKey);
+        if (exType) {
+          const exists = (exType.properties || []).some((p) => String(p.name || '').toLowerCase() === key);
+          if (exists && String(pm.incoming || '').toLowerCase() !== key) {
+            msgs.push(`Target property '${targetProp}' already exists in type '${exType.name}'.`);
+          }
+        }
+        if (msgs.length > 0) propWarnings.set(`${idx}:${j}`, msgs);
+      });
+    });
+
+    const total = Array.from(typeWarnings.values()).reduce((sum, arr) => sum + arr.length, 0)
+      + Array.from(propWarnings.values()).reduce((sum, arr) => sum + arr.length, 0);
+    return { typeWarnings, propWarnings, total };
+  }, [typeMappings, existingSchema]);
+
   const handleFile = async (file) => {
     const text = await file.text();
     let json;
@@ -374,7 +437,12 @@ function TemplatesPanel({ api }) {
             </div>
             {(pack.schema?.types?.length || 0) > 0 && (
               <div style={{ marginTop: 8 }}>
-                <div style={{ fontWeight: 600 }}>Schema (optional)</div>
+                <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span>Schema (optional)</span>
+                  {mappingWarnings.total > 0 && (
+                    <span style={{ fontSize: 12, color: '#b45309' }}>⚠ {mappingWarnings.total} mapping warning(s)</span>
+                  )}
+                </div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                   <input type="checkbox" checked={!!importSchemaOption} onChange={(e) => setImportSchemaOption(e.target.checked)} />
                   Import schema into Schema Manager
@@ -408,11 +476,14 @@ function TemplatesPanel({ api }) {
                             <input type="checkbox" checked={!!tm.skip} onChange={(e) => setTypeMappings((cur) => { const next=[...cur]; next[idx]={ ...tm, skip: e.target.checked }; return next; })} />
                             Skip
                           </label>
+                          {(mappingWarnings.typeWarnings.get(idx) || []).map((msg, k) => (
+                            <span key={`tw-${idx}-${k}`} style={{ fontSize: 12, color: '#b45309' }}>⚠ {msg}</span>
+                          ))}
                         </div>
                         {(tm.properties || []).length > 0 && (
                           <div style={{ padding: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
                             {(tm.properties || []).map((pm, j) => (
-                              <div key={`prop-${idx}-${j}`} style={{ display: 'grid', gridTemplateColumns: '1fr 20px 1fr 80px', gap: 8, alignItems: 'center' }}>
+                              <div key={`prop-${idx}-${j}`} style={{ display: 'grid', gridTemplateColumns: '1fr 20px 1fr 80px auto', gap: 8, alignItems: 'center' }}>
                                 <div style={{ opacity: 0.8 }}>{pm.incoming}</div>
                                 <div style={{ textAlign: 'center', opacity: 0.6 }}>→</div>
                                 <input
@@ -425,6 +496,11 @@ function TemplatesPanel({ api }) {
                                   <input type="checkbox" checked={!!pm.skip} onChange={(e) => setTypeMappings((cur) => { const next=[...cur]; const t={...next[idx]}; const props=[...t.properties]; props[j] = { ...pm, skip: e.target.checked }; t.properties = props; next[idx] = t; return next; })} />
                                   Skip
                                 </label>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                  {(mappingWarnings.propWarnings.get(`${idx}:${j}`) || []).map((m, x) => (
+                                    <span key={`pw-${idx}-${j}-${x}`} style={{ fontSize: 12, color: '#b45309' }}>⚠ {m}</span>
+                                  ))}
+                                </div>
                               </div>
                             ))}
                           </div>

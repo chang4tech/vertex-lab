@@ -24,6 +24,9 @@ Template Packs are data-only bundles that include tag sets, optional schema frag
   - Optionally import the mapped schema directly into the Schema Manager (and include edge types).
   - Renames apply to imported nodes (type and property names) as well.
 - Validation errors are grouped by section (Meta, Requires, Schema, Tags, Properties, Nodes, Edges) for faster resolution.
+- Mapping warnings highlight potential collisions:
+  - Duplicate property target names within a type mapping.
+  - Target property names that already exist in the destination type.
 - Nodes/edges IDs are remapped on apply to avoid collisions.
 
 ## Seed Pack: Paper Research Kit

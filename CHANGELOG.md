@@ -38,6 +38,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Docs (planned for 0.32.0)
 - Templates: Added Template Pack JSON Schema snippet to doc/TEMPLATES.md for author guidance
 
+### Improved (planned for 0.33.0)
+- Templates: Mapping UI shows collision warnings for duplicate targets and existing property name conflicts
+
 ## [0.23.0] - 2025-11-19
 
 ### Added
