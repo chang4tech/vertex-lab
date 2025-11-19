@@ -9,7 +9,8 @@ This folder contains project documentation and helper guides.
 - `GEMINI.md` — Feature highlights and quick usage instructions.
 - `NODE_INFO_PANEL_FEATURE.md` — Detailed write‑up of the Node Info Panel.
 - `PLUGIN_SPEC.md` — How to author, import, and test plugins.
- - `PLUGINS_DESIGN.md` — High‑level plugin surfaces and future directions (now includes `searchProviders`).
+- `PLUGINS_DESIGN.md` — High‑level plugin surfaces and future directions (now includes `searchProviders`).
+ - `DESIGN_TEMPLATES_WORKSPACES_SCHEMAS.md` — Exploration and decisions for Template Packs, Workspace profiles, and Schemas
 
 ### Search Providers and Core Search
 - A new slot `slots.searchProviders` allows plugins to contribute search logic.
