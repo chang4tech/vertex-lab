@@ -6,19 +6,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## Unreleased
 
-
-## [0.4.0] - 2025-11-10
+## [0.23.0] - 2025-11-19
 
 ### Added
-- Plugin System: Added `conflicts` field to plugin schema allowing plugins to declare mutual exclusivity with other plugins
-- Plugin Conflicts: Bidirectional conflict detection - checks both direct conflicts and reverse conflicts
-- Plugin Conflicts: Automatic conflict resolution with user confirmation when enabling conflicting plugins
-- Plugin Conflicts: Visual indicators in Plugins Manager showing which plugins have potential conflicts with tooltips
-- Plugin Conflicts: Comprehensive test suite (16 tests) for conflict detection logic
-- Plugin Examples: Added `conflictExample.jsx` demonstrating two mutually exclusive layout algorithm plugins
-- Documentation: Added "Plugin Conflicts" section to `doc/PLUGIN_SPEC.md` with examples and use cases
-- Release tooling: Add `tools/release.mjs` and npm scripts to bump version, update changelog, commit, and push (no tags)
-- Roadmap: Added `ROADMAP.md` outlining milestones (v0.4.0, v0.5.0, v0.6.0) and created `tools/milestones.mjs` to open GitHub milestones
 - Search: Accessibility and UX improvements — combobox/listbox semantics, option roles, Home/End/PageUp/PageDown keys, and auto-scroll to the active option
 - Search: Plugin-extensible search via new `slots.searchProviders`; aggregation merges provider results with fallback search and stable ranking
 - Search: Added `core.search.open` plugin command and routed Cmd/Ctrl+F to go through plugin command path (plugins can override)
@@ -41,6 +31,19 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Templates: Seed pack “Paper Research Kit” under public/packs and Templates panel button to load it; docs added (doc/TEMPLATES.md)
 - Templates: Strict validation for Template Packs (shape, requires, tags/properties/schema/nodes/edges) with tests
 - Node Editor: Added Typed tab that reads per-graph schema and lets you set node.type and edit typed properties with appropriate inputs
+
+## [0.4.0] - 2025-11-10
+
+### Added
+- Plugin System: Added `conflicts` field to plugin schema allowing plugins to declare mutual exclusivity with other plugins
+- Plugin Conflicts: Bidirectional conflict detection - checks both direct conflicts and reverse conflicts
+- Plugin Conflicts: Automatic conflict resolution with user confirmation when enabling conflicting plugins
+- Plugin Conflicts: Visual indicators in Plugins Manager showing which plugins have potential conflicts with tooltips
+- Plugin Conflicts: Comprehensive test suite (16 tests) for conflict detection logic
+- Plugin Examples: Added `conflictExample.jsx` demonstrating two mutually exclusive layout algorithm plugins
+- Documentation: Added "Plugin Conflicts" section to `doc/PLUGIN_SPEC.md` with examples and use cases
+- Release tooling: Add `tools/release.mjs` and npm scripts to bump version, update changelog, commit, and push (no tags)
+- Roadmap: Added `ROADMAP.md` outlining milestones (v0.4.0, v0.5.0, v0.6.0) and created `tools/milestones.mjs` to open GitHub milestones
 
 ### Changed
 - PluginsManager: Refactored `handleTogglePlugin` function - reduced cyclomatic complexity from ~5 to ~2
