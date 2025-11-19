@@ -141,6 +141,25 @@ function TemplatesPanel({ api }) {
     setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
   };
 
+  const loadSeed = async () => {
+    try {
+      const res = await fetch('/packs/paper_research_kit.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      const errs = basicValidatePack(json);
+      setErrors(errs);
+      setPack(json);
+      const deps = summarizeDependencies(json, api);
+      setDepSummary(deps);
+      const existingTags = loadTags();
+      const plan = computeTagPlan(json.tags || [], existingTags);
+      setTagPlan(plan);
+      setStatus('Loaded seed pack');
+    } catch (e) {
+      setErrors([`Failed to load seed pack: ${e.message}`]);
+    }
+  };
+
   const apply = () => {
     if (!pack) return;
     applyPack({ pack, api, tagPlan });
@@ -157,6 +176,7 @@ function TemplatesPanel({ api }) {
           <span role="button" style={{ padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer' }}>Import Pack…</span>
         </label>
         <button onClick={exportPack} style={{ padding: '6px 10px' }}>Export Current as Pack</button>
+        <button onClick={loadSeed} style={{ padding: '6px 10px' }}>Load Seed: Paper Research Kit</button>
       </div>
       {errors.length > 0 && (
         <div style={{ color: '#b91c1c' }}>
@@ -250,4 +270,3 @@ Notes
 };
 
 export default templatesPlugin;
-

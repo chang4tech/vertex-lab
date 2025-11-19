@@ -11,6 +11,7 @@ This folder contains project documentation and helper guides.
 - `PLUGIN_SPEC.md` — How to author, import, and test plugins.
 - `PLUGINS_DESIGN.md` — High‑level plugin surfaces and future directions (now includes `searchProviders`).
  - `DESIGN_TEMPLATES_WORKSPACES_SCHEMAS.md` — Exploration and decisions for Template Packs, Workspace profiles, and Schemas
+ - `TEMPLATES.md` — Template Pack format and seed packs (Paper Research Kit)
 
 ### Search Providers and Core Search
 - A new slot `slots.searchProviders` allows plugins to contribute search logic.

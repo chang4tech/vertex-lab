@@ -38,6 +38,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Schema: Added Schema Manager plugin (define types/properties per graph; stored in localStorage)
 - Linter: Reads schema and adds rules for unknown type and missing required props; Fix All fills defaults for required props
 - Lenses: Added Centrality Lens example plugin (PageRank/Degree in worker, cached by structure) with side panel and Select/Highlight actions; includes basic tests
+- Templates: Seed pack “Paper Research Kit” under public/packs and Templates panel button to load it; docs added (doc/TEMPLATES.md)
 
 ### Changed
 - PluginsManager: Refactored `handleTogglePlugin` function - reduced cyclomatic complexity from ~5 to ~2

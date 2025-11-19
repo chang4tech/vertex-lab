@@ -60,6 +60,12 @@ Vertex Lab supports plugins that contribute UI panels, canvas overlays, commands
 
 See `doc/PLUGIN_SPEC.md` for the full specification. Migration and progress notes are summarized in `doc/progress.md` and tracked in `CHANGELOG.md`.
 
+### Templates & Seed Packs
+- Use the Templates panel (Plugins → Templates) to import/export Template Packs (data‑only bundles with tag sets, optional schema fragments, and starter subgraphs).
+- The pack importer validates structure, summarizes dependencies, and previews a tag merge plan; applying runs under a single undo boundary.
+- Seed: “Paper Research Kit” is available via “Load Seed: Paper Research Kit” in the Templates panel.
+- More: see doc/TEMPLATES.md for format details.
+
 ### Search Architecture
 - Providers: Plugins may register `slots.searchProviders` to participate in matching and ranking.
 - Aggregation: The core UI aggregates provider results with a built‑in fallback (exact > prefix > others; then score; then label).

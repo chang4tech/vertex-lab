@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "name": "Paper Research Kit",
+    "version": "1.0.0",
+    "author": "Vertex Lab",
+    "description": "Tags, schema, and starter nodes for research paper mapping"
+  },
+  "requires": {
+    "app": ">=0.18.0",
+    "plugins": [
+      { "id": "core.schemaManager" },
+      { "id": "examples.graphLinter" }
+    ],
+    "capabilities": ["updateEdges"]
+  },
+  "schema": {
+    "types": [
+      {
+        "name": "Paper",
+        "color": "#1e3a8a",
+        "properties": [
+          { "name": "year", "type": "number", "required": true },
+          { "name": "authors", "type": "string[]" },
+          { "name": "venue", "type": "string" }
+        ]
+      },
+      {
+        "name": "Concept",
+        "color": "#0f766e",
+        "properties": [
+          { "name": "definition", "type": "string" }
+        ]
+      }
+    ],
+    "edgeTypes": [
+      { "name": "cites", "directed": true, "sourceTypes": ["Paper"], "targetTypes": ["Paper"] },
+      { "name": "uses", "directed": false, "sourceTypes": ["Paper","Concept"], "targetTypes": ["Concept"] }
+    ]
+  },
+  "tags": [
+    { "id": "ml", "name": "ML", "color": "#10b981" },
+    { "id": "cv", "name": "CV", "color": "#f59e0b" },
+    { "id": "nlp", "name": "NLP", "color": "#8b5cf6" }
+  ],
+  "properties": [
+    { "name": "confidence", "type": "number", "default": 0.8 }
+  ],
+  "nodes": [
+    { "id": 1001, "type": "Paper", "label": "Seed Paper A", "year": 2024, "authors": ["Smith", "Lee"], "venue": "ICLR", "tags": ["ml"] },
+    { "id": 1002, "type": "Paper", "label": "Seed Paper B", "year": 2023, "authors": ["Chen"], "venue": "NeurIPS", "tags": ["ml", "cv"] },
+    { "id": 1003, "type": "Concept", "label": "Contrastive Learning", "definition": "Learning by pulling positives together and pushing negatives apart.", "tags": ["ml"] }
+  ],
+  "edges": [
+    { "source": 1001, "target": 1002, "directed": true },
+    { "source": 1001, "target": 1003, "directed": false }
+  ]
+}
+
