@@ -24,6 +24,11 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Docs (planned for 0.28.0)
 - Updated README Keyboard Shortcuts to include Cmd/Ctrl+Alt+L for Centrality Lens toggle
 
+### Added (planned for 0.29.0)
+- Templates: Type/Property mapping UI (rename/skip) in import flow; renames apply to imported nodes
+- Templates: Optional “Import schema into Schema Manager” toggle with optional edge types merge
+- Docs: Updated Templates guide to describe mapping UI and schema import option
+
 ## [0.23.0] - 2025-11-19
 
 ### Added

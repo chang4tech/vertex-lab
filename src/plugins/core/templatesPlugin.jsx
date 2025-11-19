@@ -1,6 +1,7 @@
 import React from 'react';
 import { loadTags, saveTags, generateTagId } from '../../utils/tagUtils.js';
 import { validateTemplatePack } from '../../utils/templatePackValidation.js';
+import { loadSchema, saveSchema } from '../../utils/schemaUtils.js';
 
 const VIS_KEY = 'plugin_core.templates.showPanel';
 
@@ -54,7 +55,7 @@ function computeTagPlan(incoming, existing) {
   return plan;
 }
 
-function applyPack({ pack, api, tagPlan }) {
+function applyPack({ pack, api, tagPlan, mapping, importSchemaOption, includeEdgeTypes, existingSchema, graphId }) {
   // Apply tags
   if (Array.isArray(tagPlan) && tagPlan.length) {
     const existing = loadTags();
@@ -69,7 +70,75 @@ function applyPack({ pack, api, tagPlan }) {
     saveTags(merged);
   }
 
-  // Apply nodes/edges (optional)
+  // Build mapping helpers (types / properties)
+  const typeMap = new Map();
+  const propMap = new Map(); // key: lower(typeName) => Map(lower(incomingProp) => targetName or null(skip))
+  if (mapping && Array.isArray(mapping.types)) {
+    mapping.types.forEach((tm) => {
+      const from = String(tm.incoming || '').toLowerCase();
+      const to = tm.skip ? null : (tm.target || '').trim();
+      typeMap.set(from, to || null);
+      const propMappings = new Map();
+      (tm.properties || []).forEach((pm) => {
+        const pFrom = String(pm.incoming || '').toLowerCase();
+        propMappings.set(pFrom, pm.skip ? null : (pm.target || pm.incoming));
+      });
+      propMap.set(from, propMappings);
+    });
+  }
+
+  // Optionally import schema into Schema Manager (merge with existing)
+  try {
+    if (importSchemaOption && pack.schema && Array.isArray(pack.schema.types)) {
+      const ex = existingSchema && Array.isArray(existingSchema.types) ? existingSchema : { types: [], edgeTypes: [] };
+      const merged = { types: [...(ex.types || [])], edgeTypes: Array.isArray(ex.edgeTypes) ? [...ex.edgeTypes] : [] };
+      const existingTypeByName = new Map((merged.types || []).map(t => [String(t.name || '').toLowerCase(), t]));
+      const ensureType = (name, color) => {
+        const key = String(name || '').toLowerCase();
+        let t = existingTypeByName.get(key);
+        if (!t) { t = { name, color, properties: [] }; merged.types.push(t); existingTypeByName.set(key, t); }
+        if (!Array.isArray(t.properties)) t.properties = [];
+        return t;
+      };
+
+      // Merge types/properties per mapping
+      mapping?.types?.forEach((tm) => {
+        if (tm.skip) return;
+        const incoming = (pack.schema.types || []).find(t => String(t.name || '').toLowerCase() === String(tm.incoming || '').toLowerCase());
+        if (!incoming) return;
+        const targetName = tm.target?.trim() || incoming.name;
+        const t = ensureType(targetName, incoming.color);
+        const existingProps = new Map((t.properties || []).map(p => [String(p.name || '').toLowerCase(), p]));
+        (tm.properties || []).forEach((pm) => {
+          if (pm.skip) return;
+          const inProp = (incoming.properties || []).find(p => String(p.name || '').toLowerCase() === String(pm.incoming || '').toLowerCase());
+          if (!inProp) return;
+          const targetPropName = pm.target?.trim() || inProp.name;
+          const key = String(targetPropName).toLowerCase();
+          if (!existingProps.has(key)) {
+            (t.properties || (t.properties = [])).push({ name: targetPropName, type: inProp.type, required: !!inProp.required, default: inProp.default, enum: inProp.enum });
+            existingProps.set(key, true);
+          }
+        });
+      });
+
+      // Merge edge types if requested
+      if (includeEdgeTypes && Array.isArray(pack.schema.edgeTypes)) {
+        const existingEdgeByName = new Map((merged.edgeTypes || []).map(et => [String(et.name || '').toLowerCase(), et]));
+        (pack.schema.edgeTypes || []).forEach((et) => {
+          const key = String(et.name || '').toLowerCase();
+          if (!existingEdgeByName.has(key)) {
+            merged.edgeTypes.push({ name: et.name, directed: !!et.directed, sourceTypes: et.sourceTypes || [], targetTypes: et.targetTypes || [], noCycle: !!et.noCycle });
+            existingEdgeByName.set(key, true);
+          }
+        });
+      }
+
+      saveSchema(graphId || 'default', merged);
+    }
+  } catch {}
+
+  // Apply nodes/edges (optional) with mapping for type/property names
   const nodes = Array.isArray(api.nodes) ? api.nodes : [];
   const edges = Array.isArray(api.edges) ? api.edges : [];
   const nextNodes = [...nodes];
@@ -78,6 +147,21 @@ function applyPack({ pack, api, tagPlan }) {
   (pack.nodes || []).forEach(n => {
     const newId = ++maxId;
     idMap.set(n.id, newId);
+    // Determine type mapping
+    const incomingType = String(n.type || '').toLowerCase();
+    const mappedType = typeMap.has(incomingType) ? typeMap.get(incomingType) : (n.type || undefined);
+    // Collect extra props (exclude reserved keys)
+    const reserved = new Set(['id','label','x','y','level','tags','type']);
+    const props = {};
+    Object.keys(n || {}).forEach(k => { if (!reserved.has(k)) props[k] = n[k]; });
+    const pm = propMap.get(incomingType) || new Map();
+    const remappedProps = {};
+    Object.keys(props).forEach((k) => {
+      const trg = pm.has(String(k).toLowerCase()) ? pm.get(String(k).toLowerCase()) : k;
+      if (trg == null) return; // skip
+      remappedProps[trg] = props[k];
+    });
+
     nextNodes.push({
       id: newId,
       label: n.label || `Node ${newId}`,
@@ -85,7 +169,8 @@ function applyPack({ pack, api, tagPlan }) {
       y: typeof n.y === 'number' ? n.y : 300 + (Math.random() * 120 - 60),
       level: n.level ?? 0,
       tags: Array.isArray(n.tags) ? n.tags : [],
-      ...n.props,
+      type: mappedType || undefined,
+      ...remappedProps,
     });
   });
   if (idMap.size > 0) {
@@ -96,7 +181,7 @@ function applyPack({ pack, api, tagPlan }) {
     pack.edges.forEach(e => {
       const s = idMap.get(e.source) || e.source;
       const t = idMap.get(e.target) || e.target;
-      if (s != null && t != null) newEdges.push({ source: s, target: t, directed: !!e.directed });
+      if (s != null && t != null) newEdges.push({ source: s, target: t, directed: !!e.directed, type: e.type });
     });
     api.updateEdges?.(newEdges);
   }
@@ -108,6 +193,10 @@ function TemplatesPanel({ api }) {
   const [depSummary, setDepSummary] = React.useState(null);
   const [tagPlan, setTagPlan] = React.useState([]);
   const [status, setStatus] = React.useState('');
+  const [existingSchema, setExistingSchema] = React.useState(() => loadSchema(api.graphId || 'default'));
+  const [typeMappings, setTypeMappings] = React.useState([]);
+  const [importSchemaOption, setImportSchemaOption] = React.useState(false);
+  const [includeEdgeTypes, setIncludeEdgeTypes] = React.useState(true);
 
   const handleFile = async (file) => {
     const text = await file.text();
@@ -121,6 +210,21 @@ function TemplatesPanel({ api }) {
     const existingTags = loadTags();
     const plan = computeTagPlan(json.tags || [], existingTags);
     setTagPlan(plan);
+    // Initialize schema mapping if present
+    const graphId = api.graphId || 'default';
+    const currentSchema = loadSchema(graphId);
+    setExistingSchema(currentSchema);
+    const existingTypeNames = new Set((currentSchema.types || []).map(t => String(t.name || '').toLowerCase()));
+    const tm = (json.schema?.types || []).map((t) => {
+      const incoming = String(t.name || '');
+      const incomingKey = incoming.toLowerCase();
+      const target = existingTypeNames.has(incomingKey) ? (currentSchema.types.find(x => String(x.name || '').toLowerCase() === incomingKey)?.name || incoming) : incoming;
+      const properties = (t.properties || []).map((p) => ({ incoming: p.name, target: p.name, skip: false }));
+      return { incoming, target, skip: false, properties };
+    });
+    setTypeMappings(tm);
+    setImportSchemaOption(false);
+    setIncludeEdgeTypes(true);
     setStatus('Ready');
   };
 
@@ -155,6 +259,21 @@ function TemplatesPanel({ api }) {
       const existingTags = loadTags();
       const plan = computeTagPlan(json.tags || [], existingTags);
       setTagPlan(plan);
+      // Initialize schema mapping from seed
+      const graphId = api.graphId || 'default';
+      const currentSchema = loadSchema(graphId);
+      setExistingSchema(currentSchema);
+      const existingTypeNames = new Set((currentSchema.types || []).map(t => String(t.name || '').toLowerCase()));
+      const tm = (json.schema?.types || []).map((t) => {
+        const incoming = String(t.name || '');
+        const incomingKey = incoming.toLowerCase();
+        const target = existingTypeNames.has(incomingKey) ? (currentSchema.types.find(x => String(x.name || '').toLowerCase() === incomingKey)?.name || incoming) : incoming;
+        const properties = (t.properties || []).map((p) => ({ incoming: p.name, target: p.name, skip: false }));
+        return { incoming, target, skip: false, properties };
+      });
+      setTypeMappings(tm);
+      setImportSchemaOption(false);
+      setIncludeEdgeTypes(true);
       setStatus('Loaded seed pack');
     } catch (e) {
       setErrors([`Failed to load seed pack: ${e.message}`]);
@@ -163,7 +282,17 @@ function TemplatesPanel({ api }) {
 
   const apply = () => {
     if (!pack) return;
-    applyPack({ pack, api, tagPlan });
+    const mapping = { types: typeMappings };
+    applyPack({
+      pack,
+      api,
+      tagPlan,
+      mapping,
+      importSchemaOption,
+      includeEdgeTypes,
+      existingSchema,
+      graphId: api.graphId || 'default'
+    });
     setStatus('Applied. You can undo via Edit → Undo.');
   };
 
@@ -214,6 +343,69 @@ function TemplatesPanel({ api }) {
                 </div>
               ))}
             </div>
+            {(pack.schema?.types?.length || 0) > 0 && (
+              <div style={{ marginTop: 8 }}>
+                <div style={{ fontWeight: 600 }}>Schema (optional)</div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                  <input type="checkbox" checked={!!importSchemaOption} onChange={(e) => setImportSchemaOption(e.target.checked)} />
+                  Import schema into Schema Manager
+                </label>
+                {(pack.schema?.edgeTypes?.length || 0) > 0 && (
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                    <input type="checkbox" checked={!!includeEdgeTypes} onChange={(e) => setIncludeEdgeTypes(e.target.checked)} />
+                    Include edge types
+                  </label>
+                )}
+                <div style={{ marginTop: 6, border: '1px solid #e5e7eb', borderRadius: 6 }}>
+                  <div style={{ padding: 6, background: '#f8fafc', borderBottom: '1px solid #e5e7eb', fontSize: 12, opacity: 0.9 }}>
+                    Type and property mapping (rename/skip). Renames apply to imported nodes and, if enabled, to the saved schema.
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 8 }}>
+                    {typeMappings.length === 0 && <div style={{ fontSize: 12, opacity: 0.7 }}>No types in pack</div>}
+                    {typeMappings.map((tm, idx) => (
+                      <div key={`type-${idx}`} style={{ border: '1px solid #e5e7eb', borderRadius: 6 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 6, background: '#f9fafb' }}>
+                          <span style={{ fontWeight: 600 }}>Type:</span>
+                          <span style={{ opacity: 0.8 }}>{tm.incoming}</span>
+                          <span style={{ opacity: 0.6 }}>→</span>
+                          <input
+                            value={tm.target}
+                            onChange={(e) => setTypeMappings((cur) => { const next=[...cur]; next[idx]={ ...tm, target: e.target.value }; return next; })}
+                            placeholder={tm.incoming}
+                            style={{ flex: 1, minWidth: 120 }}
+                            disabled={tm.skip}
+                          />
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <input type="checkbox" checked={!!tm.skip} onChange={(e) => setTypeMappings((cur) => { const next=[...cur]; next[idx]={ ...tm, skip: e.target.checked }; return next; })} />
+                            Skip
+                          </label>
+                        </div>
+                        {(tm.properties || []).length > 0 && (
+                          <div style={{ padding: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            {(tm.properties || []).map((pm, j) => (
+                              <div key={`prop-${idx}-${j}`} style={{ display: 'grid', gridTemplateColumns: '1fr 20px 1fr 80px', gap: 8, alignItems: 'center' }}>
+                                <div style={{ opacity: 0.8 }}>{pm.incoming}</div>
+                                <div style={{ textAlign: 'center', opacity: 0.6 }}>→</div>
+                                <input
+                                  value={pm.target}
+                                  onChange={(e) => setTypeMappings((cur) => { const next=[...cur]; const t={...next[idx]}; const props=[...t.properties]; props[j] = { ...pm, target: e.target.value }; t.properties = props; next[idx] = t; return next; })}
+                                  placeholder={pm.incoming}
+                                  disabled={tm.skip || pm.skip}
+                                />
+                                <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                  <input type="checkbox" checked={!!pm.skip} onChange={(e) => setTypeMappings((cur) => { const next=[...cur]; const t={...next[idx]}; const props=[...t.properties]; props[j] = { ...pm, skip: e.target.checked }; t.properties = props; next[idx] = t; return next; })} />
+                                  Skip
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={apply} style={{ padding: '6px 10px' }} disabled={errors.length > 0}>Apply</button>
               {status && <span style={{ fontSize: 12, opacity: 0.8 }}>{status}</span>}
@@ -265,6 +457,7 @@ Notes
 - JSON only; no executable code.
 - Dependencies are summarized (plugins/capabilities); enabling missing plugins is suggested but not automatic.
 - Tag conflicts are merged by name (case‑insensitive) by default.
+ - Schema import: When packs include schema, you can map types/properties (rename/skip). Optionally import the schema into the Schema Manager and include edge types.
       `.trim(),
     }
   }

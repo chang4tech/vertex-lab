@@ -17,7 +17,12 @@ Template Packs are data-only bundles that include tag sets, optional schema frag
 ```
 
 - JSON only; no executable code.
-- Pre-flight shows a dependency summary and a tag merge plan; properties/types are accepted (schema is stored via the Schema Manager plugin).
+- Pre-flight shows a dependency summary and a tag merge plan.
+- If a pack includes a schema fragment, the importer provides a mapping UI:
+  - Types: rename or skip per incoming type.
+  - Properties: rename or skip per property of each incoming type.
+  - Optionally import the mapped schema directly into the Schema Manager (and include edge types).
+  - Renames apply to imported nodes (type and property names) as well.
 - Nodes/edges IDs are remapped on apply to avoid collisions.
 
 ## Seed Pack: Paper Research Kit
@@ -28,5 +33,5 @@ Template Packs are data-only bundles that include tag sets, optional schema frag
 
 ## Roadmap
 - Strict JSON schema validation for packs with richer error messages.
-- Mapping UI for properties/types (rename/skip); schema promotion to core API.
+- Schema promotion to core API (watch/set/validate) beyond the plugin-managed manager.
 - Capability registry for softer dependency checks (e.g., `updateEdges`).
