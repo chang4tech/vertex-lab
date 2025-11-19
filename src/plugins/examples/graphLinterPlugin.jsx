@@ -520,7 +520,7 @@ function schemaChecks(nodes = [], schema = { types: [] }, settings) {
   return issues;
 }
 
-function schemaEdgeChecks(nodes = [], edges = [], schema = { types: [], edgeTypes: [] }) {
+export function schemaEdgeChecks(nodes = [], edges = [], schema = { types: [], edgeTypes: [] }) {
   const issues = [];
   const nodeById = new Map((nodes || []).map(n => [n.id, n]));
   const nodeTypeById = new Map((nodes || []).map(n => [n.id, String(n.type || '').toLowerCase()]));

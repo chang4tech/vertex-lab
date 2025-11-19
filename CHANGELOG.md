@@ -54,6 +54,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Added (planned for 0.37.0)
 - Schema Manager: Edge Types UI (name, directed, sourceTypes, targetTypes, noCycle) with Add/Remove and live validation on save
 
+### Tests (planned for 0.38.0)
+- Graph Linter: Added unit tests for schemaEdgeChecks covering unknownEdgeType, edgeTypeMismatch, and relationCycle
+
 ## [0.23.0] - 2025-11-19
 
 ### Added
