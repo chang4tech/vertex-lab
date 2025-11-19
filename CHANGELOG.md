@@ -32,6 +32,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Added (planned for 0.30.0)
 - Tests: Templates import mapping and schema import flow
 
+### Improved (planned for 0.31.0)
+- Templates: Validation errors are grouped by section (Meta, Requires, Schema, Tags, Properties, Nodes, Edges)
+
 ## [0.23.0] - 2025-11-19
 
 ### Added

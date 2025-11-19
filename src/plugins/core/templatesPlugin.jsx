@@ -296,6 +296,24 @@ function TemplatesPanel({ api }) {
     setStatus('Applied. You can undo via Edit → Undo.');
   };
 
+  const groupedErrors = React.useMemo(() => {
+    const groups = new Map();
+    const put = (k, msg) => { if (!groups.has(k)) groups.set(k, []); groups.get(k).push(msg); };
+    (errors || []).forEach((msg) => {
+      const s = String(msg || '');
+      const l = s.toLowerCase();
+      if (l.startsWith('meta') || l.includes('meta.')) return put('Meta', s);
+      if (l.startsWith('requires') || l.includes('requires.')) return put('Requires', s);
+      if (l.startsWith('schema') || l.includes('schema.')) return put('Schema', s);
+      if (l.startsWith('tags') || l.includes('tags[') || l.includes(' tags ')) return put('Tags', s);
+      if (l.startsWith('properties') || l.includes('properties[')) return put('Properties', s);
+      if (l.startsWith('nodes') || l.includes('nodes[')) return put('Nodes', s);
+      if (l.startsWith('edges') || l.includes('edges[')) return put('Edges', s);
+      return put('General', s);
+    });
+    return groups;
+  }, [errors]);
+
   return (
     <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
       <h3 style={{ margin: 0 }}>Templates</h3>
@@ -309,9 +327,20 @@ function TemplatesPanel({ api }) {
         <button onClick={loadSeed} style={{ padding: '6px 10px' }}>Load Seed: Paper Research Kit</button>
       </div>
       {errors.length > 0 && (
-        <div style={{ color: '#b91c1c' }}>
-          <strong>Validation errors:</strong>
-          <ul>{errors.map((e, i) => <li key={i}>{e}</li>)}</ul>
+        <div style={{ color: '#b91c1c', border: '1px solid #fecaca', borderRadius: 8 }}>
+          <div style={{ padding: 8, background: '#fee2e2', borderBottom: '1px solid #fecaca', fontWeight: 600 }}>
+            Validation errors ({errors.length})
+          </div>
+          <div style={{ padding: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {Array.from(groupedErrors.entries()).map(([section, msgs]) => (
+              <div key={section}>
+                <div style={{ fontWeight: 600 }}>{section} ({msgs.length})</div>
+                <ul style={{ margin: '6px 0 0 16px' }}>
+                  {msgs.map((m, i) => (<li key={`${section}-${i}`} style={{ lineHeight: 1.35 }}>{m}</li>))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
       )}
       {pack && (
