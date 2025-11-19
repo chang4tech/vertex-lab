@@ -35,6 +35,38 @@ export function validateTemplatePack(pack) {
       });
     });
   }
+  if (pack.schema && pack.schema.edgeTypes != null && !Array.isArray(pack.schema.edgeTypes)) {
+    errors.push('schema.edgeTypes must be an array when provided');
+  }
+  if (pack.schema && Array.isArray(pack.schema.edgeTypes)) {
+    const typeNames = new Set(((pack.schema.types || []).map((t) => String(t?.name || '').toLowerCase())));
+    pack.schema.edgeTypes.forEach((et, i) => {
+      if (!et || typeof et !== 'object') { errors.push(`schema.edgeTypes[${i}] must be an object`); return; }
+      if (typeof et.name !== 'string' || et.name.trim() === '') errors.push(`schema.edgeTypes[${i}].name is required`);
+      if (et.directed != null && typeof et.directed !== 'boolean') errors.push(`schema.edgeTypes[${i}].directed must be boolean when provided`);
+      if (et.noCycle != null && typeof et.noCycle !== 'boolean') errors.push(`schema.edgeTypes[${i}].noCycle must be boolean when provided`);
+      if (et.sourceTypes != null && !Array.isArray(et.sourceTypes)) errors.push(`schema.edgeTypes[${i}].sourceTypes must be an array when provided`);
+      if (et.targetTypes != null && !Array.isArray(et.targetTypes)) errors.push(`schema.edgeTypes[${i}].targetTypes must be an array when provided`);
+      if (Array.isArray(et.sourceTypes)) {
+        et.sourceTypes.forEach((s, j) => {
+          if (typeof s !== 'string' || s.trim() === '') {
+            errors.push(`schema.edgeTypes[${i}].sourceTypes[${j}] must be a non-empty string`);
+          } else if (typeNames.size > 0 && !typeNames.has(String(s).toLowerCase())) {
+            errors.push(`schema.edgeTypes[${i}].sourceTypes[${j}] unknown type '${s}'`);
+          }
+        });
+      }
+      if (Array.isArray(et.targetTypes)) {
+        et.targetTypes.forEach((s, j) => {
+          if (typeof s !== 'string' || s.trim() === '') {
+            errors.push(`schema.edgeTypes[${i}].targetTypes[${j}] must be a non-empty string`);
+          } else if (typeNames.size > 0 && !typeNames.has(String(s).toLowerCase())) {
+            errors.push(`schema.edgeTypes[${i}].targetTypes[${j}] unknown type '${s}'`);
+          }
+        });
+      }
+    });
+  }
 
   // tags
   if (pack.tags != null && !Array.isArray(pack.tags)) errors.push('tags must be an array when provided');
@@ -77,4 +109,3 @@ export function validateTemplatePack(pack) {
 
   return errors;
 }
-

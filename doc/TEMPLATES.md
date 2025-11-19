@@ -27,6 +27,7 @@ Template Packs are data-only bundles that include tag sets, optional schema frag
 - Mapping warnings highlight potential collisions:
   - Duplicate property target names within a type mapping.
   - Target property names that already exist in the destination type.
+ - The importer validates `schema.edgeTypes` entries (name, directed, noCycle, optional source/target type lists) and, when types are present, checks that referenced types exist.
 - Nodes/edges IDs are remapped on apply to avoid collisions.
 
 ## Seed Pack: Paper Research Kit
