@@ -12,6 +12,10 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Schema: `edgeTypes[].noCycle` boolean supported in validation
 - Docs: Plugin Spec updated with Edge Types & Constraints; Design doc updated with `noCycle` example and notes
 
+### Added (planned for 0.25.0)
+- Search: Semantic Search DSL provider (examples.searchDSLProvider) enabling queries like `type:Paper year>=2020 tag:ml` merged via provider aggregator
+- Docs: Plugin Spec includes Search DSL syntax and examples
+
 ## [0.23.0] - 2025-11-19
 
 ### Added

@@ -126,6 +126,21 @@ Aggregation and ranking rules used by the core UI:
 - Exact matches rank above prefix matches; prefix matches rank above others.
 - Within the same group, results sort by `score` (desc), then by `label` alphabetically.
 - If multiple providers return the same node, the best‑ranked record wins.
+
+### Search DSL (Example Provider)
+
+An example provider (examples.searchDSLProvider) ships with a simple DSL for type/props queries:
+
+- Clauses are `keyOPvalue` separated by spaces. Strings can be quoted.
+- Operators: `:` (contains for strings/arrays), `=`, `!=`, `>`, `>=`, `<`, `<=` (numeric).
+- Special keys: `type`, `tag`/`tags`, `label`.
+
+Examples:
+- `type:Paper year>=2020`
+- `tag:ml author:"doe"`
+- `label:"Neural Networks" type:Paper`
+
+This provider is merged with other providers and the fallback search by the aggregator; it returns `{ node, score, exact }` for matches.
 - The core still runs its fallback label search to guarantee baseline behavior.
 
 Example provider (label prefix boost with custom scoring):
