@@ -1,5 +1,6 @@
 import React from 'react';
 import { loadTags, saveTags, generateTagId } from '../../utils/tagUtils.js';
+import { validateTemplatePack } from '../../utils/templatePackValidation.js';
 
 const VIS_KEY = 'plugin_core.templates.showPanel';
 
@@ -112,7 +113,7 @@ function TemplatesPanel({ api }) {
     const text = await file.text();
     let json;
     try { json = JSON.parse(text); } catch (e) { setErrors([`JSON parse error: ${e.message}`]); return; }
-    const errs = basicValidatePack(json);
+    const errs = validateTemplatePack(json);
     setErrors(errs);
     setPack(json);
     const deps = summarizeDependencies(json, api);
@@ -146,7 +147,7 @@ function TemplatesPanel({ api }) {
       const res = await fetch('/packs/paper_research_kit.json', { cache: 'no-store' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
-      const errs = basicValidatePack(json);
+      const errs = validateTemplatePack(json);
       setErrors(errs);
       setPack(json);
       const deps = summarizeDependencies(json, api);
