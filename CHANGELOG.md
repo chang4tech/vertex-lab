@@ -29,6 +29,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Templates: Optional “Import schema into Schema Manager” toggle with optional edge types merge
 - Docs: Updated Templates guide to describe mapping UI and schema import option
 
+### Added (planned for 0.30.0)
+- Tests: Templates import mapping and schema import flow
+
 ## [0.23.0] - 2025-11-19
 
 ### Added
