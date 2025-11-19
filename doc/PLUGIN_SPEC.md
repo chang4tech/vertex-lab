@@ -204,6 +204,17 @@ The built‑in Search UI is contributed by the `core.search` plugin:
 
 Providers registered by plugins are passed to the Search UI automatically; the core aggregator merges all provider results with a built‑in fallback matcher for robust behavior.
 
+## Schema Integration (Validation)
+
+- Linter enforcement
+  - Unknown node type: flagged based on the active per‑graph schema.
+  - Missing required properties: flagged with rule metadata; Fix All fills defaults when available (from schema defaults or reasonable type defaults).
+  - Edge constraints: unknown edge type, source/target type mismatch, and `noCycle` violations for typed relations.
+
+- Node Editor cues
+  - Typed tab displays a required marker (asterisk) next to required properties defined in the schema.
+  - Enum hints are shown as an “Allowed: …” list under inputs when present.
+
 ### controlHub (single page)
 
 Each plugin has a single page called the Control Hub at `#/plugin/<id>`. It combines settings, console, and overview in one place. From the Plugins Manager, click “Control Hub”.

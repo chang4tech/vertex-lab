@@ -41,6 +41,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Improved (planned for 0.33.0)
 - Templates: Mapping UI shows collision warnings for duplicate targets and existing property name conflicts
 
+### Docs (planned for 0.34.0)
+- Plugin Spec: Added Schema Integration (Validation) section describing linter enforcement and Node Editor required markers
+
 ## [0.23.0] - 2025-11-19
 
 ### Added

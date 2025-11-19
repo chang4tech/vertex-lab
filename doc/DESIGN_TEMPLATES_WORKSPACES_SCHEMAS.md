@@ -117,6 +117,10 @@ Integration:
 - Search: schema DSL provider (filters by type/props), merged with aggregator.
 - Export: JSON‑LD/RDF mapping plugin reads shared schema.
 
+### Validation
+- Linter: Enforces unknown type and missing required properties based on the active schema; surfaces issues in the Graph Linter panel with Fix All where applicable.
+- Node Editor: Shows required markers (asterisk) next to required properties in the Typed tab.
+
 ---
 
 ## Dependencies: Plugins vs Capabilities
