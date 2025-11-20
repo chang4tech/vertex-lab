@@ -1,0 +1,96 @@
+{
+  "meta": {
+    "name": "AI Project Knowledge Graph",
+    "version": "1.0.0",
+    "author": "Vertex Lab",
+    "description": "Schema + starter graph for AI projects (Models, Datasets, Experiments, Metrics, UseCases)."
+  },
+  "requires": {
+    "app": ">=0.24.0",
+    "plugins": [
+      { "id": "examples.graphLinter" }
+    ],
+    "capabilities": ["updateEdges"]
+  },
+  "schema": {
+    "types": [
+      {
+        "name": "Model",
+        "color": "#1d4ed8",
+        "properties": [
+          { "name": "architecture", "type": "string" },
+          { "name": "status", "type": "string", "required": true }
+        ]
+      },
+      {
+        "name": "Dataset",
+        "color": "#ea580c",
+        "properties": [
+          { "name": "modality", "type": "string" },
+          { "name": "size", "type": "string" }
+        ]
+      },
+      {
+        "name": "Experiment",
+        "color": "#7c3aed",
+        "properties": [
+          { "name": "goal", "type": "string" },
+          { "name": "status", "type": "string", "required": true }
+        ]
+      },
+      {
+        "name": "Metric",
+        "color": "#16a34a",
+        "properties": [
+          { "name": "type", "type": "string" },
+          { "name": "value", "type": "number" }
+        ]
+      },
+      {
+        "name": "UseCase",
+        "color": "#f97316",
+        "properties": [
+          { "name": "domain", "type": "string", "required": true },
+          { "name": "priority", "type": "string" }
+        ]
+      }
+    ],
+    "edgeTypes": [
+      { "name": "trains_on", "directed": true, "sourceTypes": ["Model"], "targetTypes": ["Dataset"] },
+      { "name": "evaluates_with", "directed": true, "sourceTypes": ["Experiment"], "targetTypes": ["Metric"] },
+      { "name": "delivers_for", "directed": true, "sourceTypes": ["Model"], "targetTypes": ["UseCase"] },
+      { "name": "depends_on", "directed": true, "sourceTypes": ["Experiment"], "targetTypes": ["Experiment"], "noCycle": true },
+      { "name": "produces", "directed": true, "sourceTypes": ["Experiment"], "targetTypes": ["Model", "Metric"] }
+    ]
+  },
+  "tags": [
+    { "id": "research", "name": "Research", "color": "#f472b6" },
+    { "id": "production", "name": "Production", "color": "#10b981" },
+    { "id": "blocked", "name": "Blocked", "color": "#ef4444" }
+  ],
+  "properties": [],
+  "nodes": [
+    { "id": 8001, "type": "Model", "label": "Vision Transformer", "architecture": "ViT-B/16", "status": "training", "tags": ["research"] },
+    { "id": 8002, "type": "Model", "label": "Conversational AI", "architecture": "LLM", "status": "deployed", "tags": ["production"] },
+    { "id": 8101, "type": "Dataset", "label": "MedImageSet", "modality": "Image", "size": "3M" },
+    { "id": 8102, "type": "Dataset", "label": "ChatLogs", "modality": "Text", "size": "120GB" },
+    { "id": 8201, "type": "Experiment", "label": "ViT Augment Study", "goal": "improve accuracy", "status": "running" },
+    { "id": 8202, "type": "Experiment", "label": "LLM Guardrails", "goal": "reduce toxicity", "status": "analysis", "tags": ["blocked"] },
+    { "id": 8301, "type": "Metric", "label": "AUC", "type": "AUC", "value": 0.89 },
+    { "id": 8302, "type": "Metric", "label": "Toxicity Score", "type": "Score", "value": 0.12 },
+    { "id": 8401, "type": "UseCase", "label": "Radiology Triage", "domain": "Healthcare", "priority": "High" },
+    { "id": 8402, "type": "UseCase", "label": "Support Copilot", "domain": "Customer Success", "priority": "Medium" }
+  ],
+  "edges": [
+    { "source": 8001, "target": 8101, "directed": true, "type": "trains_on" },
+    { "source": 8002, "target": 8102, "directed": true, "type": "trains_on" },
+    { "source": 8201, "target": 8301, "directed": true, "type": "produces" },
+    { "source": 8201, "target": 8301, "directed": true, "type": "evaluates_with" },
+    { "source": 8201, "target": 8001, "directed": true, "type": "produces" },
+    { "source": 8202, "target": 8302, "directed": true, "type": "produces" },
+    { "source": 8202, "target": 8002, "directed": true, "type": "produces" },
+    { "source": 8202, "target": 8201, "directed": true, "type": "depends_on" },
+    { "source": 8001, "target": 8401, "directed": true, "type": "delivers_for" },
+    { "source": 8002, "target": 8402, "directed": true, "type": "delivers_for" }
+  ]
+}

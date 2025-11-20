@@ -73,6 +73,12 @@ Template Packs are data-only bundles that include tag sets, optional schema frag
 - Contents: schema for Account, Contact, Opportunity, and Activity with relationships (`contacts`, `owns`, `touches`, `involves`, `depends_on`) and a starter CRM pipeline board.
 - Import: open Templates panel and click “Load Seed: CRM Starter”.
 
+## Seed Pack: AI Project Knowledge Graph
+
+- Path: `public/packs/ai_project_knowledge_graph.json`
+- Contents: schema for Model, Dataset, Experiment, Metric, and UseCase with relations (`trains_on`, `evaluates_with`, `produces`, `depends_on`, `delivers_for`) plus a starter AI project board.
+- Import: open Templates panel and click “Load Seed: AI Project”.
+
 ### Configuring default seed buttons
 - The set/order of seed buttons shown in Templates is defined in `src/plugins/templates.config.json` (JSON with `{ path, label, buttonLabel }`). Update this config to add/remove seeds without editing component code.
 
