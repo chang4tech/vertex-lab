@@ -381,6 +381,14 @@ function TemplatesPanel({ api }) {
           </button>
         ))}
       </div>
+      <div style={{ fontSize: 13, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: 10 }}>
+        <strong>How to create your own Template Pack:</strong>
+        <ol style={{ margin: '6px 0 0 16px', padding: 0 }}>
+          <li>Define schema via the Schema panel (types + edge types).</li>
+          <li>Add sample nodes/edges/tags on the canvas.</li>
+          <li>Return here and click “Export Current as Pack”.</li>
+        </ol>
+      </div>
       {errors.length > 0 && (
         <div style={{ color: '#b91c1c', border: '1px solid #fecaca', borderRadius: 8 }}>
           <div style={{ padding: 8, background: '#fee2e2', borderBottom: '1px solid #fecaca', fontWeight: 600 }}>

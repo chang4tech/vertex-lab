@@ -135,6 +135,14 @@ function SchemaPanel({ api }) {
   return (
     <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
       <h3 style={{ margin: 0 }}>Schema Manager</h3>
+      <div style={{ fontSize: 13, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: 10 }}>
+        <strong>Tip — Create a Template Pack:</strong>
+        <ol style={{ margin: '6px 0 0 16px', padding: 0 }}>
+          <li>Define your node/edge types here (with required fields).</li>
+          <li>Switch to the canvas to add sample nodes & tags.</li>
+          <li>Open Templates → Export Pack to bundle schema + graph.</li>
+        </ol>
+      </div>
       <div style={{ display: 'flex', gap: 8 }}>
         <button onClick={addType}>Add Type</button>
         <button onClick={() => {

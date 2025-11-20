@@ -91,6 +91,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Added (planned for 0.51.0)
 - Templates: Added “AI Project Knowledge Graph” seed pack (Model/Dataset/Experiment/Metric/UseCase schema + starter AI board)
 
+### Improved (planned for 0.52.0)
+- Schema/Template UX: Added inline guidance cards (Schema Manager + Templates panel) explaining how to define schema and export custom packs
+
 ### Added (planned for 0.39.0)
 - Edge Editor: Edge Info panel now allows setting `edge.type` using schema.edgeTypes; updates persist via plugin API `updateEdges`
 
