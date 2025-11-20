@@ -1,0 +1,92 @@
+{
+  "meta": {
+    "name": "Product Strategy Graph",
+    "version": "1.0.0",
+    "author": "Vertex Lab",
+    "description": "Schema + starter graph for mapping initiatives, metrics, personas, and channels."
+  },
+  "requires": {
+    "app": ">=0.24.0",
+    "plugins": [
+      { "id": "examples.graphLinter" }
+    ],
+    "capabilities": ["updateEdges"]
+  },
+  "schema": {
+    "types": [
+      {
+        "name": "Initiative",
+        "color": "#2563eb",
+        "properties": [
+          { "name": "owner", "type": "string", "required": true },
+          { "name": "horizon", "type": "string" },
+          { "name": "stage", "type": "string" }
+        ]
+      },
+      {
+        "name": "Metric",
+        "color": "#16a34a",
+        "properties": [
+          { "name": "unit", "type": "string" },
+          { "name": "target", "type": "number", "required": true },
+          { "name": "current", "type": "number" }
+        ]
+      },
+      {
+        "name": "Persona",
+        "color": "#db2777",
+        "properties": [
+          { "name": "segment", "type": "string", "required": true },
+          { "name": "needs", "type": "string" }
+        ]
+      },
+      {
+        "name": "Channel",
+        "color": "#ea580c",
+        "properties": [
+          { "name": "type", "type": "string", "required": true },
+          { "name": "cost", "type": "string" }
+        ]
+      }
+    ],
+    "edgeTypes": [
+      { "name": "drives", "directed": true, "sourceTypes": ["Initiative"], "targetTypes": ["Metric"] },
+      { "name": "targets", "directed": true, "sourceTypes": ["Initiative"], "targetTypes": ["Persona"] },
+      { "name": "runs_on", "directed": true, "sourceTypes": ["Initiative"], "targetTypes": ["Channel"] },
+      { "name": "depends_on", "directed": true, "sourceTypes": ["Initiative"], "targetTypes": ["Initiative"], "noCycle": true },
+      { "name": "influences", "directed": true, "sourceTypes": ["Metric"], "targetTypes": ["Metric"] }
+    ]
+  },
+  "tags": [
+    { "id": "northstar", "name": "North Star", "color": "#f97316" },
+    { "id": "expansion", "name": "Expansion", "color": "#10b981" },
+    { "id": "acquisition", "name": "Acquisition", "color": "#3b82f6" }
+  ],
+  "properties": [],
+  "nodes": [
+    { "id": 3001, "type": "Initiative", "label": "Revamp Onboarding", "owner": "Alice", "horizon": "Q2", "stage": "planning", "tags": ["acquisition"] },
+    { "id": 3002, "type": "Initiative", "label": "Expand Pro Plan", "owner": "Diego", "horizon": "Q3", "stage": "in flight", "tags": ["expansion"] },
+    { "id": 3003, "type": "Initiative", "label": "Self-Serve Intelligence", "owner": "Priya", "horizon": "Q4", "stage": "backlog", "tags": ["northstar"] },
+    { "id": 3101, "type": "Metric", "label": "Activation Rate", "unit": "%", "target": 65, "current": 48 },
+    { "id": 3102, "type": "Metric", "label": "Weekly Pro Upgrades", "unit": "count", "target": 120, "current": 72 },
+    { "id": 3103, "type": "Metric", "label": "Net Revenue", "unit": "$", "target": 450000, "current": 320000 },
+    { "id": 3201, "type": "Persona", "label": "Project Managers", "segment": "Team Leads", "needs": "faster kickoff" },
+    { "id": 3202, "type": "Persona", "label": "Ops Specialists", "segment": "Operations", "needs": "cross-team visibility" },
+    { "id": 3301, "type": "Channel", "label": "In-product Guide", "type": "Product", "cost": "Low" },
+    { "id": 3302, "type": "Channel", "label": "Customer Success", "type": "Human", "cost": "High" }
+  ],
+  "edges": [
+    { "source": 3001, "target": 3101, "directed": true, "type": "drives" },
+    { "source": 3001, "target": 3201, "directed": true, "type": "targets" },
+    { "source": 3001, "target": 3301, "directed": true, "type": "runs_on" },
+    { "source": 3002, "target": 3102, "directed": true, "type": "drives" },
+    { "source": 3002, "target": 3103, "directed": true, "type": "drives" },
+    { "source": 3002, "target": 3202, "directed": true, "type": "targets" },
+    { "source": 3002, "target": 3302, "directed": true, "type": "runs_on" },
+    { "source": 3003, "target": 3103, "directed": true, "type": "drives" },
+    { "source": 3003, "target": 3202, "directed": true, "type": "targets" },
+    { "source": 3003, "target": 3301, "directed": true, "type": "runs_on" },
+    { "source": 3003, "target": 3002, "directed": true, "type": "depends_on" },
+    { "source": 3101, "target": 3102, "directed": true, "type": "influences" }
+  ]
+}

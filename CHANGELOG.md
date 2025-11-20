@@ -70,6 +70,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Docs (planned for 0.44.0)
 - Added `doc/PLUGIN_CONFIG.md` and README note describing how ops teams can adjust `pluginConfig.json`
 
+### Added (planned for 0.45.0)
+- Templates: Added “Product Strategy Graph” seed pack (Initiative/Metric/Persona/Channel schema with starter board)
+
 ### Added (planned for 0.39.0)
 - Edge Editor: Edge Info panel now allows setting `edge.type` using schema.edgeTypes; updates persist via plugin API `updateEdges`
 

@@ -376,6 +376,7 @@ function TemplatesPanel({ api }) {
         <button onClick={exportPack} style={{ padding: '6px 10px' }}>Export Current as Pack</button>
         <button onClick={() => loadSeedPack('/packs/paper_research_kit.json', 'Paper Research Kit')} style={{ padding: '6px 10px' }}>Load Seed: Paper Research Kit</button>
         <button onClick={() => loadSeedPack('/packs/research_map.json', 'Research Map')} style={{ padding: '6px 10px' }}>Load Seed: Research Map</button>
+        <button onClick={() => loadSeedPack('/packs/product_strategy_graph.json', 'Product Strategy Graph')} style={{ padding: '6px 10px' }}>Load Seed: Product Strategy</button>
       </div>
       {errors.length > 0 && (
         <div style={{ color: '#b91c1c', border: '1px solid #fecaca', borderRadius: 8 }}>

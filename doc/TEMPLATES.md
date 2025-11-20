@@ -43,6 +43,12 @@ Template Packs are data-only bundles that include tag sets, optional schema frag
 - Contents: schema for Paper, Concept, Method, and Dataset (with typed properties + edge types such as `cites`, `introduces`, `implements`, `evaluates_with`). Includes a mini starter graph linking sample papers, concepts, methods, and datasets.
 - Import: open Templates panel and click “Load Seed: Research Map”.
 
+## Seed Pack: Product Strategy Graph
+
+- Path: `public/packs/product_strategy_graph.json`
+- Contents: schema for Initiative, Metric, Persona, and Channel (plus edge types like `drives`, `targets`, `runs_on`, `depends_on`, `influences`) and a starter strategy board connecting initiatives to metrics/personas/channels.
+- Import: open Templates panel and click “Load Seed: Product Strategy”.
+
 ## Roadmap
 - Strict JSON schema validation for packs with richer error messages.
 - Schema promotion to core API (watch/set/validate) beyond the plugin-managed manager.
