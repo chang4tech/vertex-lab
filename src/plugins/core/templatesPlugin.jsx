@@ -199,6 +199,11 @@ function TemplatesPanel({ api }) {
   const [importSchemaOption, setImportSchemaOption] = React.useState(false);
   const [includeEdgeTypes, setIncludeEdgeTypes] = React.useState(true);
   const missingPlugins = depSummary?.missingPlugins || [];
+  const openSchemaManager = React.useCallback(() => {
+    try {
+      window.location.hash = '#/plugin/core.schemaManager';
+    } catch {}
+  }, []);
 
   // Compute mapping collision warnings (duplicate targets, existing prop conflicts)
   const mappingWarnings = React.useMemo(() => {
@@ -388,6 +393,11 @@ function TemplatesPanel({ api }) {
           <li>Add sample nodes/edges/tags on the canvas.</li>
           <li>Return here and click “Export Current as Pack”.</li>
         </ol>
+        <div style={{ marginTop: 8 }}>
+          <button onClick={openSchemaManager} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #93c5fd', background: '#eff6ff', color: '#1d4ed8', cursor: 'pointer' }}>
+            Open Schema Manager ↗
+          </button>
+        </div>
       </div>
       {errors.length > 0 && (
         <div style={{ color: '#b91c1c', border: '1px solid #fecaca', borderRadius: 8 }}>
