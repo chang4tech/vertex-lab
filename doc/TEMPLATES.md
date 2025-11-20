@@ -55,6 +55,12 @@ Template Packs are data-only bundles that include tag sets, optional schema frag
 - Contents: schema for Incident, RootCause, Mitigation, Runbook, and Owner with edge types (`caused_by`, `mitigated_by`, `uses_runbook`, `owned_by`, `linked_incident`) plus a starter playbook linking sample incidents to runbooks/owners.
 - Import: open Templates panel and click “Load Seed: Incident Response”.
 
+## Seed Pack: Study Notes Knowledge Graph
+
+- Path: `public/packs/study_notes_knowledge_graph.json`
+- Contents: schema for Topic, Subtopic, Question, and Reference with relations (`relates_to`, `requires`, `covers`, `explains`, `linked`) plus a starter knowledge map for study notes.
+- Import: open Templates panel and click “Load Seed: Study Notes”.
+
 ## Roadmap
 - Strict JSON schema validation for packs with richer error messages.
 - Schema promotion to core API (watch/set/validate) beyond the plugin-managed manager.

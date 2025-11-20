@@ -1,0 +1,86 @@
+{
+  "meta": {
+    "name": "Study Notes Knowledge Graph",
+    "version": "1.0.0",
+    "author": "Vertex Lab",
+    "description": "Schema + starter graph for mapping topics, subtopics, questions, and references with study status."
+  },
+  "requires": {
+    "app": ">=0.24.0",
+    "plugins": [
+      { "id": "examples.graphLinter" }
+    ],
+    "capabilities": ["updateEdges"]
+  },
+  "schema": {
+    "types": [
+      {
+        "name": "Topic",
+        "color": "#2563eb",
+        "properties": [
+          { "name": "domain", "type": "string", "required": true },
+          { "name": "difficulty", "type": "string" }
+        ]
+      },
+      {
+        "name": "Subtopic",
+        "color": "#7c3aed",
+        "properties": [
+          { "name": "parent", "type": "string" },
+          { "name": "confidence", "type": "string" }
+        ]
+      },
+      {
+        "name": "Question",
+        "color": "#f97316",
+        "properties": [
+          { "name": "type", "type": "string", "required": true },
+          { "name": "status", "type": "string", "required": true },
+          { "name": "answer", "type": "string" }
+        ]
+      },
+      {
+        "name": "Reference",
+        "color": "#16a34a",
+        "properties": [
+          { "name": "source", "type": "string", "required": true },
+          { "name": "url", "type": "string" }
+        ]
+      }
+    ],
+    "edgeTypes": [
+      { "name": "relates_to", "directed": true, "sourceTypes": ["Subtopic"], "targetTypes": ["Topic"] },
+      { "name": "requires", "directed": true, "sourceTypes": ["Subtopic", "Topic"], "targetTypes": ["Subtopic", "Topic"], "noCycle": true },
+      { "name": "explains", "directed": true, "sourceTypes": ["Reference"], "targetTypes": ["Subtopic", "Question"] },
+      { "name": "covers", "directed": true, "sourceTypes": ["Topic"], "targetTypes": ["Question"] },
+      { "name": "linked", "directed": false, "sourceTypes": ["Question"], "targetTypes": ["Question"] }
+    ]
+  },
+  "tags": [
+    { "id": "exam", "name": "Exam", "color": "#facc15" },
+    { "id": "review", "name": "Review", "color": "#fb7185" },
+    { "id": "mastered", "name": "Mastered", "color": "#10b981" }
+  ],
+  "properties": [],
+  "nodes": [
+    { "id": 5001, "type": "Topic", "label": "Neural Networks", "domain": "ML", "difficulty": "Medium", "tags": ["exam"] },
+    { "id": 5002, "type": "Topic", "label": "Optimization", "domain": "Math", "difficulty": "Hard", "tags": ["review"] },
+    { "id": 5101, "type": "Subtopic", "label": "Backpropagation", "parent": "Neural Networks", "confidence": "Low" },
+    { "id": 5102, "type": "Subtopic", "label": "Gradient Descent", "parent": "Optimization", "confidence": "Medium" },
+    { "id": 5201, "type": "Question", "label": "Explain weight updates", "type": "Conceptual", "status": "In Progress" },
+    { "id": 5202, "type": "Question", "label": "Derive gradient for layer", "type": "Derivation", "status": "Not Started" },
+    { "id": 5203, "type": "Question", "label": "When does GD diverge?", "type": "Conceptual", "status": "Reviewed" },
+    { "id": 5301, "type": "Reference", "label": "CS231n Notes", "source": "Lecture Notes", "url": "https://cs231n.stanford.edu" },
+    { "id": 5302, "type": "Reference", "label": "Backprop Blog", "source": "Blog", "url": "https://blog/backprop" }
+  ],
+  "edges": [
+    { "source": 5101, "target": 5001, "directed": true, "type": "relates_to" },
+    { "source": 5102, "target": 5002, "directed": true, "type": "relates_to" },
+    { "source": 5101, "target": 5102, "directed": true, "type": "requires" },
+    { "source": 5301, "target": 5101, "directed": true, "type": "explains" },
+    { "source": 5302, "target": 5202, "directed": true, "type": "explains" },
+    { "source": 5001, "target": 5201, "directed": true, "type": "covers" },
+    { "source": 5002, "target": 5203, "directed": true, "type": "covers" },
+    { "source": 5201, "target": 5202, "directed": false, "type": "linked" }
+  ]
+}

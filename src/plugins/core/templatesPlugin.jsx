@@ -378,6 +378,7 @@ function TemplatesPanel({ api }) {
         <button onClick={() => loadSeedPack('/packs/research_map.json', 'Research Map')} style={{ padding: '6px 10px' }}>Load Seed: Research Map</button>
         <button onClick={() => loadSeedPack('/packs/product_strategy_graph.json', 'Product Strategy Graph')} style={{ padding: '6px 10px' }}>Load Seed: Product Strategy</button>
         <button onClick={() => loadSeedPack('/packs/incident_response_playbook.json', 'Incident Response Playbook')} style={{ padding: '6px 10px' }}>Load Seed: Incident Response</button>
+        <button onClick={() => loadSeedPack('/packs/study_notes_knowledge_graph.json', 'Study Notes Knowledge Graph')} style={{ padding: '6px 10px' }}>Load Seed: Study Notes</button>
       </div>
       {errors.length > 0 && (
         <div style={{ color: '#b91c1c', border: '1px solid #fecaca', borderRadius: 8 }}>
