@@ -1,0 +1,97 @@
+{
+  "meta": {
+    "name": "Incident Response Playbook",
+    "version": "1.0.0",
+    "author": "Vertex Lab",
+    "description": "Schema + starter graph for mapping incidents, root causes, mitigations, runbooks, and owners."
+  },
+  "requires": {
+    "app": ">=0.24.0",
+    "plugins": [
+      { "id": "examples.graphLinter" }
+    ],
+    "capabilities": ["updateEdges"]
+  },
+  "schema": {
+    "types": [
+      {
+        "name": "Incident",
+        "color": "#dc2626",
+        "properties": [
+          { "name": "severity", "type": "string", "required": true },
+          { "name": "status", "type": "string", "required": true },
+          { "name": "detected_by", "type": "string" },
+          { "name": "opened_at", "type": "string" }
+        ]
+      },
+      {
+        "name": "RootCause",
+        "color": "#7c3aed",
+        "properties": [
+          { "name": "category", "type": "string", "required": true },
+          { "name": "description", "type": "string" }
+        ]
+      },
+      {
+        "name": "Mitigation",
+        "color": "#16a34a",
+        "properties": [
+          { "name": "action", "type": "string", "required": true },
+          { "name": "eta", "type": "string" }
+        ]
+      },
+      {
+        "name": "Runbook",
+        "color": "#2563eb",
+        "properties": [
+          { "name": "steps", "type": "string", "required": true },
+          { "name": "link", "type": "string" }
+        ]
+      },
+      {
+        "name": "Owner",
+        "color": "#f97316",
+        "properties": [
+          { "name": "team", "type": "string", "required": true },
+          { "name": "contact", "type": "string" }
+        ]
+      }
+    ],
+    "edgeTypes": [
+      { "name": "caused_by", "directed": true, "sourceTypes": ["Incident"], "targetTypes": ["RootCause"] },
+      { "name": "mitigated_by", "directed": true, "sourceTypes": ["Incident"], "targetTypes": ["Mitigation"] },
+      { "name": "uses_runbook", "directed": true, "sourceTypes": ["Mitigation"], "targetTypes": ["Runbook"] },
+      { "name": "owned_by", "directed": true, "sourceTypes": ["Incident"], "targetTypes": ["Owner"] },
+      { "name": "linked_incident", "directed": true, "sourceTypes": ["Incident"], "targetTypes": ["Incident"], "noCycle": false }
+    ]
+  },
+  "tags": [
+    { "id": "sev1", "name": "Sev1", "color": "#ef4444" },
+    { "id": "sev2", "name": "Sev2", "color": "#f97316" },
+    { "id": "sev3", "name": "Sev3", "color": "#facc15" }
+  ],
+  "properties": [],
+  "nodes": [
+    { "id": 4001, "type": "Incident", "label": "DB Latency Spike", "severity": "Sev1", "status": "mitigating", "detected_by": "APM", "opened_at": "2025-05-01T03:12Z", "tags": ["sev1"] },
+    { "id": 4002, "type": "Incident", "label": "Login Rate Drop", "severity": "Sev2", "status": "investigating", "detected_by": "Alerting", "opened_at": "2025-05-08T11:24Z", "tags": ["sev2"] },
+    { "id": 4101, "type": "RootCause", "label": "Hot shard overload", "category": "Database", "description": "Uneven traffic distribution" },
+    { "id": 4102, "type": "RootCause", "label": "Auth cache miss", "category": "Caching", "description": "Cache invalidation bug" },
+    { "id": 4201, "type": "Mitigation", "label": "Traffic rebalance", "action": "Shift 20% traffic", "eta": "2h" },
+    { "id": 4202, "type": "Mitigation", "label": "Cache patch", "action": "Deploy patch", "eta": "4h" },
+    { "id": 4301, "type": "Runbook", "label": "DB Rebalance Guide", "steps": "Check shard metrics, update router", "link": "https://ops/runbook/db" },
+    { "id": 4302, "type": "Runbook", "label": "Cache Flush SOP", "steps": "Drain traffic, flush cache, redeploy", "link": "https://ops/runbook/cache" },
+    { "id": 4401, "type": "Owner", "label": "DB On-call", "team": "Database", "contact": "db-oncall@company" },
+    { "id": 4402, "type": "Owner", "label": "Identity Squad", "team": "Identity", "contact": "identity@company" }
+  ],
+  "edges": [
+    { "source": 4001, "target": 4101, "directed": true, "type": "caused_by" },
+    { "source": 4001, "target": 4201, "directed": true, "type": "mitigated_by" },
+    { "source": 4201, "target": 4301, "directed": true, "type": "uses_runbook" },
+    { "source": 4001, "target": 4401, "directed": true, "type": "owned_by" },
+    { "source": 4002, "target": 4102, "directed": true, "type": "caused_by" },
+    { "source": 4002, "target": 4202, "directed": true, "type": "mitigated_by" },
+    { "source": 4202, "target": 4302, "directed": true, "type": "uses_runbook" },
+    { "source": 4002, "target": 4402, "directed": true, "type": "owned_by" },
+    { "source": 4002, "target": 4001, "directed": true, "type": "linked_incident" }
+  ]
+}

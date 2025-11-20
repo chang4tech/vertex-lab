@@ -49,6 +49,12 @@ Template Packs are data-only bundles that include tag sets, optional schema frag
 - Contents: schema for Initiative, Metric, Persona, and Channel (plus edge types like `drives`, `targets`, `runs_on`, `depends_on`, `influences`) and a starter strategy board connecting initiatives to metrics/personas/channels.
 - Import: open Templates panel and click “Load Seed: Product Strategy”.
 
+## Seed Pack: Incident Response Playbook
+
+- Path: `public/packs/incident_response_playbook.json`
+- Contents: schema for Incident, RootCause, Mitigation, Runbook, and Owner with edge types (`caused_by`, `mitigated_by`, `uses_runbook`, `owned_by`, `linked_incident`) plus a starter playbook linking sample incidents to runbooks/owners.
+- Import: open Templates panel and click “Load Seed: Incident Response”.
+
 ## Roadmap
 - Strict JSON schema validation for packs with richer error messages.
 - Schema promotion to core API (watch/set/validate) beyond the plugin-managed manager.
