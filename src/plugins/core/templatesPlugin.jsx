@@ -197,6 +197,7 @@ function TemplatesPanel({ api }) {
   const [typeMappings, setTypeMappings] = React.useState([]);
   const [importSchemaOption, setImportSchemaOption] = React.useState(false);
   const [includeEdgeTypes, setIncludeEdgeTypes] = React.useState(true);
+  const missingPlugins = depSummary?.missingPlugins || [];
 
   // Compute mapping collision warnings (duplicate targets, existing prop conflicts)
   const mappingWarnings = React.useMemo(() => {
@@ -343,8 +344,14 @@ function TemplatesPanel({ api }) {
     }
   };
 
+  const enableMissingPlugins = () => {
+    if (!Array.isArray(missingPlugins) || missingPlugins.length === 0) return;
+    missingPlugins.forEach((pid) => api.setPluginEnabled?.(pid, true));
+    setStatus('Enabled missing plugins (if available).');
+  };
+
   const apply = () => {
-    if (!pack) return;
+    if (!pack || (missingPlugins && missingPlugins.length > 0)) return;
     const mapping = { types: typeMappings };
     applyPack({
       pack,
@@ -420,8 +427,11 @@ function TemplatesPanel({ api }) {
                 {depSummary.capabilities?.length > 0 && (
                   <div>Capabilities: {depSummary.capabilities.join(', ')}</div>
                 )}
-                {depSummary.missingPlugins?.length > 0 && (
-                  <div style={{ color: '#b45309' }}>Missing plugins: {depSummary.missingPlugins.join(', ')}</div>
+                {missingPlugins.length > 0 && (
+                  <div style={{ color: '#b45309', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span>Missing plugins: {missingPlugins.join(', ')}</span>
+                    <button onClick={enableMissingPlugins} style={{ padding: '2px 8px', fontSize: 12 }}>Enable</button>
+                  </div>
                 )}
               </div>
             )}
@@ -511,8 +521,11 @@ function TemplatesPanel({ api }) {
                 </div>
               </div>
             )}
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={apply} style={{ padding: '6px 10px' }} disabled={errors.length > 0}>Apply</button>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button onClick={apply} style={{ padding: '6px 10px' }} disabled={errors.length > 0 || missingPlugins.length > 0}>Apply</button>
+              {missingPlugins.length > 0 && (
+                <span style={{ fontSize: 12, color: '#b45309' }}>Enable required plugins first.</span>
+              )}
               {status && <span style={{ fontSize: 12, opacity: 0.8 }}>{status}</span>}
             </div>
           </div>
