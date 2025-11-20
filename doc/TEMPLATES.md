@@ -61,6 +61,12 @@ Template Packs are data-only bundles that include tag sets, optional schema frag
 - Contents: schema for Topic, Subtopic, Question, and Reference with relations (`relates_to`, `requires`, `covers`, `explains`, `linked`) plus a starter knowledge map for study notes.
 - Import: open Templates panel and click “Load Seed: Study Notes”.
 
+## Seed Pack: ADR Navigator
+
+- Path: `public/packs/adr_navigator.json`
+- Contents: schema for ADR, Option, Constraint, and Task with relations (`considers`, `decides`, `satisfies`, `implements`, `blocked_by`) and a starter ADR board connecting decisions to tasks/constraints.
+- Import: open Templates panel and click “Load Seed: ADR Navigator”.
+
 ### Configuring default seed buttons
 - The set/order of seed buttons shown in Templates is defined in `src/plugins/templates.config.json` (JSON with `{ path, label, buttonLabel }`). Update this config to add/remove seeds without editing component code.
 

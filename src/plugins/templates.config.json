@@ -4,6 +4,7 @@
     { "path": "/packs/research_map.json", "label": "Research Map", "buttonLabel": "Load Seed: Research Map" },
     { "path": "/packs/product_strategy_graph.json", "label": "Product Strategy Graph", "buttonLabel": "Load Seed: Product Strategy" },
     { "path": "/packs/incident_response_playbook.json", "label": "Incident Response Playbook", "buttonLabel": "Load Seed: Incident Response" },
-    { "path": "/packs/study_notes_knowledge_graph.json", "label": "Study Notes Knowledge Graph", "buttonLabel": "Load Seed: Study Notes" }
+    { "path": "/packs/study_notes_knowledge_graph.json", "label": "Study Notes Knowledge Graph", "buttonLabel": "Load Seed: Study Notes" },
+    { "path": "/packs/adr_navigator.json", "label": "ADR Navigator", "buttonLabel": "Load Seed: ADR Navigator" }
   ]
 }

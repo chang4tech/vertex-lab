@@ -1,0 +1,88 @@
+{
+  "meta": {
+    "name": "ADR Navigator",
+    "version": "1.0.0",
+    "author": "Vertex Lab",
+    "description": "Schema + starter graph for architecture decision records (ADRs), options, constraints, and implementation tasks."
+  },
+  "requires": {
+    "app": ">=0.24.0",
+    "plugins": [
+      { "id": "examples.graphLinter" }
+    ],
+    "capabilities": ["updateEdges"]
+  },
+  "schema": {
+    "types": [
+      {
+        "name": "ADR",
+        "color": "#2563eb",
+        "properties": [
+          { "name": "status", "type": "string", "required": true },
+          { "name": "context", "type": "string" },
+          { "name": "decision", "type": "string" }
+        ]
+      },
+      {
+        "name": "Option",
+        "color": "#7c3aed",
+        "properties": [
+          { "name": "pros", "type": "string" },
+          { "name": "cons", "type": "string" }
+        ]
+      },
+      {
+        "name": "Constraint",
+        "color": "#d97706",
+        "properties": [
+          { "name": "type", "type": "string", "required": true },
+          { "name": "severity", "type": "string" }
+        ]
+      },
+      {
+        "name": "Task",
+        "color": "#16a34a",
+        "properties": [
+          { "name": "assignee", "type": "string", "required": true },
+          { "name": "eta", "type": "string" }
+        ]
+      }
+    ],
+    "edgeTypes": [
+      { "name": "considers", "directed": true, "sourceTypes": ["ADR"], "targetTypes": ["Option"] },
+      { "name": "satisfies", "directed": true, "sourceTypes": ["Option"], "targetTypes": ["Constraint"] },
+      { "name": "decides", "directed": true, "sourceTypes": ["ADR"], "targetTypes": ["Option"] },
+      { "name": "implements", "directed": true, "sourceTypes": ["Task"], "targetTypes": ["ADR"] },
+      { "name": "blocked_by", "directed": true, "sourceTypes": ["Task"], "targetTypes": ["Task"], "noCycle": true }
+    ]
+  },
+  "tags": [
+    { "id": "open", "name": "Open", "color": "#60a5fa" },
+    { "id": "decided", "name": "Decided", "color": "#34d399" },
+    { "id": "followup", "name": "Follow-up", "color": "#f87171" }
+  ],
+  "properties": [],
+  "nodes": [
+    { "id": 6001, "type": "ADR", "label": "Choose Message Queue", "status": "decided", "context": "Need reliable async processing", "decision": "Adopt Kafka", "tags": ["decided"] },
+    { "id": 6002, "type": "ADR", "label": "Auth Token Strategy", "status": "open", "context": "Evaluating JWT vs PASETO", "tags": ["open"] },
+    { "id": 6101, "type": "Option", "label": "Kafka", "pros": "mature ecosystem", "cons": "operational overhead" },
+    { "id": 6102, "type": "Option", "label": "SQS", "pros": "managed", "cons": "regional limits" },
+    { "id": 6103, "type": "Option", "label": "JWT", "pros": "wide support", "cons": "harder revocation" },
+    { "id": 6104, "type": "Option", "label": "PASETO", "pros": "security defaults", "cons": "smaller ecosystem" },
+    { "id": 6201, "type": "Constraint", "label": "At-least-once delivery", "type": "Reliability", "severity": "High" },
+    { "id": 6202, "type": "Constraint", "label": "Managed service", "type": "Ops", "severity": "Medium" },
+    { "id": 6301, "type": "Task", "label": "Provision Kafka cluster", "assignee": "Infra", "eta": "2w" },
+    { "id": 6302, "type": "Task", "label": "JWT audit", "assignee": "Security", "eta": "1w" }
+  ],
+  "edges": [
+    { "source": 6001, "target": 6101, "directed": true, "type": "considers" },
+    { "source": 6001, "target": 6102, "directed": true, "type": "considers" },
+    { "source": 6101, "target": 6201, "directed": true, "type": "satisfies" },
+    { "source": 6102, "target": 6202, "directed": true, "type": "satisfies" },
+    { "source": 6001, "target": 6101, "directed": true, "type": "decides" },
+    { "source": 6301, "target": 6001, "directed": true, "type": "implements" },
+    { "source": 6002, "target": 6103, "directed": true, "type": "considers" },
+    { "source": 6002, "target": 6104, "directed": true, "type": "considers" },
+    { "source": 6302, "target": 6301, "directed": true, "type": "blocked_by" }
+  ]
+}
