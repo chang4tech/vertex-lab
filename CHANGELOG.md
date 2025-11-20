@@ -64,6 +64,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Added (planned for 0.42.0)
 - Templates: Added “Research Map” seed pack (Paper/Concept/Method/Dataset schema with sample graph)
 
+### Improved (planned for 0.43.0)
+- Plugins: Core/bundled plugin lists now driven by `src/plugins/pluginConfig.json` instead of hard-coded imports; preserves ordering via config
+
 ### Added (planned for 0.39.0)
 - Edge Editor: Edge Info panel now allows setting `edge.type` using schema.edgeTypes; updates persist via plugin API `updateEdges`
 

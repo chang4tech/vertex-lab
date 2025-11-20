@@ -1,0 +1,31 @@
+{
+  "core": [
+    "./core/nodeInfoPlugin.jsx",
+    "./core/edgeInfoPlugin.jsx",
+    "./core/graphStatsPlugin.jsx",
+    "./core/helpOverlayPlugin.jsx",
+    "./core/schemaManagerPlugin.jsx",
+    "./core/workspacePlugin.jsx",
+    "./core/templatesPlugin.jsx",
+    "./core/exportWatermarkPlugin.jsx",
+    "./core/versionHistoryPlugin.jsx",
+    "./core/searchCommandPlugin.jsx",
+    "./core/selectionToolsPlugin.jsx",
+    "./core/clipboardPlugin.jsx",
+    "./core/neighborsHighlighterPlugin.jsx",
+    "./core/randomNodeSelectorPlugin.jsx",
+    "./core/connectNodesByIdPlugin.jsx",
+    "./core/levelsPlugin.jsx",
+    "./examples/followUpRemindersPlugin.jsx",
+    "./examples/showcasePlugin.jsx"
+  ],
+  "bundled": [
+    "./examples/gamificationPlugin.jsx",
+    "./examples/paperReferenceProspectorPlugin.jsx",
+    "./examples/searchPrefixProviderPlugin.jsx",
+    "./examples/searchDSLProviderPlugin.jsx",
+    "./examples/graphLinterPlugin.jsx",
+    "./examples/centralityLensPlugin.jsx",
+    "./examples/nodeEditorExamplePlugin.jsx"
+  ]
+}
