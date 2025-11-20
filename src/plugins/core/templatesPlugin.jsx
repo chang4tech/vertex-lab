@@ -2,6 +2,7 @@ import React from 'react';
 import { loadTags, saveTags, generateTagId } from '../../utils/tagUtils.js';
 import { validateTemplatePack } from '../../utils/templatePackValidation.js';
 import { loadSchema, saveSchema } from '../../utils/schemaUtils.js';
+import templateConfig from '../templates.config.json';
 
 const VIS_KEY = 'plugin_core.templates.showPanel';
 
@@ -367,18 +368,18 @@ function TemplatesPanel({ api }) {
   return (
     <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
       <h3 style={{ margin: 0 }}>Templates</h3>
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <label>
           <input type="file" accept="application/json" style={{ display: 'none' }}
             onChange={async (e) => { const f = e.target.files?.[0]; if (f) await handleFile(f); e.target.value=''; }} />
           <span role="button" style={{ padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer' }}>Import Pack…</span>
         </label>
         <button onClick={exportPack} style={{ padding: '6px 10px' }}>Export Current as Pack</button>
-        <button onClick={() => loadSeedPack('/packs/paper_research_kit.json', 'Paper Research Kit')} style={{ padding: '6px 10px' }}>Load Seed: Paper Research Kit</button>
-        <button onClick={() => loadSeedPack('/packs/research_map.json', 'Research Map')} style={{ padding: '6px 10px' }}>Load Seed: Research Map</button>
-        <button onClick={() => loadSeedPack('/packs/product_strategy_graph.json', 'Product Strategy Graph')} style={{ padding: '6px 10px' }}>Load Seed: Product Strategy</button>
-        <button onClick={() => loadSeedPack('/packs/incident_response_playbook.json', 'Incident Response Playbook')} style={{ padding: '6px 10px' }}>Load Seed: Incident Response</button>
-        <button onClick={() => loadSeedPack('/packs/study_notes_knowledge_graph.json', 'Study Notes Knowledge Graph')} style={{ padding: '6px 10px' }}>Load Seed: Study Notes</button>
+        {(templateConfig?.seeds || []).map((seed) => (
+          <button key={seed.path} onClick={() => loadSeedPack(seed.path, seed.label)} style={{ padding: '6px 10px' }}>
+            {seed.buttonLabel || `Load Seed: ${seed.label}`}
+          </button>
+        ))}
       </div>
       {errors.length > 0 && (
         <div style={{ color: '#b91c1c', border: '1px solid #fecaca', borderRadius: 8 }}>

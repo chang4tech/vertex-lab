@@ -61,6 +61,9 @@ Template Packs are data-only bundles that include tag sets, optional schema frag
 - Contents: schema for Topic, Subtopic, Question, and Reference with relations (`relates_to`, `requires`, `covers`, `explains`, `linked`) plus a starter knowledge map for study notes.
 - Import: open Templates panel and click “Load Seed: Study Notes”.
 
+### Configuring default seed buttons
+- The set/order of seed buttons shown in Templates is defined in `src/plugins/templates.config.json` (JSON with `{ path, label, buttonLabel }`). Update this config to add/remove seeds without editing component code.
+
 ## Roadmap
 - Strict JSON schema validation for packs with richer error messages.
 - Schema promotion to core API (watch/set/validate) beyond the plugin-managed manager.

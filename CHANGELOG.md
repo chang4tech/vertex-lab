@@ -79,6 +79,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Added (planned for 0.47.0)
 - Templates: Added “Study Notes Knowledge Graph” seed pack (Topic/Subtopic/Question/Reference schema + starter notes)
 
+### Improved (planned for 0.48.0)
+- Templates: Seed buttons are now driven by `src/plugins/templates.config.json` (editable config instead of hard-coded list)
+
 ### Added (planned for 0.39.0)
 - Edge Editor: Edge Info panel now allows setting `edge.type` using schema.edgeTypes; updates persist via plugin API `updateEdges`
 
