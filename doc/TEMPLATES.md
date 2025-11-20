@@ -67,6 +67,12 @@ Template Packs are data-only bundles that include tag sets, optional schema frag
 - Contents: schema for ADR, Option, Constraint, and Task with relations (`considers`, `decides`, `satisfies`, `implements`, `blocked_by`) and a starter ADR board connecting decisions to tasks/constraints.
 - Import: open Templates panel and click “Load Seed: ADR Navigator”.
 
+## Seed Pack: CRM Starter Graph
+
+- Path: `public/packs/crm_starter_graph.json`
+- Contents: schema for Account, Contact, Opportunity, and Activity with relationships (`contacts`, `owns`, `touches`, `involves`, `depends_on`) and a starter CRM pipeline board.
+- Import: open Templates panel and click “Load Seed: CRM Starter”.
+
 ### Configuring default seed buttons
 - The set/order of seed buttons shown in Templates is defined in `src/plugins/templates.config.json` (JSON with `{ path, label, buttonLabel }`). Update this config to add/remove seeds without editing component code.
 

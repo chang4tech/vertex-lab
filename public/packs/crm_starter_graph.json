@@ -1,0 +1,87 @@
+{
+  "meta": {
+    "name": "CRM Starter Graph",
+    "version": "1.0.0",
+    "author": "Vertex Lab",
+    "description": "Schema + starter graph for a graph-based CRM (Accounts, Contacts, Opportunities, Activities)."
+  },
+  "requires": {
+    "app": ">=0.24.0",
+    "plugins": [
+      { "id": "examples.graphLinter" }
+    ],
+    "capabilities": ["updateEdges"]
+  },
+  "schema": {
+    "types": [
+      {
+        "name": "Account",
+        "color": "#2563eb",
+        "properties": [
+          { "name": "industry", "type": "string", "required": true },
+          { "name": "segment", "type": "string" }
+        ]
+      },
+      {
+        "name": "Contact",
+        "color": "#db2777",
+        "properties": [
+          { "name": "role", "type": "string", "required": true },
+          { "name": "email", "type": "string" }
+        ]
+      },
+      {
+        "name": "Opportunity",
+        "color": "#16a34a",
+        "properties": [
+          { "name": "stage", "type": "string", "required": true },
+          { "name": "value", "type": "number" },
+          { "name": "close_date", "type": "string" }
+        ]
+      },
+      {
+        "name": "Activity",
+        "color": "#f97316",
+        "properties": [
+          { "name": "type", "type": "string", "required": true },
+          { "name": "status", "type": "string" },
+          { "name": "due", "type": "string" }
+        ]
+      }
+    ],
+    "edgeTypes": [
+      { "name": "contacts", "directed": true, "sourceTypes": ["Contact"], "targetTypes": ["Account"] },
+      { "name": "owns", "directed": true, "sourceTypes": ["Opportunity"], "targetTypes": ["Account"] },
+      { "name": "touches", "directed": true, "sourceTypes": ["Activity"], "targetTypes": ["Contact", "Opportunity"] },
+      { "name": "involves", "directed": true, "sourceTypes": ["Activity"], "targetTypes": ["Account"] },
+      { "name": "depends_on", "directed": true, "sourceTypes": ["Opportunity"], "targetTypes": ["Opportunity"], "noCycle": true }
+    ]
+  },
+  "tags": [
+    { "id": "high_value", "name": "High Value", "color": "#d946ef" },
+    { "id": "at_risk", "name": "At Risk", "color": "#f87171" },
+    { "id": "follow_up", "name": "Follow-up", "color": "#fbbf24" }
+  ],
+  "properties": [],
+  "nodes": [
+    { "id": 7001, "type": "Account", "label": "Acme Corp", "industry": "Finance", "segment": "Enterprise", "tags": ["high_value"] },
+    { "id": 7002, "type": "Account", "label": "Beta Health", "industry": "Healthcare", "segment": "Mid Market", "tags": ["follow_up"] },
+    { "id": 7101, "type": "Contact", "label": "Dana Lee", "role": "CTO", "email": "dana@acme.com" },
+    { "id": 7102, "type": "Contact", "label": "Oscar Gomez", "role": "Ops VP", "email": "oscar@betahealth.com" },
+    { "id": 7201, "type": "Opportunity", "label": "Acme Renewal", "stage": "Proposal", "value": 500000, "close_date": "2025-06-30" },
+    { "id": 7202, "type": "Opportunity", "label": "Beta Expansion", "stage": "Discovery", "value": 120000, "close_date": "2025-08-15" },
+    { "id": 7301, "type": "Activity", "label": "Acme QBR", "type": "Meeting", "status": "Scheduled", "due": "2025-05-10" },
+    { "id": 7302, "type": "Activity", "label": "Beta Demo", "type": "Demo", "status": "Pending", "due": "2025-05-05" }
+  ],
+  "edges": [
+    { "source": 7101, "target": 7001, "directed": true, "type": "contacts" },
+    { "source": 7102, "target": 7002, "directed": true, "type": "contacts" },
+    { "source": 7201, "target": 7001, "directed": true, "type": "owns" },
+    { "source": 7202, "target": 7002, "directed": true, "type": "owns" },
+    { "source": 7301, "target": 7101, "directed": true, "type": "touches" },
+    { "source": 7301, "target": 7201, "directed": true, "type": "touches" },
+    { "source": 7301, "target": 7001, "directed": true, "type": "involves" },
+    { "source": 7302, "target": 7102, "directed": true, "type": "touches" },
+    { "source": 7302, "target": 7202, "directed": true, "type": "touches" }
+  ]
+}
