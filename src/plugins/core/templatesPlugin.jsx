@@ -262,10 +262,7 @@ function TemplatesPanel({ api }) {
     return { typeWarnings, propWarnings, total };
   }, [typeMappings, existingSchema]);
 
-  const handleFile = async (file) => {
-    const text = await file.text();
-    let json;
-    try { json = JSON.parse(text); } catch (e) { setErrors([`JSON parse error: ${e.message}`]); return; }
+  const ingestPack = (json, statusMsg = 'Ready') => {
     const errs = validateTemplatePack(json);
     setErrors(errs);
     setPack(json);
@@ -274,7 +271,6 @@ function TemplatesPanel({ api }) {
     const existingTags = loadTags();
     const plan = computeTagPlan(json.tags || [], existingTags);
     setTagPlan(plan);
-    // Initialize schema mapping if present
     const graphId = api.graphId || 'default';
     const currentSchema = loadSchema(graphId);
     setExistingSchema(currentSchema);
@@ -289,7 +285,14 @@ function TemplatesPanel({ api }) {
     setTypeMappings(tm);
     setImportSchemaOption(false);
     setIncludeEdgeTypes(true);
-    setStatus('Ready');
+    setStatus(statusMsg);
+  };
+
+  const handleFile = async (file) => {
+    const text = await file.text();
+    let json;
+    try { json = JSON.parse(text); } catch (e) { setErrors([`JSON parse error: ${e.message}`]); return; }
+    ingestPack(json, 'Ready');
   };
 
   const exportPack = () => {
@@ -310,35 +313,12 @@ function TemplatesPanel({ api }) {
     setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
   };
 
-  const loadSeed = async () => {
+  const loadSeedPack = async (path, label) => {
     try {
-      const res = await fetch('/packs/paper_research_kit.json', { cache: 'no-store' });
+      const res = await fetch(path, { cache: 'no-store' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
-      const errs = validateTemplatePack(json);
-      setErrors(errs);
-      setPack(json);
-      const deps = summarizeDependencies(json, api);
-      setDepSummary(deps);
-      const existingTags = loadTags();
-      const plan = computeTagPlan(json.tags || [], existingTags);
-      setTagPlan(plan);
-      // Initialize schema mapping from seed
-      const graphId = api.graphId || 'default';
-      const currentSchema = loadSchema(graphId);
-      setExistingSchema(currentSchema);
-      const existingTypeNames = new Set((currentSchema.types || []).map(t => String(t.name || '').toLowerCase()));
-      const tm = (json.schema?.types || []).map((t) => {
-        const incoming = String(t.name || '');
-        const incomingKey = incoming.toLowerCase();
-        const target = existingTypeNames.has(incomingKey) ? (currentSchema.types.find(x => String(x.name || '').toLowerCase() === incomingKey)?.name || incoming) : incoming;
-        const properties = (t.properties || []).map((p) => ({ incoming: p.name, target: p.name, skip: false }));
-        return { incoming, target, skip: false, properties };
-      });
-      setTypeMappings(tm);
-      setImportSchemaOption(false);
-      setIncludeEdgeTypes(true);
-      setStatus('Loaded seed pack');
+      ingestPack(json, `Loaded seed: ${label}`);
     } catch (e) {
       setErrors([`Failed to load seed pack: ${e.message}`]);
     }
@@ -394,7 +374,8 @@ function TemplatesPanel({ api }) {
           <span role="button" style={{ padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer' }}>Import Pack…</span>
         </label>
         <button onClick={exportPack} style={{ padding: '6px 10px' }}>Export Current as Pack</button>
-        <button onClick={loadSeed} style={{ padding: '6px 10px' }}>Load Seed: Paper Research Kit</button>
+        <button onClick={() => loadSeedPack('/packs/paper_research_kit.json', 'Paper Research Kit')} style={{ padding: '6px 10px' }}>Load Seed: Paper Research Kit</button>
+        <button onClick={() => loadSeedPack('/packs/research_map.json', 'Research Map')} style={{ padding: '6px 10px' }}>Load Seed: Research Map</button>
       </div>
       {errors.length > 0 && (
         <div style={{ color: '#b91c1c', border: '1px solid #fecaca', borderRadius: 8 }}>

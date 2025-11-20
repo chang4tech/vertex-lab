@@ -61,6 +61,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Template Packs: Validation extended to cover `schema.edgeTypes` (shape and referenced type names)
 - Template Packs: Apply is disabled until required plugins are enabled; preflight offers an “Enable missing plugins” action
 
+### Added (planned for 0.42.0)
+- Templates: Added “Research Map” seed pack (Paper/Concept/Method/Dataset schema with sample graph)
+
 ### Added (planned for 0.39.0)
 - Edge Editor: Edge Info panel now allows setting `edge.type` using schema.edgeTypes; updates persist via plugin API `updateEdges`
 

@@ -1,0 +1,87 @@
+{
+  "meta": {
+    "name": "Research Map",
+    "version": "1.0.0",
+    "author": "Vertex Lab",
+    "description": "Schema + starter graph for mapping papers, concepts, methods, and datasets."
+  },
+  "requires": {
+    "app": ">=0.24.0",
+    "plugins": [
+      { "id": "examples.graphLinter" }
+    ],
+    "capabilities": ["updateEdges"]
+  },
+  "schema": {
+    "types": [
+      {
+        "name": "Paper",
+        "color": "#1d4ed8",
+        "properties": [
+          { "name": "year", "type": "number", "required": true },
+          { "name": "venue", "type": "string" },
+          { "name": "authors", "type": "string[]" },
+          { "name": "impact", "type": "number" }
+        ]
+      },
+      {
+        "name": "Concept",
+        "color": "#9333ea",
+        "properties": [
+          { "name": "domain", "type": "string", "required": true },
+          { "name": "maturity", "type": "string" }
+        ]
+      },
+      {
+        "name": "Method",
+        "color": "#0f766e",
+        "properties": [
+          { "name": "technique", "type": "string", "required": true },
+          { "name": "status", "type": "string" }
+        ]
+      },
+      {
+        "name": "Dataset",
+        "color": "#ea580c",
+        "properties": [
+          { "name": "modality", "type": "string" },
+          { "name": "size", "type": "string" }
+        ]
+      }
+    ],
+    "edgeTypes": [
+      { "name": "cites", "directed": true, "sourceTypes": ["Paper"], "targetTypes": ["Paper"], "noCycle": true },
+      { "name": "introduces", "directed": true, "sourceTypes": ["Paper"], "targetTypes": ["Concept"] },
+      { "name": "implements", "directed": true, "sourceTypes": ["Paper", "Concept"], "targetTypes": ["Method"] },
+      { "name": "evaluates_with", "directed": true, "sourceTypes": ["Method"], "targetTypes": ["Dataset"] },
+      { "name": "applies_to", "directed": true, "sourceTypes": ["Method"], "targetTypes": ["Concept"] }
+    ]
+  },
+  "tags": [
+    { "id": "ml", "name": "ML", "color": "#22d3ee" },
+    { "id": "cv", "name": "CV", "color": "#fbbf24" },
+    { "id": "nlp", "name": "NLP", "color": "#f472b6" }
+  ],
+  "properties": [],
+  "nodes": [
+    { "id": 1001, "type": "Paper", "label": "Graph Memory Networks", "year": 2022, "venue": "ICLR", "authors": ["Lee", "Patel"], "tags": ["ml"] },
+    { "id": 1002, "type": "Paper", "label": "Concept Linking Baselines", "year": 2020, "venue": "NeurIPS", "authors": ["Huang"], "tags": ["nlp"] },
+    { "id": 1003, "type": "Concept", "label": "Hierarchical Memory", "domain": "Representation" },
+    { "id": 1004, "type": "Concept", "label": "Self-Supervised Retrieval", "domain": "Retrieval" },
+    { "id": 1005, "type": "Method", "label": "Graph Memory Net", "technique": "Diffusion", "status": "prototype" },
+    { "id": 1006, "type": "Method", "label": "Contrastive Retriever", "technique": "Encoder", "status": "production" },
+    { "id": 1007, "type": "Dataset", "label": "ConceptBench", "modality": "Text", "size": "1.2M pairs" },
+    { "id": 1008, "type": "Dataset", "label": "GraphEval", "modality": "Graph", "size": "50K nodes" }
+  ],
+  "edges": [
+    { "source": 1001, "target": 1002, "directed": true, "type": "cites" },
+    { "source": 1001, "target": 1003, "directed": true, "type": "introduces" },
+    { "source": 1001, "target": 1005, "directed": true, "type": "implements" },
+    { "source": 1005, "target": 1003, "directed": true, "type": "applies_to" },
+    { "source": 1005, "target": 1007, "directed": true, "type": "evaluates_with" },
+    { "source": 1006, "target": 1004, "directed": true, "type": "applies_to" },
+    { "source": 1006, "target": 1008, "directed": true, "type": "evaluates_with" },
+    { "source": 1002, "target": 1004, "directed": true, "type": "introduces" },
+    { "source": 1002, "target": 1006, "directed": true, "type": "implements" }
+  ]
+}

@@ -37,6 +37,12 @@ Template Packs are data-only bundles that include tag sets, optional schema frag
 - Contents: common research tags (ML/CV/NLP), schema for Paper/Concept with properties, and a small starter graph.
 - Import: open Templates panel and click “Load Seed: Paper Research Kit”.
 
+## Seed Pack: Research Map
+
+- Path: `public/packs/research_map.json`
+- Contents: schema for Paper, Concept, Method, and Dataset (with typed properties + edge types such as `cites`, `introduces`, `implements`, `evaluates_with`). Includes a mini starter graph linking sample papers, concepts, methods, and datasets.
+- Import: open Templates panel and click “Load Seed: Research Map”.
+
 ## Roadmap
 - Strict JSON schema validation for packs with richer error messages.
 - Schema promotion to core API (watch/set/validate) beyond the plugin-managed manager.
