@@ -58,6 +58,7 @@ Vertex Lab supports plugins that contribute UI panels, canvas overlays, commands
 - How to Use: Authors can provide a simple `aboutPage.markdown` string for richer docs; it’s rendered as lightweight Markdown.
 - First‑time tip: When you enable a plugin for the first time, a localized banner appears linking to its Control Hub.
 - Incomplete indicator: Plugins with no visible contributions (no panels, commands, overlays, about, or config) show an “Incomplete” badge in the Plugins dialog.
+- Default plugin lineup: edit `src/plugins/pluginConfig.json` (documented in `doc/PLUGIN_CONFIG.md`) to add/remove core or bundled plugins without touching code.
 
 See `doc/PLUGIN_SPEC.md` for the full specification. Migration and progress notes are summarized in `doc/progress.md` and tracked in `CHANGELOG.md`.
 
